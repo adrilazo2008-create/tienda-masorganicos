@@ -21,9 +21,18 @@ La tienda está online en **https://tienda.masorganicos.com.ar**
 
 ## Cómo actualizar la tienda (redeploy)
 
-1. Subir por FTP los archivos cambiados a `/claude2026/tienda/` (normalmente algo de `app/`).
-2. cPanel → **Setup Python App** → la app `tienda.masorganicos.com.ar` → **REINICIAR**.
-3. Si cambiaste `requirements.txt`: en esa pantalla, **Run Pip Install** (con `requirements.txt`) y después **Restart**.
+**Por Git (lo normal):**
+1. `git push origin main` (sube a GitHub — repo público `adrilazo2008-create/tienda-masorganicos`).
+2. cPanel → **Git Version Control** → repo `tienda` → **Administrar** → pestaña **Pull or Deploy**
+   → **Update from Remote** → **Deploy HEAD Commit**.
+3. El `.cpanel.yml` copia `app/` + `passenger_wsgi.py` + `requirements.txt` a
+   `public_html/claude2026/tienda/` y reinicia Passenger solo (via `tmp/restart.txt`).
+
+**Si cambió `requirements.txt`** (dependencias nuevas): además de lo de arriba, ir a
+**Setup Python App** → la app → escribir `requirements.txt` en el campo → **Run Pip Install** → **Restart**.
+
+**Repo del server**: `/home3/iebbbhrt/repositories/tienda` (rama `main`).
+El `.env` NO está en git y no se toca en el deploy.
 
 ⚠️ **`passenger_wsgi.py`**: si alguna vez se **recrea** la app desde cero, cPanel lo pisa con un stub
 propio (que rompe con recursión infinita). Hay que volver a subir el `passenger_wsgi.py` de este repo.
