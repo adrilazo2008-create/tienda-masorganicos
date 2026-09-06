@@ -3,31 +3,36 @@
 {% block contenido %}
 
 <h1>Confirmá tu pedido</h1>
-{% if error %}<p class="err-box">{{ error }}</p>{% endif %}
+{% if error %}<p class="err-box" tabindex="-1" id="checkout-error">{{ error }}</p>{% endif %}
 {% if permitir_escribir %}
   <p class="chico">El pedido se va a registrar y aparecerá en el sistema del local.</p>
 {% else %}
   <p class="aviso">Modo prueba: el pedido <b>no</b> se graba. Se muestra el resumen para revisar el flujo.</p>
 {% endif %}
 
-<form method="post" action="/checkout/confirmar" class="checkout">
+<form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout">
   <div class="co-col">
 
     <fieldset class="co-box">
       <legend>1 · Tus datos</legend>
-      <label>Celular</label>
-      <div class="row-tel">
-        <input name="telefono" id="telefono" inputmode="tel" required placeholder="11 5504 6740"
+      <label>Celular
+        <input name="telefono" id="telefono" type="tel" inputmode="tel" autocomplete="tel"
+               required placeholder="11 5504 6740"
                hx-post="/checkout/identificar" hx-trigger="change" hx-target="#identidad" hx-include="this">
-      </div>
-      <div id="identidad">
+      </label>
+      <div id="identidad" aria-live="polite">
         <div class="grid2">
-          <div><label>Nombre</label><input name="nombre" required></div>
-          <div><label>Apellido</label><input name="apellido" required></div>
+          <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
+          <label>Apellido <input name="apellido" autocomplete="family-name" required></label>
         </div>
-        <label>Email</label><input type="email" name="email" placeholder="para enviarte el resumen">
-        <label>PIN de 4 dígitos <small>(opcional — para ver tus pedidos la próxima vez)</small></label>
-        <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="opcional">
+        <label>Email
+          <input type="email" name="email" autocomplete="email" spellcheck="false"
+                 placeholder="para enviarte el resumen">
+        </label>
+        <label>PIN de 4 dígitos <small>(opcional — para ver tus pedidos la próxima vez)</small>
+          <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}"
+                 autocomplete="off" spellcheck="false" placeholder="opcional">
+        </label>
       </div>
     </fieldset>
 
@@ -37,55 +42,59 @@
       <label class="radio"><input type="radio" name="entrega" value="retira" onchange="toggleEntrega()"> Retiro en sucursal</label>
 
       <div id="bloque-envio">
-        <label>Zona</label>
-        <select name="id_zona" onchange="recalcularEnvio()">
-          <option value="0">Elegí tu zona…</option>
-          {% for z in zonas %}
-            <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}" data-min="{{ z.minimo_compra }}">
-              {{ z.titulo }} — envío {{ pesos(z.precio) }}
-            </option>
-          {% endfor %}
-        </select>
-        <p class="chico" id="envio-info"></p>
+        <label>Zona
+          <select name="id_zona" onchange="recalcularEnvio()">
+            <option value="0">Elegí tu zona…</option>
+            {% for z in zonas %}
+              <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}" data-min="{{ z.minimo_compra }}">
+                {{ z.titulo }} — envío {{ pesos(z.precio) }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+        <p class="chico" id="envio-info" aria-live="polite"></p>
         <div class="grid2">
-          <div><label>Calle</label><input name="direccion"></div>
-          <div><label>Altura</label><input name="altura" inputmode="numeric"></div>
+          <label>Calle <input name="direccion" autocomplete="address-line1"></label>
+          <label>Altura <input name="altura" inputmode="numeric" autocomplete="off"></label>
         </div>
-        <label>Localidad</label><input name="localidad">
-        <label>Piso / depto / entre calles (opcional)</label><input name="info_adicional">
+        <label>Localidad <input name="localidad" autocomplete="address-level2"></label>
+        <label>Piso / depto / entre calles (opcional) <input name="info_adicional" autocomplete="address-line2"></label>
       </div>
 
       <div id="bloque-retira" hidden>
-        <label>Sucursal</label>
-        <select name="id_sucursal">
-          {% for s in sucursales %}<option value="{{ s.id }}">{{ s.descripcion }} — {{ s.direccion }} {{ s.altura }}</option>{% endfor %}
-        </select>
+        <label>Sucursal
+          <select name="id_sucursal">
+            {% for s in sucursales %}<option value="{{ s.id }}">{{ s.descripcion }} — {{ s.direccion }} {{ s.altura }}</option>{% endfor %}
+          </select>
+        </label>
       </div>
     </fieldset>
 
     <fieldset class="co-box">
       <legend>3 · Pago</legend>
       <label class="radio"><input type="radio" name="pago" value="efectivo" checked> Efectivo</label>
-      <label class="radio"><input type="radio" name="pago" value="otro"> Transferencia / Débito / Crédito / Cuenta DNI / Mercado Pago</label>
+      <label class="radio"><input type="radio" name="pago" value="otro"> Transferencia / Débito / Crédito / Cuenta&nbsp;DNI / Mercado&nbsp;Pago</label>
       <p class="chico">No se cobra en el sitio. Coordinamos el pago al momento de la entrega.</p>
     </fieldset>
 
     <fieldset class="co-box">
       <legend>4 · Extras (opcional)</legend>
-      <label>Código de descuento</label><input name="codigo_descuento">
-      <label>Aclaraciones para el pedido</label><textarea name="observacion" maxlength="500" rows="2"></textarea>
+      <label>Código de descuento <input name="codigo_descuento" autocomplete="off" spellcheck="false"></label>
+      <label>Aclaraciones para el pedido
+        <textarea name="observacion" maxlength="500" rows="2"></textarea>
+      </label>
     </fieldset>
   </div>
 
   <aside class="co-resumen">
     <h2>Tu pedido</h2>
     {% for l in car.lineas %}
-      <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}</span><span>{{ pesos(l.subtotal) }}</span></p>
+      <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}</span><span class="num">{{ pesos(l.subtotal) }}</span></p>
     {% endfor %}
-    <p class="rr tot"><span>Subtotal</span><span id="r-subtotal" data-v="{{ car.subtotal }}">{{ pesos(car.subtotal) }}</span></p>
-    <p class="rr"><span>Envío</span><span id="r-envio">a calcular</span></p>
-    <p class="rr tot"><span>Total estimado</span><span id="r-total">{{ pesos(car.subtotal) }}</span></p>
-    <button type="submit" class="btn-grande">Confirmar pedido</button>
+    <p class="rr tot"><span>Subtotal</span><span class="num" id="r-subtotal" data-v="{{ car.subtotal }}">{{ pesos(car.subtotal) }}</span></p>
+    <p class="rr"><span>Envío</span><span class="num" id="r-envio">a calcular</span></p>
+    <p class="rr tot"><span>Total estimado</span><span class="num" id="r-total">{{ pesos(car.subtotal) }}</span></p>
+    <button type="submit" class="btn-grande" id="btn-confirmar">Confirmar pedido</button>
     <a href="/carrito" class="btn-sec">Volver al carrito</a>
   </aside>
 </form>

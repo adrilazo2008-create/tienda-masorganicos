@@ -11,7 +11,8 @@
   <div class="carrito-lineas">
     {% for l in car.lineas %}
     <div class="cl">
-      <img src="{{ img_producto(l.producto.codigo) }}" alt="" onerror="this.src='/static/img/sinfoto.svg'">
+      <img src="{{ img_producto(l.producto.codigo) }}" alt="" width="64" height="64"
+           loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
       <div class="cl-info">
         <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
         <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
@@ -19,10 +20,11 @@
       </div>
       <form method="post" action="/carrito/actualizar" class="cl-cant">
         <input type="hidden" name="indice" value="{{ l.indice }}">
-        <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal" onchange="this.form.submit()">
+        <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
+               aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off" onchange="this.form.submit()">
         <span>{{ l.producto.unidad }}</span>
       </form>
-      <span class="cl-sub">{{ pesos(l.subtotal) }}</span>
+      <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
       <form method="post" action="/carrito/quitar" class="cl-quitar">
         <input type="hidden" name="indice" value="{{ l.indice }}">
         <button type="submit" aria-label="Quitar">✕</button>
@@ -33,9 +35,9 @@
 
   <aside class="carrito-resumen">
     <h2>Resumen</h2>
-    <p class="rr"><span>Subtotal</span><span>{{ pesos(car.subtotal) }}</span></p>
+    <p class="rr"><span>Subtotal</span><span class="num">{{ pesos(car.subtotal) }}</span></p>
     <p class="rr chico">El costo de envío se calcula en el próximo paso según tu zona.</p>
-    <a href="/checkout" class="btn-grande">Continuar</a>
+    <a href="/checkout" class="btn-grande">Ir a pagar</a>
     <a href="/catalogo" class="btn-sec">Seguir comprando</a>
   </aside>
 </div>

@@ -118,10 +118,11 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
                     cantidad: str = Form("1"), observacion: str = Form("")):
     carrito_mod.agregar(request.session, producto_id, cantidad, observacion)
     if request.headers.get("HX-Request"):
-        car = carrito_mod.resolver(request.session)
+        n = carrito_mod.resolver(request.session).cantidad_items
         return HTMLResponse(
-            f'<span id="carrito-badge" class="badge" hx-swap-oob="true">{car.cantidad_items}</span>'
-            f'<div class="toast-ok">Agregado al carrito</div>')
+            f'<span id="carrito-badge" class="badge" aria-live="polite" '
+            f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>'
+            f'<p class="toast-ok" role="status">Agregado al carrito</p>')
     return RedirectResponse("/catalogo", status_code=303)
 
 

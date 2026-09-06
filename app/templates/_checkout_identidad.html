@@ -6,17 +6,20 @@
   <details class="mini">
     <summary>¿No sos {{ cliente_encontrado.nombre }}? Ingresá tus datos</summary>
     <div class="grid2">
-      <div><label>Nombre</label><input name="nombre"></div>
-      <div><label>Apellido</label><input name="apellido"></div>
+      <label>Nombre <input name="nombre" autocomplete="given-name"></label>
+      <label>Apellido <input name="apellido" autocomplete="family-name"></label>
     </div>
-    <label>Email</label><input type="email" name="email">
+    <label>Email <input type="email" name="email" autocomplete="email" spellcheck="false"></label>
   </details>
 {% else %}
   <div class="grid2">
-    <div><label>Nombre</label><input name="nombre" required></div>
-    <div><label>Apellido</label><input name="apellido" required></div>
+    <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
+    <label>Apellido <input name="apellido" autocomplete="family-name" required></label>
   </div>
-  <label>Email</label><input type="email" name="email" placeholder="para enviarte el resumen">
-  <label>PIN de 4 dígitos <small>(opcional)</small></label>
-  <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="opcional">
+  <label>Email
+    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="para enviarte el resumen">
+  </label>
+  <label>PIN de 4 dígitos <small>(opcional)</small>
+    <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" autocomplete="off" spellcheck="false" placeholder="opcional">
+  </label>
 {% endif %}

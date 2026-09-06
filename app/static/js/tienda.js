@@ -38,3 +38,25 @@ function recalcularEnvio(){
 }
 function fmtPeso(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
 function iniciarCheckout(){ toggleEntrega(); }
+
+// toasts: quitar cada uno después de unos segundos
+document.body.addEventListener('htmx:afterSwap', function(e){
+  if (e.detail && e.detail.target && e.detail.target.id === 'toasts'){
+    var t = e.detail.target.firstElementChild;
+    if (t && !t.dataset.timed){
+      t.dataset.timed = '1';
+      setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 220); }, 2600);
+    }
+  }
+});
+
+// checkout: evitar doble submit y hacer foco en el primer error
+document.addEventListener('DOMContentLoaded', function(){
+  var f = document.getElementById('form-checkout');
+  if (f) f.addEventListener('submit', function(){
+    var b = document.getElementById('btn-confirmar');
+    if (b){ b.disabled = true; b.textContent = 'Enviando…'; }
+  });
+  var err = document.getElementById('checkout-error') || document.getElementById('login-error');
+  if (err) err.focus();
+});

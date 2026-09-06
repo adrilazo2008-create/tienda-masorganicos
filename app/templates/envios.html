@@ -4,14 +4,17 @@
 <h1>Zonas y costos de envío</h1>
 <p>Hacemos reparto a Zona Norte, GBA y CABA. El costo y la compra mínima dependen de tu zona.</p>
 
-<table class="tabla-zonas">
-  <thead><tr><th>Zona</th><th>Envío</th><th>Compra mínima</th><th>Envío gratis desde</th></tr></thead>
-  <tbody>
-  {% for z in zonas %}
-    <tr><td>{{ z.titulo }}</td><td>{{ pesos(z.precio) }}</td><td>{{ pesos(z.minimo_compra) }}</td><td>{{ pesos(z.envio_gratis) }}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+<div class="tabla-scroll">
+  <table class="tabla-zonas">
+    <caption class="sr-only">Costo de envío, compra mínima y umbral de envío gratis por zona</caption>
+    <thead><tr><th scope="col">Zona</th><th scope="col">Envío</th><th scope="col">Compra mínima</th><th scope="col">Envío gratis desde</th></tr></thead>
+    <tbody>
+    {% for z in zonas %}
+      <tr><td>{{ z.titulo }}</td><td class="num">{{ pesos(z.precio) }}</td><td class="num">{{ pesos(z.minimo_compra) }}</td><td class="num">{{ pesos(z.envio_gratis) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 <h2>Retiro en sucursal</h2>
 <ul class="sucursales">

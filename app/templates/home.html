@@ -17,7 +17,9 @@
   </div>
   {% if carrousel %}
   <div class="hero-img">
-    <img src="{{ IMG_BASE }}/carrousel/{{ carrousel[0].imagen }}" alt="{{ carrousel[0].titulo }}"
+    <img src="{{ IMG_BASE }}/carrousel/{{ carrousel[0].imagen }}"
+         alt="{{ carrousel[0].titulo or 'Frutas y verduras agroecológicas de Más Orgánicos' }}"
+         width="1280" height="400" fetchpriority="high" decoding="async"
          onerror="this.closest('.hero-img').style.display='none'">
   </div>
   {% endif %}

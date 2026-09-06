@@ -19,12 +19,17 @@
     <p><b>Pago:</b> {{ 'Efectivo' if pedido.efectivo else 'Transferencia / tarjeta / MP (a coordinar)' }}</p>
     {% if pedido.codigo_descuento %}<p><b>Código:</b> {{ pedido.codigo_descuento }}</p>{% endif %}
     <table class="ok-items">
+      <thead>
+        <tr><th scope="col">Cant.</th><th scope="col">Producto</th><th scope="col">Precio</th><th scope="col">Subtotal</th></tr>
+      </thead>
+      <tbody>
       {% for it in pedido.items %}
-      <tr><td>{{ fmt_cantidad(it.cantidad) }}</td><td>#{{ it.producto_id }}</td><td>{{ pesos(it.precio_unitario) }}</td><td>{{ pesos(it.cantidad * it.precio_unitario) }}</td></tr>
+      <tr><td class="num">{{ fmt_cantidad(it.cantidad) }}</td><td>#{{ it.producto_id }}</td><td class="num">{{ pesos(it.precio_unitario) }}</td><td class="num">{{ pesos(it.cantidad * it.precio_unitario) }}</td></tr>
       {% endfor %}
+      </tbody>
     </table>
-    <p class="rr tot"><span>Subtotal</span><span>{{ pesos(pedido.subtotal()) }}</span></p>
-    <p class="rr tot"><span>Total</span><span>{{ pesos(pedido.total()) }}</span></p>
+    <p class="rr tot"><span>Subtotal</span><span class="num">{{ pesos(pedido.subtotal()) }}</span></p>
+    <p class="rr tot"><span>Total</span><span class="num">{{ pesos(pedido.total()) }}</span></p>
   </div>
 
   <a href="/catalogo" class="btn-grande">Seguir comprando</a>

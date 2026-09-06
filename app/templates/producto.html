@@ -3,30 +3,34 @@
 {% block descripcion %}{{ p.detalle|default(p.nombre) }}{% endblock %}
 {% block contenido %}
 
-<nav class="miga"><a href="/catalogo">Productos</a> / <a href="/catalogo?categoria={{ p.categoria_id }}">{{ p.categoria|title }}</a> / {{ p.nombre }}</nav>
+<nav class="miga" aria-label="Ruta de navegación">
+  <a href="/catalogo">Productos</a> / <a href="/catalogo?categoria={{ p.categoria_id }}">{{ p.categoria|title }}</a> / <span aria-current="page">{{ p.nombre }}</span>
+</nav>
 
 <div class="prod">
   <div class="prod-img">
-    <img src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}" onerror="this.src='/static/img/sinfoto.svg'">
-    {% if p.poco_stock %}<p class="alerta-stock">Pocas unidades — sujeto a confirmación al preparar el pedido</p>{% endif %}
+    <img src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}" width="600" height="600"
+         fetchpriority="high" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
+    {% if p.poco_stock %}<p class="alerta-stock" role="status">Pocas unidades — sujeto a confirmación al preparar el pedido</p>{% endif %}
   </div>
   <div class="prod-info">
     <h1>{{ p.nombre }}</h1>
-    <p class="prod-precio">{{ pesos(p.precio) }} <small>x {{ p.unidad }}</small></p>
+    <p class="prod-precio"><span class="num">{{ pesos(p.precio) }}</span> <small>x {{ p.unidad }}</small></p>
     {% if p.detalle %}<p class="prod-det">{{ p.detalle }}</p>{% endif %}
 
-    <form class="prod-add" hx-post="/carrito/agregar" hx-swap="none">
+    <form class="prod-add" hx-post="/carrito/agregar" hx-target="#toasts" hx-swap="afterbegin">
       <input type="hidden" name="producto_id" value="{{ p.id }}">
-      <label>Cantidad ({{ p.unidad }})</label>
-      <div class="cant grande">
-        <button type="button" onclick="stepCant(this,-1)">−</button>
-        <input name="cantidad" value="1" inputmode="decimal"
+      <label for="cant-{{ p.id }}">Cantidad ({{ p.unidad }})</label>
+      <div class="cant grande" role="group" aria-label="Cantidad">
+        <button type="button" onclick="stepCant(this,-1)" aria-label="Quitar uno">−</button>
+        <input id="cant-{{ p.id }}" name="cantidad" value="1" inputmode="decimal" autocomplete="off"
                data-step="{{ '0.25' if p.fraccionable else '1' }}" data-min="{{ '0.25' if p.fraccionable else '1' }}">
-        <button type="button" onclick="stepCant(this,1)">+</button>
+        <button type="button" onclick="stepCant(this,1)" aria-label="Agregar uno">+</button>
       </div>
       {% if p.fraccionable %}<small class="hint">Podés pedir 0,25 · 0,5 · 0,75 kg</small>{% endif %}
-      <label>Observación (opcional)</label>
-      <input class="obs" name="observacion" placeholder="Ej: bien maduro / cambiar por otro si no hay" maxlength="191">
+      <label for="obs-{{ p.id }}">Observación (opcional)</label>
+      <input id="obs-{{ p.id }}" class="obs" name="observacion" autocomplete="off"
+             placeholder="Ej: bien maduro, cambiar por otro si no hay…" maxlength="191">
       <button type="submit" class="btn-grande">Agregar al carrito</button>
     </form>
     <p class="prod-nota">El precio y la disponibilidad se confirman al preparar tu pedido.</p>

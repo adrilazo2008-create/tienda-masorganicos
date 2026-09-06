@@ -3,43 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>{% block title %}Más Orgánicos — Almacén natural con envío{% endblock %}</title>
 <meta name="description" content="{% block descripcion %}Frutas, verduras agroecológicas y almacén natural con envío a Zona Norte, GBA y CABA. Comprá online, pagás al recibir.{% endblock %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{% if IMG_BASE.startswith('http') %}<link rel="preconnect" href="{{ IMG_BASE.split('/assets')[0] }}">{% endif %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/estilo.css">
 <script src="/static/js/htmx.min.js" defer></script>
 </head>
 <body>
+<a href="#contenido" class="skip">Saltar al contenido</a>
 {% if entorno != 'production' %}<div class="banda-dev">entorno de prueba — los pedidos no se graban salvo que se active</div>{% endif %}
 
 <header class="cab">
   <div class="cab-in">
-    <a href="/" class="logo"><img src="{{ IMG_BASE }}/logo/00.jpg" alt="Más Orgánicos" onerror="this.replaceWith(document.createTextNode('Más Orgánicos'))"></a>
+    <a href="/" class="logo" translate="no">
+      <img src="{{ IMG_BASE }}/logo/masorganicos.png" alt="" width="36" height="36" fetchpriority="high" decoding="async">
+      <span>Más Orgánicos</span>
+    </a>
     <form action="/catalogo" method="get" class="buscador" role="search">
-      <input type="search" name="q" placeholder="Buscar productos…" value="{{ busqueda|default('') }}" aria-label="Buscar">
-      <button type="submit" aria-label="Buscar">🔍</button>
+      <input type="search" name="q" placeholder="Buscar productos…" value="{{ busqueda|default('') }}"
+             aria-label="Buscar productos" autocomplete="off" enterkeyhint="search">
+      <button type="submit" aria-label="Buscar"><span aria-hidden="true">🔍</span></button>
     </form>
-    <nav class="cab-acc">
+    <nav class="cab-acc" aria-label="Tu cuenta y carrito">
       <a href="/cuenta" class="acc-cuenta">{{ cliente.nombre if cliente else 'Mi cuenta' }}</a>
-      <a href="/carrito" class="acc-carrito">Carrito <span id="carrito-badge" class="badge">{{ carrito_n }}</span></a>
+      <a href="/carrito" class="acc-carrito">Carrito
+        <span id="carrito-badge" class="badge" aria-live="polite" aria-label="{{ carrito_n }} productos en el carrito">{{ carrito_n }}</span>
+      </a>
     </nav>
   </div>
-  <nav class="menu">
+  <nav class="menu" aria-label="Categorías">
     <a href="/catalogo">Todo</a>
     {% for c in categorias[:8] %}<a href="/catalogo?categoria={{ c.id }}">{{ c.nombre|title }}</a>{% endfor %}
     <a href="/catalogo" class="menu-mas">+ categorías</a>
   </nav>
 </header>
 
-<main class="cont">
+<main class="cont" id="contenido">
   {% block contenido %}{% endblock %}
 </main>
 
 <footer class="pie">
   <div class="pie-in">
     <div>
-      <h4>Más Orgánicos</h4>
+      <h4 translate="no">Más Orgánicos</h4>
       <p>Almacén natural y verdulería agroecológica. Envíos a Zona Norte, GBA y CABA.</p>
-      <p>WhatsApp: <a href="https://wa.me/5491155046740">11 5504 6740</a></p>
+      <p>WhatsApp: <a href="https://wa.me/5491155046740" rel="noopener">11&nbsp;5504&nbsp;6740</a></p>
     </div>
     <div>
       <h4>Ayuda</h4>
@@ -50,13 +62,17 @@
     <div>
       <h4>Novedades</h4>
       <form hx-post="/newsletter" hx-target="#nl-res" hx-swap="innerHTML">
-        <input type="email" name="email" placeholder="Tu email" required>
+        <label class="sr-only" for="nl-email">Tu email</label>
+        <input id="nl-email" type="email" name="email" autocomplete="email"
+               placeholder="tucorreo@ejemplo.com" required>
         <button type="submit">Suscribirme</button>
       </form>
-      <div id="nl-res"></div>
+      <div id="nl-res" aria-live="polite"></div>
     </div>
   </div>
-  <p class="pie-legal">Los precios y el stock se confirman al preparar el pedido. No se cobra en el sitio: pagás al recibir (efectivo, transferencia, débito, crédito, Cuenta DNI o Mercado Pago).</p>
+  <p class="pie-legal">Los precios y el stock se confirman al preparar el pedido. No se cobra en el sitio: pagás al recibir (efectivo, transferencia, débito, crédito, Cuenta&nbsp;DNI o Mercado&nbsp;Pago).</p>
 </footer>
+
+<div id="toasts" role="status" aria-live="polite"></div>
 </body>
 </html>

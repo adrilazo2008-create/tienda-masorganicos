@@ -15,8 +15,9 @@
 
   <section class="cat-main">
     <h1>{{ titulo }}</h1>
-    <p class="cat-count">{{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
+    <p class="cat-count num">{{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
     {% if productos %}
+      <h2 class="sr-only">Lista de productos</h2>
       <div class="grid">
         {% for p in productos %}{% include "_card.html" %}{% endfor %}
       </div>

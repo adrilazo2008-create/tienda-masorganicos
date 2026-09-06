@@ -1,6 +1,7 @@
 <article class="card">
   <a href="/producto/{{ p.id }}" class="card-img">
-    <img loading="lazy" src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}"
+    <img loading="lazy" decoding="async" width="400" height="400"
+         src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}"
          onerror="this.src='/static/img/sinfoto.svg'">
     {% if p.destacado %}<span class="etq etq-dest">Destacado</span>{% endif %}
     {% if p.poco_stock %}<span class="etq etq-stock">Pocas unidades</span>{% endif %}
@@ -8,16 +9,17 @@
   <div class="card-body">
     <h3><a href="/producto/{{ p.id }}">{{ p.nombre }}</a></h3>
     {% if p.detalle %}<p class="card-det">{{ p.detalle|truncate(90) }}</p>{% endif %}
-    <p class="card-precio">{{ pesos(p.precio) }} <small>x {{ p.unidad }}</small></p>
-    <form class="card-add" hx-post="/carrito/agregar" hx-swap="none">
+    <p class="card-precio"><span class="num">{{ pesos(p.precio) }}</span> <small>x {{ p.unidad }}</small></p>
+    <form class="card-add" hx-post="/carrito/agregar" hx-target="#toasts" hx-swap="afterbegin">
       <input type="hidden" name="producto_id" value="{{ p.id }}">
-      <div class="cant">
-        <button type="button" onclick="stepCant(this,-1)" aria-label="Menos">−</button>
-        <input name="cantidad" value="1" inputmode="decimal"
+      <div class="cant" role="group" aria-label="Cantidad">
+        <button type="button" onclick="stepCant(this,-1)" aria-label="Quitar uno">−</button>
+        <input name="cantidad" value="1" inputmode="decimal" aria-label="Cantidad" autocomplete="off"
                data-step="{{ '0.25' if p.fraccionable else '1' }}" data-min="{{ '0.25' if p.fraccionable else '1' }}">
-        <button type="button" onclick="stepCant(this,1)" aria-label="Más">+</button>
+        <button type="button" onclick="stepCant(this,1)" aria-label="Agregar uno">+</button>
       </div>
-      <input class="obs" name="observacion" placeholder="Observación (opcional)" maxlength="191">
+      <input class="obs" name="observacion" aria-label="Observación (opcional)"
+             placeholder="Bien maduro, sin bolsa…" maxlength="191" autocomplete="off">
       <button type="submit" class="btn-add">Agregar</button>
     </form>
   </div>
