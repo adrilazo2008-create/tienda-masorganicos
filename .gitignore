@@ -2,6 +2,7 @@
 deploy/env.produccion
 .agents/
 .claude/skills/agent-browser
+.claude/skills/frontend-design
 __pycache__/
 *.pyc
 .venv/
