@@ -47,10 +47,19 @@ Al confirmar un pedido se inserta **1 fila en `grupos`** (`status=0`) + **N en `
 (`producto_id` = `mprimas.id`), previo alta/actualización de `users` y, si es envío, `direccion`.
 El botón `cmdPedidosWebMO` del VB6 lo levanta igual que hoy. Ver `app/pedidos.py`.
 
-## Pendiente de despliegue
+## Despliegue
 
-Falta el acceso a cPanel de Nuthost para configurar "Setup Python App".
-Las fotos ya están subidas por FTP a `masorganicos.com.ar/claude2026/assets/img/`.
+En producción: **https://tienda.masorganicos.com.ar** (cPanel Passenger, Nuthost, Python 3.11).
+
+Flujo de actualización:
+1. `git push origin main` (sube a GitHub).
+2. En cPanel → **Git Version Control** → repo `tienda` → **Administrar** → **Pull or Deploy**
+   → **Update from Remote** → **Deploy HEAD Commit**.
+3. El `.cpanel.yml` copia `app/` + `passenger_wsgi.py` + `requirements.txt` a la carpeta de la app
+   y reinicia Passenger (via `tmp/restart.txt`).
+
+El `.env` del server NO está en git y no se toca en cada deploy.
+Ver `DESPLIEGUE.md` para el detalle completo.
 
 ## Tests
 
