@@ -1,5 +1,7 @@
 .env
 deploy/env.produccion
+.agents/
+.claude/skills/agent-browser
 __pycache__/
 *.pyc
 .venv/
