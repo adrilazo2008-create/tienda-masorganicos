@@ -1,0 +1,24 @@
+<article class="card">
+  <a href="/producto/{{ p.id }}" class="card-img">
+    <img loading="lazy" src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}"
+         onerror="this.src='/static/img/sinfoto.svg'">
+    {% if p.destacado %}<span class="etq etq-dest">Destacado</span>{% endif %}
+    {% if p.poco_stock %}<span class="etq etq-stock">Pocas unidades</span>{% endif %}
+  </a>
+  <div class="card-body">
+    <h3><a href="/producto/{{ p.id }}">{{ p.nombre }}</a></h3>
+    {% if p.detalle %}<p class="card-det">{{ p.detalle|truncate(90) }}</p>{% endif %}
+    <p class="card-precio">{{ pesos(p.precio) }} <small>x {{ p.unidad }}</small></p>
+    <form class="card-add" hx-post="/carrito/agregar" hx-swap="none">
+      <input type="hidden" name="producto_id" value="{{ p.id }}">
+      <div class="cant">
+        <button type="button" onclick="stepCant(this,-1)" aria-label="Menos">−</button>
+        <input name="cantidad" value="1" inputmode="decimal"
+               data-step="{{ '0.25' if p.fraccionable else '1' }}" data-min="{{ '0.25' if p.fraccionable else '1' }}">
+        <button type="button" onclick="stepCant(this,1)" aria-label="Más">+</button>
+      </div>
+      <input class="obs" name="observacion" placeholder="Observación (opcional)" maxlength="191">
+      <button type="submit" class="btn-add">Agregar</button>
+    </form>
+  </div>
+</article>

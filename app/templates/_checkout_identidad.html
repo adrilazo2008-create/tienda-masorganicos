@@ -1,0 +1,22 @@
+{% if existe %}
+  <p class="ok-box">¡Hola de nuevo, {{ cliente_encontrado.nombre }}! Ya tenemos tus datos.</p>
+  <input type="hidden" name="nombre" value="{{ cliente_encontrado.nombre }}">
+  <input type="hidden" name="apellido" value="{{ cliente_encontrado.apellido }}">
+  <input type="hidden" name="email" value="{{ cliente_encontrado.email }}">
+  <details class="mini">
+    <summary>¿No sos {{ cliente_encontrado.nombre }}? Ingresá tus datos</summary>
+    <div class="grid2">
+      <div><label>Nombre</label><input name="nombre"></div>
+      <div><label>Apellido</label><input name="apellido"></div>
+    </div>
+    <label>Email</label><input type="email" name="email">
+  </details>
+{% else %}
+  <div class="grid2">
+    <div><label>Nombre</label><input name="nombre" required></div>
+    <div><label>Apellido</label><input name="apellido" required></div>
+  </div>
+  <label>Email</label><input type="email" name="email" placeholder="para enviarte el resumen">
+  <label>PIN de 4 dígitos <small>(opcional)</small></label>
+  <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="opcional">
+{% endif %}

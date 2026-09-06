@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<section class="hero">
+  <div class="hero-txt">
+    <h1>Comida real, del productor a tu casa</h1>
+    <p>Frutas y verduras agroecológicas + almacén natural. Envío a Zona Norte, GBA y CABA. Pagás cuando recibís.</p>
+    <div class="hero-cta">
+      <a href="/catalogo" class="btn-grande">Ver productos</a>
+      <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
+    </div>
+    <ul class="hero-conf">
+      <li>Agroecológico y orgánico</li>
+      <li>Sin pago online: pagás al recibir</li>
+      <li>Coordinamos la entrega por WhatsApp</li>
+    </ul>
+  </div>
+  {% if carrousel %}
+  <div class="hero-img">
+    <img src="{{ IMG_BASE }}/carrousel/{{ carrousel[0].imagen }}" alt="{{ carrousel[0].titulo }}"
+         onerror="this.closest('.hero-img').style.display='none'">
+  </div>
+  {% endif %}
+</section>
+
+{% if avisos %}
+<section class="avisos">
+  {% for a in avisos %}<div class="aviso">{{ a|safe }}</div>{% endfor %}
+</section>
+{% endif %}
+
+<section class="bloque">
+  <div class="bloque-cab"><h2>Productos destacados</h2><a href="/catalogo">Ver todo →</a></div>
+  <div class="grid">
+    {% for p in destacados %}{% include "_card.html" %}{% endfor %}
+  </div>
+</section>
+
+<section class="bloque categorias-home">
+  <h2>Comprá por categoría</h2>
+  <div class="cat-chips">
+    {% for c in categorias %}
+      <a href="/catalogo?categoria={{ c.id }}">{{ c.nombre|title }} <span>{{ c.n }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+
+<script src="/static/js/tienda.js"></script>
+{% endblock %}

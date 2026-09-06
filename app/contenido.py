@@ -1,0 +1,51 @@
+"""Contenido editable de la tienda (carrousel, textos, FAQ) — base de la tienda."""
+from __future__ import annotations
+
+from sqlalchemy import text
+
+from .db import engine_tienda
+
+
+def carrousel() -> list[dict]:
+    sql = """SELECT nombreImg, titulo, subtitulo, link, tituloLink
+             FROM carrousel WHERE activo = 1 ORDER BY id_imgCarousel"""
+    with engine_tienda.connect() as cx:
+        return [dict(imagen=r.nombreImg.strip(), titulo=(r.titulo or "").strip(),
+                     subtitulo=(r.subtitulo or "").strip(), link=(r.link or "").strip(),
+                     titulo_link=(r.tituloLink or "").strip())
+                for r in cx.execute(text(sql))]
+
+
+def avisos(limite: int = 2) -> list[str]:
+    """Textos de `genericos` (avisos de la home: feriados, mínimos de envío, etc.)."""
+    with engine_tienda.connect() as cx:
+        rows = cx.execute(text(
+            "SELECT texto FROM genericos WHERE activo = 1 ORDER BY id")).all()
+    textos = [r.texto.strip() for r in rows if (r.texto or "").strip()]
+    return textos[:limite]
+
+
+def faq() -> list[dict]:
+    sql = """
+        SELECT p.titulo AS pregunta, r.respuesta AS respuesta
+        FROM faq_preguntas p
+        JOIN faq_respuestas r ON r.id_faq_pregunta = p.id_faq_pregunta AND r.activo = 1
+        WHERE p.activo = 1
+        ORDER BY p.orden, p.id_faq_pregunta
+    """
+    with engine_tienda.connect() as cx:
+        return [dict(pregunta=r.pregunta.strip(), respuesta=r.respuesta.strip())
+                for r in cx.execute(text(sql))]
+
+
+def suscribir_newsletter(email: str) -> bool:
+    email = (email or "").strip().lower()
+    if "@" not in email:
+        return False
+    try:
+        with engine_tienda.begin() as cx:
+            cx.execute(text("INSERT IGNORE INTO newsletter (email, activo) VALUES (:e, 1)"),
+                       {"e": email})
+        return True
+    except Exception:
+        return False

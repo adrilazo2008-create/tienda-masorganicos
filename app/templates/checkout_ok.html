@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Pedido recibido — Más Orgánicos{% endblock %}
+{% block contenido %}
+
+<div class="ok-final">
+  {% if simulado %}
+    <h1>Resumen del pedido (modo prueba)</h1>
+    <p class="aviso">Este pedido <b>no se grabó</b>. Con <code>PERMITIR_ESCRIBIR_PEDIDOS=1</code> se registraría en el sistema del local.</p>
+  {% else %}
+    <h1>¡Pedido recibido!</h1>
+    <p>Tu número de pedido es <b>#{{ numero }}</b>. Te contactamos por WhatsApp para coordinar el día de entrega.</p>
+  {% endif %}
+
+  <div class="ok-caja">
+    <p><b>Cliente:</b> {{ cliente.nombre_completo }} · {{ cliente.telefono }}{% if cliente.email %} · {{ cliente.email }}{% endif %}</p>
+    <p><b>Entrega:</b>
+      {% if pedido.id_sucursal %}Retira en sucursal{% else %}Envío (zona #{{ pedido.id_zona_envio }}) · {{ pesos(pedido.precio_envio) }}{% endif %}
+    </p>
+    <p><b>Pago:</b> {{ 'Efectivo' if pedido.efectivo else 'Transferencia / tarjeta / MP (a coordinar)' }}</p>
+    {% if pedido.codigo_descuento %}<p><b>Código:</b> {{ pedido.codigo_descuento }}</p>{% endif %}
+    <table class="ok-items">
+      {% for it in pedido.items %}
+      <tr><td>{{ fmt_cantidad(it.cantidad) }}</td><td>#{{ it.producto_id }}</td><td>{{ pesos(it.precio_unitario) }}</td><td>{{ pesos(it.cantidad * it.precio_unitario) }}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="rr tot"><span>Subtotal</span><span>{{ pesos(pedido.subtotal()) }}</span></p>
+    <p class="rr tot"><span>Total</span><span>{{ pesos(pedido.total()) }}</span></p>
+  </div>
+
+  <a href="/catalogo" class="btn-grande">Seguir comprando</a>
+</div>
+{% endblock %}

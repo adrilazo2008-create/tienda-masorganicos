@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Preguntas frecuentes — Más Orgánicos{% endblock %}
+{% block contenido %}
+<h1>Preguntas frecuentes</h1>
+<div class="faq">
+  {% for f in faq %}
+  <details>
+    <summary>{{ f.pregunta }}</summary>
+    <div>{{ f.respuesta|safe }}</div>
+  </details>
+  {% endfor %}
+</div>
+{% endblock %}

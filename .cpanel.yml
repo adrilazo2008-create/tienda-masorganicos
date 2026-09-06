@@ -1,0 +1,9 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home3/iebbbhrt/public_html/claude2026/tienda
+    - /bin/mkdir -p $DEPLOYPATH/tmp
+    - /bin/cp -R app $DEPLOYPATH/
+    - /bin/cp passenger_wsgi.py $DEPLOYPATH/
+    - /bin/cp requirements.txt $DEPLOYPATH/
+    - /bin/touch $DEPLOYPATH/tmp/restart.txt

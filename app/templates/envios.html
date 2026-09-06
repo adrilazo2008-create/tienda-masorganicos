@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Zonas y costos de envío — Más Orgánicos{% endblock %}
+{% block contenido %}
+<h1>Zonas y costos de envío</h1>
+<p>Hacemos reparto a Zona Norte, GBA y CABA. El costo y la compra mínima dependen de tu zona.</p>
+
+<table class="tabla-zonas">
+  <thead><tr><th>Zona</th><th>Envío</th><th>Compra mínima</th><th>Envío gratis desde</th></tr></thead>
+  <tbody>
+  {% for z in zonas %}
+    <tr><td>{{ z.titulo }}</td><td>{{ pesos(z.precio) }}</td><td>{{ pesos(z.minimo_compra) }}</td><td>{{ pesos(z.envio_gratis) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Retiro en sucursal</h2>
+<ul class="sucursales">
+  {% for s in sucursales %}<li><b>{{ s.descripcion }}</b> — {{ s.direccion }} {{ s.altura }}, {{ s.ciudad }}</li>{% endfor %}
+</ul>
+<p class="chico">Otras zonas: consultanos por WhatsApp al 11 5504 6740.</p>
+{% endblock %}

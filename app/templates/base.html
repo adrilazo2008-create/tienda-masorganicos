@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Más Orgánicos — Almacén natural con envío{% endblock %}</title>
+<meta name="description" content="{% block descripcion %}Frutas, verduras agroecológicas y almacén natural con envío a Zona Norte, GBA y CABA. Comprá online, pagás al recibir.{% endblock %}">
+<link rel="stylesheet" href="/static/css/estilo.css">
+<script src="/static/js/htmx.min.js" defer></script>
+</head>
+<body>
+{% if entorno != 'production' %}<div class="banda-dev">entorno de prueba — los pedidos no se graban salvo que se active</div>{% endif %}
+
+<header class="cab">
+  <div class="cab-in">
+    <a href="/" class="logo"><img src="{{ IMG_BASE }}/logo/00.jpg" alt="Más Orgánicos" onerror="this.replaceWith(document.createTextNode('Más Orgánicos'))"></a>
+    <form action="/catalogo" method="get" class="buscador" role="search">
+      <input type="search" name="q" placeholder="Buscar productos…" value="{{ busqueda|default('') }}" aria-label="Buscar">
+      <button type="submit" aria-label="Buscar">🔍</button>
+    </form>
+    <nav class="cab-acc">
+      <a href="/cuenta" class="acc-cuenta">{{ cliente.nombre if cliente else 'Mi cuenta' }}</a>
+      <a href="/carrito" class="acc-carrito">Carrito <span id="carrito-badge" class="badge">{{ carrito_n }}</span></a>
+    </nav>
+  </div>
+  <nav class="menu">
+    <a href="/catalogo">Todo</a>
+    {% for c in categorias[:8] %}<a href="/catalogo?categoria={{ c.id }}">{{ c.nombre|title }}</a>{% endfor %}
+    <a href="/catalogo" class="menu-mas">+ categorías</a>
+  </nav>
+</header>
+
+<main class="cont">
+  {% block contenido %}{% endblock %}
+</main>
+
+<footer class="pie">
+  <div class="pie-in">
+    <div>
+      <h4>Más Orgánicos</h4>
+      <p>Almacén natural y verdulería agroecológica. Envíos a Zona Norte, GBA y CABA.</p>
+      <p>WhatsApp: <a href="https://wa.me/5491155046740">11 5504 6740</a></p>
+    </div>
+    <div>
+      <h4>Ayuda</h4>
+      <a href="/envios">Zonas y costos de envío</a>
+      <a href="/faq">Preguntas frecuentes</a>
+      <a href="/cuenta">Mis pedidos</a>
+    </div>
+    <div>
+      <h4>Novedades</h4>
+      <form hx-post="/newsletter" hx-target="#nl-res" hx-swap="innerHTML">
+        <input type="email" name="email" placeholder="Tu email" required>
+        <button type="submit">Suscribirme</button>
+      </form>
+      <div id="nl-res"></div>
+    </div>
+  </div>
+  <p class="pie-legal">Los precios y el stock se confirman al preparar el pedido. No se cobra en el sitio: pagás al recibir (efectivo, transferencia, débito, crédito, Cuenta DNI o Mercado Pago).</p>
+</footer>
+</body>
+</html>

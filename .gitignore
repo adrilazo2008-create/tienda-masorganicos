@@ -1,0 +1,10 @@
+.env
+deploy/env.produccion
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+_migracion/
+*.log
+.DS_Store

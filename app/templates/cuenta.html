@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Mi cuenta — Más Orgánicos{% endblock %}
+{% block contenido %}
+<div class="cuenta-cab">
+  <h1>Hola, {{ cliente.nombre }}</h1>
+  <a href="/cuenta/salir" class="btn-sec">Salir</a>
+</div>
+
+<section class="bloque">
+  <h2>Mis pedidos</h2>
+  {% if pedidos_cli %}
+  <table class="tabla-pedidos">
+    <thead><tr><th>#</th><th>Fecha</th><th>Estado</th><th>Items</th><th>Total</th></tr></thead>
+    <tbody>
+    {% for p in pedidos_cli %}
+      <tr><td>{{ p.id }}</td><td>{{ p.fecha.strftime('%d/%m/%Y') }}</td><td>{{ p.estado }}</td><td>{{ p.cantidad_items }}</td><td>{{ pesos(p.total) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="vacio">Todavía no tenés pedidos.</p>{% endif %}
+</section>
+
+<section class="bloque">
+  <h2>Mis direcciones</h2>
+  {% if direcciones %}
+  <ul class="lista-dir">
+    {% for d in direcciones %}<li>{{ d.direccion }} {{ d.altura }}, {{ d.localidad }} {% if d.principal %}<span class="tag">principal</span>{% endif %}</li>{% endfor %}
+  </ul>
+  {% else %}<p class="vacio">No tenés direcciones guardadas.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Más Orgánicos{% endblock %}
+{% block contenido %}
+
+<div class="cat-layout">
+  <aside class="cat-side">
+    <h3>Categorías</h3>
+    <a href="/catalogo" class="{{ 'act' if not categoria_actual and not busqueda }}">Todos</a>
+    {% for c in categorias %}
+      <a href="/catalogo?categoria={{ c.id }}" class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">
+        {{ c.nombre|title }} <span>{{ c.n }}</span>
+      </a>
+    {% endfor %}
+  </aside>
+
+  <section class="cat-main">
+    <h1>{{ titulo }}</h1>
+    <p class="cat-count">{{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
+    {% if productos %}
+      <div class="grid">
+        {% for p in productos %}{% include "_card.html" %}{% endfor %}
+      </div>
+    {% else %}
+      <p class="vacio">No encontramos productos. Probá con otra categoría o término.</p>
+    {% endif %}
+  </section>
+</div>
+
+<script src="/static/js/tienda.js"></script>
+{% endblock %}

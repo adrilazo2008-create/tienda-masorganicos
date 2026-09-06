@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Tu carrito — Más Orgánicos{% endblock %}
+{% block contenido %}
+
+<h1>Tu carrito</h1>
+
+{% if car.vacio %}
+  <p class="vacio">Todavía no agregaste nada. <a href="/catalogo">Ver productos →</a></p>
+{% else %}
+<div class="carrito">
+  <div class="carrito-lineas">
+    {% for l in car.lineas %}
+    <div class="cl">
+      <img src="{{ img_producto(l.producto.codigo) }}" alt="" onerror="this.src='/static/img/sinfoto.svg'">
+      <div class="cl-info">
+        <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
+        <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
+        {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
+      </div>
+      <form method="post" action="/carrito/actualizar" class="cl-cant">
+        <input type="hidden" name="indice" value="{{ l.indice }}">
+        <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal" onchange="this.form.submit()">
+        <span>{{ l.producto.unidad }}</span>
+      </form>
+      <span class="cl-sub">{{ pesos(l.subtotal) }}</span>
+      <form method="post" action="/carrito/quitar" class="cl-quitar">
+        <input type="hidden" name="indice" value="{{ l.indice }}">
+        <button type="submit" aria-label="Quitar">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <aside class="carrito-resumen">
+    <h2>Resumen</h2>
+    <p class="rr"><span>Subtotal</span><span>{{ pesos(car.subtotal) }}</span></p>
+    <p class="rr chico">El costo de envío se calcula en el próximo paso según tu zona.</p>
+    <a href="/checkout" class="btn-grande">Continuar</a>
+    <a href="/catalogo" class="btn-sec">Seguir comprando</a>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}
