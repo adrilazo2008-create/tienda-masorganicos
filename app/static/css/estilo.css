@@ -218,6 +218,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .err-box,.err{background:#fdecec;border:1px solid #e6b5b5;color:var(--rojo);border-radius:8px;padding:.5rem .8rem;font-size:.9rem}
 .mini summary{font-size:.82rem;color:var(--verde-osc);cursor:pointer}
 
+/* checkout: buscar zona por dirección */
+.busca-zona{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:8px;padding:.7rem .8rem;margin:0 0 .9rem}
+.busca-zona > label{display:block;font-weight:600;font-size:.9rem;margin-bottom:.4rem}
+.cz-row{display:flex;gap:.5rem}
+.cz-row input{flex:1;min-width:0;padding:.5rem .7rem;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff;color:var(--tinta)}
+.cz-row button{white-space:nowrap;background:var(--verde);color:#fff;border:0;border-radius:8px;padding:0 1rem;font-weight:600;cursor:pointer}
+.cz-row button:hover{background:var(--verde-osc)}
+.cz-row button:disabled{opacity:.6}
+#cz-msg{margin:.4rem 0 0}
+
 .ok-final{max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:1.5rem;text-align:center}
 .ok-num{color:var(--gris);margin:.2rem 0 1rem}
 .ok-wsp{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:var(--radio);padding:.9rem 1rem;text-align:left;font-size:.95rem;margin:0 0 1rem}

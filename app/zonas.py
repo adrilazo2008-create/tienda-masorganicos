@@ -72,6 +72,7 @@ def poligonos_geojson() -> dict:
             if "(" in titulo and ")" not in titulo:  # el varchar(45) cortó el paréntesis
                 titulo = titulo.split("(")[0].strip()
             props = {
+                "id_zona": z.id,
                 "titulo": titulo,
                 "precio": int(z.precio),
                 "precio_dia": int(z.precio_dia),

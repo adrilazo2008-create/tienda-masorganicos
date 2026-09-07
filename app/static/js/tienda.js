@@ -37,7 +37,78 @@ function recalcularEnvio(){
   var ei = document.getElementById('envio-info'); if (ei) ei.textContent = info;
 }
 function fmtPeso(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
-function iniciarCheckout(){ toggleEntrega(); }
+function iniciarCheckout(){ toggleEntrega(); iniciarBuscaZona(); }
+
+// checkout: buscar dirección -> autocompletar zona + calle/altura/localidad
+function iniciarBuscaZona(){
+  var inp = document.getElementById('cz-dir');
+  var btn = document.getElementById('cz-btn');
+  var msg = document.getElementById('cz-msg');
+  var sel = document.getElementById('sel-zona');
+  var form = document.getElementById('form-checkout');
+  if (!inp || !btn || !sel || !form || inp.dataset.listo) return;
+  inp.dataset.listo = '1';
+
+  var polis = [];
+  fetch('/envios/zonas.geojson').then(function(r){ return r.json(); }).then(function(geo){
+    (geo.features || []).forEach(function(f){
+      if (f.geometry && f.geometry.type === 'Polygon') polis.push(f);
+    });
+  }).catch(function(){});
+
+  function pip(x, y, ring){
+    var dentro = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++){
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) dentro = !dentro;
+    }
+    return dentro;
+  }
+  function tieneOpcion(v){
+    for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value == v) return true;
+    return false;
+  }
+
+  function buscar(){
+    var q = (inp.value || '').trim();
+    if (q.length < 4){ msg.textContent = 'Escribí tu dirección con la localidad.'; return; }
+    btn.disabled = true; btn.textContent = 'Buscando…';
+    var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=ar&q='
+      + encodeURIComponent(q + ', Buenos Aires, Argentina');
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || !d.length){
+          msg.textContent = 'No encontramos esa dirección. Completá los campos y elegí la zona en la lista.';
+          return;
+        }
+        var h = d[0], lat = parseFloat(h.lat), lng = parseFloat(h.lon), a = h.address || {};
+        if (a.road) form.direccion.value = a.road;
+        var nro = a.house_number || (q.match(/\b(\d{1,5})\b/) || [])[1];
+        if (nro) form.altura.value = nro;
+        var loc = a.city || a.town || a.village || a.suburb || a.city_district || a.municipality || '';
+        if (loc) form.localidad.value = loc;
+
+        var zid = 0;
+        for (var i = 0; i < polis.length; i++){
+          if (pip(lng, lat, polis[i].geometry.coordinates[0])){ zid = polis[i].properties.id_zona || 0; break; }
+        }
+        if (zid && tieneOpcion(zid)){
+          sel.value = String(zid);
+          recalcularEnvio();
+          var nombre = sel.options[sel.selectedIndex].text.split(' — ')[0];
+          msg.textContent = 'Zona detectada: ' + nombre + '. Revisá que sea correcta y ajustá si hace falta.';
+        } else {
+          msg.textContent = 'Completamos tu dirección, pero no pudimos detectar la zona — elegila en la lista.';
+        }
+      })
+      .catch(function(){ msg.textContent = 'No pudimos buscar ahora. Elegí la zona en la lista.'; })
+      .finally(function(){ btn.disabled = false; btn.textContent = 'Detectar'; });
+  }
+
+  btn.addEventListener('click', buscar);
+  inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); buscar(); } });
+}
 
 // toasts: quitar cada uno después de unos segundos
 document.body.addEventListener('htmx:afterSwap', function(e){

@@ -39,8 +39,17 @@
       <label class="radio"><input type="radio" name="entrega" value="retira" onchange="toggleEntrega()"> Retiro en sucursal</label>
 
       <div id="bloque-envio">
+        <div class="busca-zona">
+          <label for="cz-dir">Buscá tu dirección y detectamos la zona</label>
+          <div class="cz-row">
+            <input id="cz-dir" type="text" autocomplete="off" enterkeyhint="search"
+                   placeholder="Calle y altura, localidad">
+            <button type="button" id="cz-btn">Detectar</button>
+          </div>
+          <p class="chico" id="cz-msg" aria-live="polite"></p>
+        </div>
         <label>Zona
-          <select name="id_zona" onchange="recalcularEnvio()">
+          <select name="id_zona" id="sel-zona" onchange="recalcularEnvio()">
             <option value="0">Elegí tu zona…</option>
             {% for z in zonas %}
               <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}" data-min="{{ z.minimo_compra }}">
