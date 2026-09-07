@@ -2,34 +2,15 @@
 {% block contenido %}
 
 <section class="hero">
-  <div class="hero-txt">
-    <h1>Comida real, del productor a tu casa</h1>
-    <p>Frutas y verduras agroecológicas + almacén natural. Envío a Zona Norte, GBA y CABA. Pagás cuando recibís.</p>
-    <div class="hero-cta">
-      <a href="/catalogo" class="btn-grande">Ver productos</a>
-      <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
-    </div>
-    <ul class="hero-conf">
-      <li>Agroecológico y orgánico</li>
-      <li>Sin pago online: pagás al recibir</li>
-      <li>Coordinamos la entrega por WhatsApp</li>
-    </ul>
+  <p class="hero-eyebrow">Verdulería agroecológica · Almacén natural · Zona Norte, GBA y CABA</p>
+  <h1>Comida real, del productor a tu casa</h1>
+  <p class="hero-lead">Frutas y verduras de estación que cambian cada semana, elegidas junto a productores que cultivan sin agrotóxicos. Armás tu pedido, lo coordinamos por WhatsApp y pagás al recibir.</p>
+  <div class="hero-cta">
+    <a href="/catalogo" class="btn-grande">Ver productos</a>
+    <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
   </div>
-  {% if carrousel %}
-  <div class="hero-img">
-    <img src="{{ IMG_BASE }}/carrousel/{{ carrousel[0].imagen }}"
-         alt="{{ carrousel[0].titulo or 'Frutas y verduras agroecológicas de Más Orgánicos' }}"
-         width="1280" height="400" fetchpriority="high" decoding="async"
-         onerror="this.closest('.hero-img').style.display='none'">
-  </div>
-  {% endif %}
 </section>
 
-{% if avisos %}
-<section class="avisos">
-  {% for a in avisos %}<div class="aviso">{{ a|safe }}</div>{% endfor %}
-</section>
-{% endif %}
 
 <section class="bloque">
   <div class="bloque-cab"><h2>Productos destacados</h2><a href="/catalogo">Ver todo →</a></div>

@@ -5,7 +5,7 @@
          onerror="this.src='/static/img/sinfoto.svg'">
     {% if p.etiquetas %}
     <span class="etiquetas">
-      {% for e in p.etiquetas[:3] %}<img src="{{ img_etiqueta(e.archivo) }}" alt="{{ e.nombre }}" title="{{ e.nombre }}" width="26" height="26" loading="lazy">{% endfor %}
+      {% for e in p.etiquetas[:3] %}<img src="{{ img_etiqueta(e.archivo) }}" alt="{{ e.nombre }}" title="{{ e.nombre }}" width="28" height="28" decoding="async">{% endfor %}
     </span>
     {% endif %}
     {% if p.destacado %}<span class="etq etq-dest">Destacado</span>{% endif %}
