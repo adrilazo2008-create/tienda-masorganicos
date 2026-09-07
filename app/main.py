@@ -23,15 +23,30 @@ from .formato import pesos
 BASE_DIR = Path(__file__).resolve().parent
 S = get_settings()
 
+# Versión de los assets: cambia cuando cambian css/js -> rompe el caché del navegador.
+def _asset_ver() -> str:
+    try:
+        mt = max((BASE_DIR / "static" / p).stat().st_mtime
+                 for p in ("css/estilo.css", "js/tienda.js"))
+        return str(int(mt))
+    except OSError:
+        return "1"
+
+ASSET_VER = _asset_ver()
+
 app = FastAPI(title="Tienda MasOrgánicos")
 app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 30)
 
 
 @app.middleware("http")
-async def _no_cache(request: Request, call_next):
-    """El sitio es dinámico y por-sesión: que ningún proxy (NGINX/CDN) lo cachee."""
+async def _cache_headers(request: Request, call_next):
     resp = await call_next(request)
-    if "/static/" not in request.url.path and "/img/" not in request.url.path:
+    p = request.url.path
+    if p.startswith("/static/") or p.startswith("/img/"):
+        # las URLs de estáticos llevan ?v=... -> se pueden cachear fuerte
+        resp.headers["Cache-Control"] = "public, max-age=604800"
+    else:
+        # el HTML es dinámico y por-sesión: que ningún proxy lo cachee
         resp.headers["Cache-Control"] = "no-store, must-revalidate"
     return resp
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
@@ -45,6 +60,7 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 templates.env.globals["pesos"] = pesos
 templates.env.globals["fmt_cantidad"] = fmt_cantidad
 templates.env.globals["IMG_BASE"] = S.img_base_url
+templates.env.globals["V"] = ASSET_VER
 templates.env.globals["img_producto"] = (
     lambda codigo: f"{S.img_base_url}/producto/{codigo}.jpg" if codigo
     else "/static/img/sinfoto.svg"
