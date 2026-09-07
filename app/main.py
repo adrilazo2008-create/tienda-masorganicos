@@ -27,8 +27,7 @@ S = get_settings()
 def _asset_ver() -> str:
     try:
         mt = max((BASE_DIR / "static" / p).stat().st_mtime
-                 for p in ("css/estilo.css", "js/tienda.js",
-                           "js/verificador-zona.js", "data/zonas_reparto.geojson"))
+                 for p in ("css/estilo.css", "js/tienda.js", "js/verificador-zona.js"))
         return str(int(mt))
     except OSError:
         return "1"
@@ -147,6 +146,13 @@ def ver_faq(request: Request):
 @app.get("/envios", response_class=HTMLResponse)
 def ver_envios(request: Request):
     return render(request, "envios.html", zonas=zonas.zonas(), sucursales=zonas.sucursales())
+
+
+@app.get("/envios/zonas.geojson")
+def envios_geojson():
+    from fastapi.responses import JSONResponse
+    return JSONResponse(zonas.poligonos_geojson(),
+                        headers={"Cache-Control": "public, max-age=3600"})
 
 
 # --------------------------------------------------------------------------- carrito

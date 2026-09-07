@@ -17,7 +17,7 @@ function iniciarVerificadorZona() {
   var poligonos = [];      // array de arrays de [lng,lat]
   var capaZonas = null;
 
-  fetch(elMapa.dataset.geojson || '/static/data/zonas_reparto.geojson')
+  fetch(elMapa.dataset.geojson || '/envios/zonas.geojson')
     .then(function (r) { return r.json(); })
     .then(function (geo) {
       capaZonas = L.geoJSON(geo, {
@@ -125,10 +125,10 @@ function iniciarVerificadorZona() {
         p.push(linea);
       }
       if (zona.minimo) p.push('pedido mínimo ' + plata(zona.minimo));
-      if (zona.gratis) p.push('gratis desde ' + plata(zona.gratis));
+      if (zona.gratis) p.push('envío gratis desde ' + plata(zona.gratis));
       var detalle = p.length ? ' — ' + p.join(' · ') + '.' : '';
       mostrar('✅ ¡Sí, llegamos a tu zona!' + detalle +
-        ' Armá tu pedido y coordinamos el día y horario por WhatsApp.', 'ok');
+        ' El costo exacto se calcula al hacer el pedido; coordinamos día y horario por WhatsApp.', 'ok');
     } else {
       mostrar('Esa dirección quedó fuera de las zonas de reparto habituales. Escribinos por WhatsApp así lo confirmamos — a veces llegamos igual.', 'warn');
     }
