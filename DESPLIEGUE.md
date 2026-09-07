@@ -46,6 +46,26 @@ Editar `public_html/claude2026/tienda/.env` (por FTP o File Manager):
 cambiar `PERMITIR_ESCRIBIR_PEDIDOS=0` → `PERMITIR_ESCRIBIR_PEDIDOS=1`, y **REINICIAR** la app.
 Desde ese momento cada pedido confirmado se inserta en `grupos` + `transacciones` y lo levanta el VB6.
 
+## Cambiar los valores de envío
+
+Todos viven en **una sola tabla: `zonas`** (base `iebbbhrt_prueba_paginaweb`), columnas:
+
+| Columna | Qué es |
+|---|---|
+| `precio` | costo de envío normal |
+| `descuento` | % de descuento el día que se reparte esa zona |
+| `mim_compra` | compra mínima para despachar |
+| `envio_gratis` | subtotal a partir del cual el envío es gratis |
+| `titulo` / `activo` | nombre y si está vigente |
+
+Editar por **cPanel → phpMyAdmin → tabla `zonas`**, o pedirle a Claude
+("cambiá el envío de Pacheco a $X"). El cambio se refleja solo en: la tabla de
+`/envios`, el cálculo del checkout, y el verificador de zona ("¿llegamos a tu zona?").
+
+El **mapa de Google (My Maps)** ahora solo define las **formas** de las zonas.
+Si se redibuja una zona ahí, hay que re-exportar los polígonos a
+`app/data/zonas_poligonos.json` (script en `_handoff/` o pedirle a Claude).
+
 ## Pendientes menores
 
 - Borrar 2 filas de prueba en la base (usuario `ClaudeTest`): ver HALLAZGOS_SESION_2.md §8.5.
