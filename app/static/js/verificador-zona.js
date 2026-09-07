@@ -45,28 +45,47 @@ function iniciarVerificadorZona() {
   var btn = form.querySelector('button');
   var res = document.getElementById('zona-resultado');
 
+  function geocodificar(q) {
+    var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q='
+      + encodeURIComponent(q);
+    return fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { return (d && d.length) ? d[0] : null; });
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var q = (input.value || '').trim();
     if (q.length < 4) { mostrar('Escribí tu dirección con la localidad.', 'warn'); return; }
     btn.disabled = true; btn.textContent = 'Buscando…';
-    var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q='
-      + encodeURIComponent(q + ', Buenos Aires, Argentina');
-    fetch(url, { headers: { 'Accept': 'application/json' } })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (!data || !data.length) {
-          mostrar('No encontramos esa dirección. Probá con calle, altura y localidad, o movés el pin a mano.', 'warn');
-          ponerPin(CENTRO[0], CENTRO[1], true);
+
+    var conPais = q + ', Buenos Aires, Argentina';
+    var sinAltura = q.replace(/\s*\d+\s*/, ' ').replace(/\s+/g, ' ').trim() + ', Buenos Aires, Argentina';
+
+    geocodificar(conPais)
+      .then(function (hit) {
+        if (hit) {
+          var lat = parseFloat(hit.lat), lng = parseFloat(hit.lon);
+          ponerPin(lat, lng, false);
+          mapa.setView([lat, lng], 14);
+          evaluar(lat, lng);
           return;
         }
-        var lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
-        ponerPin(lat, lng, false);
-        mapa.setView([lat, lng], 14);
-        evaluar(lat, lng);
+        // sin resultado exacto -> probar solo con la calle y la localidad
+        return geocodificar(sinAltura).then(function (calle) {
+          if (calle) {
+            var la = parseFloat(calle.lat), lo = parseFloat(calle.lon);
+            ponerPin(la, lo, false);
+            mapa.setView([la, lo], 14);
+            mostrar('Encontramos la calle pero no la altura exacta. Arrastrá el pin hasta tu casa y te confirmo.', 'warn');
+          } else {
+            mostrar('No encontramos esa dirección. Arrastrá el pin hasta tu casa, o escribinos por WhatsApp.', 'warn');
+            ponerPin(CENTRO[0], CENTRO[1], true);
+          }
+        });
       })
       .catch(function () {
-        mostrar('No pudimos verificar ahora. Movés el pin a tu casa o escribinos por WhatsApp.', 'warn');
+        mostrar('No pudimos verificar ahora. Arrastrá el pin hasta tu casa o escribinos por WhatsApp.', 'warn');
         ponerPin(CENTRO[0], CENTRO[1], true);
       })
       .finally(function () { btn.disabled = false; btn.textContent = 'Verificar'; });
