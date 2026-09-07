@@ -3,19 +3,14 @@
 {% block contenido %}
 <div class="login-box">
   <h1>Mis pedidos</h1>
-  <p>Ingresá con tu celular y el PIN que elegiste al comprar.</p>
+  <p>Ingresá con el celular que usaste al comprar.</p>
   {% if error %}<p class="err-box" tabindex="-1" id="login-error">{{ error }}</p>{% endif %}
   <form method="post" action="/cuenta/entrar">
     <label>Celular
       <input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required>
     </label>
-    <label>PIN de 4 dígitos
-      <input name="pin" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}"
-             autocomplete="current-password" spellcheck="false" required>
-    </label>
-    <button type="submit" class="btn-grande">Entrar</button>
+    <button type="submit" class="btn-grande">Ver mis pedidos</button>
   </form>
-  <p class="chico">¿No pusiste PIN? Pronto vas a poder recibir un código por WhatsApp. Mientras tanto, escribinos.</p>
 </div>
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 {% endblock %}

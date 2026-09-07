@@ -194,17 +194,21 @@ def checkout(request: Request):
 @app.post("/checkout/identificar", response_class=HTMLResponse)
 def checkout_identificar(request: Request, telefono: str = Form(...)):
     c = clientes.buscar_por_telefono(telefono)
+    dir_ppal = None
     if c:
         request.session["checkout_cliente_id"] = c.id
+        dirs = clientes.direcciones(c.id)
+        dir_ppal = dirs[0] if dirs else None
     return render(request, "_checkout_identidad.html",
-                  existe=c is not None, cliente_encontrado=c, telefono=telefono)
+                  existe=c is not None, cliente_encontrado=c, telefono=telefono,
+                  direccion_ppal=dir_ppal)
 
 
 @app.post("/checkout/confirmar", response_class=HTMLResponse)
 def checkout_confirmar(
     request: Request,
     nombre: str = Form(""), apellido: str = Form(""),
-    telefono: str = Form(...), email: str = Form(""), pin: str = Form(""),
+    telefono: str = Form(...), email: str = Form(""),
     entrega: str = Form("envio"),
     id_zona: int = Form(0), id_sucursal: int = Form(0),
     direccion: str = Form(""), altura: str = Form(""), localidad: str = Form(""),
@@ -233,15 +237,15 @@ def checkout_confirmar(
     if graba:
         if cli:
             clientes.actualizar(cli.id, nombre=nombre or None, apellido=apellido or None,
-                                email=email or None, pin=pin or None)
+                                email=email or None)
             cli = clientes.obtener(cli.id)
         else:
-            cli = clientes.crear(nombre, apellido, telefono, email, pin or None)
+            cli = clientes.crear(nombre, apellido, telefono, email)
     elif not cli:
         # modo prueba y cliente nuevo: cliente ficticio, no se escribe
         cli = clientes.Cliente(id=0, nombre=nombre or "Cliente", apellido=apellido or "",
                                telefono=clientes.normalizar_telefono(telefono),
-                               email=email, tiene_pin=bool(pin))
+                               email=email, tiene_pin=False)
 
     id_dir, id_zona_envio, precio_envio = 0, 0, Decimal("0.00")
     if entrega == "retira":
@@ -289,13 +293,13 @@ def cuenta(request: Request):
 
 
 @app.post("/cuenta/entrar", response_class=HTMLResponse)
-def cuenta_entrar(request: Request, telefono: str = Form(...), pin: str = Form("")):
+def cuenta_entrar(request: Request, telefono: str = Form(...)):
     c = clientes.buscar_por_telefono(telefono)
-    if c and c.tiene_pin and clientes.verificar_pin(c.id, pin):
+    if c:
         request.session["cliente_id"] = c.id
         return RedirectResponse("/cuenta", status_code=303)
     return render(request, "cuenta_login.html",
-                  error="Celular o PIN incorrecto. (El acceso por código llega pronto.)")
+                  error="No encontramos pedidos con ese celular. Revisá el número o hacé tu primer pedido.")
 
 
 @app.get("/cuenta/salir")

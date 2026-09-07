@@ -20,6 +20,7 @@
                required placeholder="11 5504 6740"
                hx-post="/checkout/identificar" hx-trigger="change" hx-target="#identidad" hx-include="this">
       </label>
+      <p class="chico">Con tu celular te reconocemos la próxima vez. Coordinamos todo por WhatsApp.</p>
       <div id="identidad" aria-live="polite">
         <div class="grid2">
           <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
@@ -27,11 +28,7 @@
         </div>
         <label>Email
           <input type="email" name="email" autocomplete="email" spellcheck="false"
-                 placeholder="para enviarte el resumen">
-        </label>
-        <label>PIN de 4 dígitos <small>(opcional — para ver tus pedidos la próxima vez)</small>
-          <input name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}"
-                 autocomplete="off" spellcheck="false" placeholder="opcional">
+                 placeholder="para enviarte el resumen (opcional)">
         </label>
       </div>
     </fieldset>

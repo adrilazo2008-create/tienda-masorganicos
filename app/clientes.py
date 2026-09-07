@@ -1,9 +1,8 @@
 """Clientes de la tienda (tabla `users` en iebbbhrt_prueba_paginaweb).
 
-Identificación de baja fricción:
-- El cliente se identifica por celular (o email).
-- PIN de 4 dígitos OPCIONAL. Se guarda hasheado en `users.password` (la columna ya existe).
-- Si no pone PIN, para ver su historial se usa un código de un solo uso (OTP) -> otro módulo.
+Identificación de baja fricción: el cliente se identifica SOLO por celular. No hay
+contraseña ni PIN; todo se coordina después por WhatsApp. `hash_pin` / `verificar_pin`
+quedan por si en el futuro se quiere proteger "Mis pedidos" con un código.
 
 El sistema de escritorio (VB6) busca al cliente en el ERP por `users.telefono` y luego por
 `users.email`. Por eso lo único importante es dejar esos dos campos bien cargados.
