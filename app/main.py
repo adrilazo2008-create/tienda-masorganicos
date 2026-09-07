@@ -49,6 +49,10 @@ templates.env.globals["img_producto"] = (
     lambda codigo: f"{S.img_base_url}/producto/{codigo}.jpg" if codigo
     else "/static/img/sinfoto.svg"
 )
+templates.env.globals["img_etiqueta"] = (
+    lambda archivo: f"{S.img_base_url}/etiquetas/{archivo}"
+)
+templates.env.globals["WHATSAPP"] = "5491155046740"
 
 
 def _cliente_actual(request: Request):
@@ -59,7 +63,7 @@ def _cliente_actual(request: Request):
 def ctx(request: Request, **extra):
     car = carrito_mod.resolver(request.session)
     base = dict(
-        categorias=catalogo.categorias(),
+        rubros=catalogo.rubros(),
         carrito_n=car.cantidad_items,
         cliente=_cliente_actual(request),
         entorno=S.entorno,
@@ -83,12 +87,29 @@ def home(request: Request):
 
 
 @app.get("/catalogo", response_class=HTMLResponse)
-def ver_catalogo(request: Request, categoria: Optional[int] = None, q: Optional[str] = None):
-    productos = catalogo.listar(categoria_id=categoria, busqueda=q)
-    cat_actual = next((c for c in catalogo.categorias() if c["id"] == categoria), None)
-    titulo = cat_actual["nombre"] if cat_actual else (f'"{q}"' if q else "Todos los productos")
-    return render(request, "catalogo.html", productos=productos,
-                  categoria_actual=cat_actual, busqueda=q or "", titulo=titulo)
+def ver_catalogo(request: Request, categoria: Optional[int] = None,
+                 rubro: Optional[int] = None, q: Optional[str] = None):
+    productos = catalogo.listar(categoria_id=categoria, rubro_id=rubro, busqueda=q)
+    rubros = catalogo.rubros()
+    rubro_actual = next((r for r in rubros if r["id"] == rubro), None)
+    cat_actual = None
+    if categoria:
+        for r in rubros:
+            cat_actual = next((c for c in r["categorias"] if c["id"] == categoria), None)
+            if cat_actual:
+                rubro_actual = r
+                break
+    if cat_actual:
+        titulo = cat_actual["nombre"]
+    elif rubro_actual:
+        titulo = rubro_actual["nombre"]
+    elif q:
+        titulo = f'“{q}”'
+    else:
+        titulo = "Todos los productos"
+    return render(request, "catalogo.html", productos=productos, rubros=rubros,
+                  rubro_actual=rubro_actual, categoria_actual=cat_actual,
+                  busqueda=q or "", titulo=titulo)
 
 
 @app.get("/producto/{producto_id}", response_class=HTMLResponse)

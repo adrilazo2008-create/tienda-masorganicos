@@ -4,25 +4,38 @@
 
 <div class="cat-layout">
   <aside class="cat-side">
-    <h3>Categorías</h3>
-    <a href="/catalogo" class="{{ 'act' if not categoria_actual and not busqueda }}">Todos</a>
-    {% for c in categorias %}
-      <a href="/catalogo?categoria={{ c.id }}" class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">
-        {{ c.nombre|title }} <span>{{ c.n }}</span>
+    <h2>Comprá por rubro</h2>
+    <a href="/catalogo" class="{{ 'act' if not rubro_actual and not busqueda }}">Todos los productos</a>
+    {% for r in rubros %}
+      <a href="/catalogo?rubro={{ r.id }}" class="rubro {{ 'act' if rubro_actual and rubro_actual.id == r.id and not categoria_actual }}">
+        {{ r.nombre }} <span>{{ r.n }}</span>
       </a>
+      {% if rubro_actual and rubro_actual.id == r.id %}
+        <div class="subcats">
+          {% for c in r.categorias %}
+            <a href="/catalogo?categoria={{ c.id }}" class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">
+              {{ c.nombre }} <span>{{ c.n }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endfor %}
   </aside>
 
   <section class="cat-main">
     <h1>{{ titulo }}</h1>
-    <p class="cat-count num">{{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
+    {% if rubro_actual and categoria_actual %}
+      <p class="cat-count"><a href="/catalogo?rubro={{ rubro_actual.id }}">← {{ rubro_actual.nombre }}</a> · {{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
+    {% else %}
+      <p class="cat-count num">{{ productos|length }} producto{{ 's' if productos|length != 1 }}</p>
+    {% endif %}
     {% if productos %}
       <h2 class="sr-only">Lista de productos</h2>
       <div class="grid">
         {% for p in productos %}{% include "_card.html" %}{% endfor %}
       </div>
     {% else %}
-      <p class="vacio">No encontramos productos. Probá con otra categoría o término.</p>
+      <p class="vacio">No encontramos productos. Probá con otro rubro o término.</p>
     {% endif %}
   </section>
 </div>

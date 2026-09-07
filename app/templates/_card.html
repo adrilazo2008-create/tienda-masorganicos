@@ -3,6 +3,11 @@
     <img loading="lazy" decoding="async" width="400" height="400"
          src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}"
          onerror="this.src='/static/img/sinfoto.svg'">
+    {% if p.etiquetas %}
+    <span class="etiquetas">
+      {% for e in p.etiquetas[:3] %}<img src="{{ img_etiqueta(e.archivo) }}" alt="{{ e.nombre }}" title="{{ e.nombre }}" width="26" height="26" loading="lazy">{% endfor %}
+    </span>
+    {% endif %}
     {% if p.destacado %}<span class="etq etq-dest">Destacado</span>{% endif %}
     {% if p.poco_stock %}<span class="etq etq-stock">Pocas unidades</span>{% endif %}
   </a>

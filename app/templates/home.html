@@ -38,11 +38,14 @@
   </div>
 </section>
 
-<section class="bloque categorias-home">
-  <h2>Comprá por categoría</h2>
-  <div class="cat-chips">
-    {% for c in categorias %}
-      <a href="/catalogo?categoria={{ c.id }}">{{ c.nombre|title }} <span>{{ c.n }}</span></a>
+<section class="bloque rubros-home">
+  <h2>Nuestros rubros</h2>
+  <div class="rubros-grid">
+    {% for r in rubros %}
+      <a href="/catalogo?rubro={{ r.id }}">
+        <strong>{{ r.nombre }}</strong>
+        <span>{{ r.n }} producto{{ 's' if r.n != 1 }}</span>
+      </a>
     {% endfor %}
   </div>
 </section>

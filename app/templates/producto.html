@@ -4,13 +4,21 @@
 {% block contenido %}
 
 <nav class="miga" aria-label="Ruta de navegación">
-  <a href="/catalogo">Productos</a> / <a href="/catalogo?categoria={{ p.categoria_id }}">{{ p.categoria|title }}</a> / <span aria-current="page">{{ p.nombre }}</span>
+  <a href="/catalogo">Productos</a>
+  / <a href="/catalogo?rubro={{ p.rubro_id }}">{{ p.rubro }}</a>
+  / <a href="/catalogo?categoria={{ p.categoria_id }}">{{ p.categoria }}</a>
+  / <span aria-current="page">{{ p.nombre }}</span>
 </nav>
 
 <div class="prod">
   <div class="prod-img">
     <img src="{{ img_producto(p.codigo) }}" alt="{{ p.nombre }}" width="600" height="600"
          fetchpriority="high" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
+    {% if p.etiquetas %}
+    <span class="etiquetas etiquetas-grande">
+      {% for e in p.etiquetas %}<img src="{{ img_etiqueta(e.archivo) }}" alt="{{ e.nombre }}" title="{{ e.nombre }}" width="34" height="34" loading="lazy">{% endfor %}
+    </span>
+    {% endif %}
     {% if p.poco_stock %}<p class="alerta-stock" role="status">Pocas unidades — sujeto a confirmación al preparar el pedido</p>{% endif %}
   </div>
   <div class="prod-info">
