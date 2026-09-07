@@ -17,7 +17,7 @@ function iniciarVerificadorZona() {
   var poligonos = [];      // array de arrays de [lng,lat]
   var capaZonas = null;
 
-  fetch('/static/data/zonas_reparto.geojson')
+  fetch(elMapa.dataset.geojson || '/static/data/zonas_reparto.geojson')
     .then(function (r) { return r.json(); })
     .then(function (geo) {
       capaZonas = L.geoJSON(geo, {
@@ -26,7 +26,7 @@ function iniciarVerificadorZona() {
       try { mapa.fitBounds(capaZonas.getBounds().pad(0.05)); } catch (e) {}
       (geo.features || []).forEach(function (f) {
         if (f.geometry && f.geometry.type === 'Polygon') {
-          poligonos.push(f.geometry.coordinates[0]);
+          poligonos.push({ anillo: f.geometry.coordinates[0], props: f.properties || {} });
         }
       });
     })
@@ -105,11 +105,30 @@ function iniciarVerificadorZona() {
     }
   }
 
+  function plata(n) {
+    return '$' + (n || 0).toLocaleString('es-AR');
+  }
+
   function evaluar(lat, lng) {
     if (!poligonos.length) return;
-    var dentro = poligonos.some(function (anillo) { return puntoEnPoligono(lng, lat, anillo); });
-    if (dentro) {
-      mostrar('✅ ¡Sí, llegamos a tu zona! Armá tu pedido y coordinamos el día y horario de entrega por WhatsApp.', 'ok');
+    var zona = null;
+    for (var i = 0; i < poligonos.length; i++) {
+      if (puntoEnPoligono(lng, lat, poligonos[i].anillo)) { zona = poligonos[i].props; break; }
+    }
+    if (zona) {
+      var p = [];
+      if (zona.precio) {
+        var linea = 'envío aprox. ' + plata(zona.precio);
+        if (zona.precio_dia && zona.precio_dia < zona.precio) {
+          linea += ' (' + plata(zona.precio_dia) + ' el día que repartimos tu zona)';
+        }
+        p.push(linea);
+      }
+      if (zona.minimo) p.push('pedido mínimo ' + plata(zona.minimo));
+      if (zona.gratis) p.push('gratis desde ' + plata(zona.gratis));
+      var detalle = p.length ? ' — ' + p.join(' · ') + '.' : '';
+      mostrar('✅ ¡Sí, llegamos a tu zona!' + detalle +
+        ' Armá tu pedido y coordinamos el día y horario por WhatsApp.', 'ok');
     } else {
       mostrar('Esa dirección quedó fuera de las zonas de reparto habituales. Escribinos por WhatsApp así lo confirmamos — a veces llegamos igual.', 'warn');
     }
