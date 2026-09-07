@@ -27,7 +27,8 @@ S = get_settings()
 def _asset_ver() -> str:
     try:
         mt = max((BASE_DIR / "static" / p).stat().st_mtime
-                 for p in ("css/estilo.css", "js/tienda.js"))
+                 for p in ("css/estilo.css", "js/tienda.js",
+                           "js/verificador-zona.js", "data/zonas_reparto.geojson"))
         return str(int(mt))
     except OSError:
         return "1"

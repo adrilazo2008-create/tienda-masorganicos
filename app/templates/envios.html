@@ -4,6 +4,19 @@
 <h1>Zonas y costos de envío</h1>
 <p>Hacemos reparto a Zona Norte, GBA y CABA. El costo y la compra mínima dependen de tu zona.</p>
 
+<section class="verificador">
+  <h2>¿Llegamos a tu zona?</h2>
+  <p class="chico">Escribí tu dirección y te decimos si entra en el reparto. Podés arrastrar el pin para ajustarlo.</p>
+  <form id="form-zona" class="verif-form" autocomplete="off">
+    <input id="dir-zona" name="dir" type="text" enterkeyhint="search"
+           placeholder="Calle y altura, localidad — ej: Av. Cazón 1200, Tigre" aria-label="Tu dirección">
+    <button type="submit" class="btn-grande">Verificar</button>
+  </form>
+  <p id="zona-resultado" class="verif-res" role="status" aria-live="polite" hidden></p>
+  <div id="mapa-zonas" class="mapa-zonas" aria-label="Mapa de zonas de reparto"></div>
+  <p class="chico"><a href="https://www.google.com/maps/d/viewer?mid=1Ahux9u3kGYceEBntxn-AFNpf8E2UYfU" target="_blank" rel="noopener">Ver el mapa completo de zonas</a></p>
+</section>
+
 <div class="tabla-scroll">
   <table class="tabla-zonas">
     <caption class="sr-only">Costo de envío, compra mínima y umbral de envío gratis por zona</caption>
@@ -20,5 +33,10 @@
 <ul class="sucursales">
   {% for s in sucursales %}<li><b>{{ s.descripcion }}</b> — {{ s.direccion }} {{ s.altura }}, {{ s.ciudad }}</li>{% endfor %}
 </ul>
-<p class="chico">Otras zonas: consultanos por WhatsApp al 11 5504 6740.</p>
+<p class="chico">¿Tu zona no aparece o el pin quedó justo en el borde? Escribinos por WhatsApp al
+  <a href="https://wa.me/{{ WHATSAPP }}" target="_blank" rel="noopener">11 5504 6740</a> y lo confirmamos.</p>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<script defer src="/static/js/verificador-zona.js?v={{ V }}"></script>
 {% endblock %}

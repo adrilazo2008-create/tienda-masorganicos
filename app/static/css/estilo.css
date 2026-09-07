@@ -228,6 +228,20 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .ok-items td{padding:.2rem;border-bottom:1px solid var(--linea)}
 
 /* tablas varias */
+/* verificador de zona (/envios) */
+.verificador{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:1.2rem;margin:1.2rem 0 1.6rem}
+.verificador h2{margin:0 0 .3rem}
+.verif-form{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+.verif-form input{flex:1;min-width:200px;padding:.6rem .8rem;border:1px solid var(--linea);border-radius:8px;font-size:1rem;font-family:inherit;background:#fff;color:var(--tinta)}
+.verif-form button{white-space:nowrap}
+.verif-res{margin:.4rem 0 .8rem;padding:.7rem .9rem;border-radius:8px;font-size:.95rem;line-height:1.45}
+.verif-ok{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc)}
+.verif-warn{background:#fdf6e7;border:1px solid #efe0bd;color:#7a5a1e}
+.mapa-zonas{height:340px;border-radius:10px;overflow:hidden;border:1px solid var(--linea);z-index:0}
+.mapa-zonas .leaflet-container{font:inherit}
+.pin-zona span{display:block;width:20px;height:20px;border-radius:50% 50% 50% 0;background:var(--rojo);
+  border:2px solid #fff;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.4);margin:3px}
+
 .tabla-zonas,.tabla-pedidos{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden;font-size:.9rem}
 .tabla-zonas th,.tabla-pedidos th{background:var(--verde);color:#fff;text-align:left;padding:.5rem}
 .tabla-zonas td,.tabla-pedidos td{padding:.5rem;border-top:1px solid var(--linea)}
