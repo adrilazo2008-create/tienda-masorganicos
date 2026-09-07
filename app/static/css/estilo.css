@@ -220,6 +220,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .mini summary{font-size:.82rem;color:var(--verde-osc);cursor:pointer}
 
 .ok-final{max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:1.5rem;text-align:center}
+.ok-num{color:var(--gris);margin:.2rem 0 1rem}
+.ok-wsp{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:var(--radio);padding:.9rem 1rem;text-align:left;font-size:.95rem;margin:0 0 1rem}
+.ok-wsp-btn{background:#25d366;margin-bottom:1rem}
+.ok-wsp-btn:hover{background:#1fb457}
 .ok-caja{text-align:left;background:var(--crema);border-radius:var(--radio);padding:1rem;margin:1rem 0}
 .ok-items{width:100%;font-size:.85rem;border-collapse:collapse;margin:.5rem 0}
 .ok-items td{padding:.2rem;border-bottom:1px solid var(--linea)}

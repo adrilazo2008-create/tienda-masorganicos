@@ -3,12 +3,15 @@
 {% block contenido %}
 
 <div class="ok-final">
+  <h1>¡Pedido recibido! 🌱</h1>
+  {% if numero %}<p class="ok-num">Tu número de pedido es <b>#{{ numero }}</b>.</p>{% endif %}
+  <p class="ok-wsp">
+    <b>Te vamos a escribir por WhatsApp</b> para confirmar disponibilidad y coordinar el día y horario de entrega.
+    No hace falta que pagues nada ahora: se abona al recibir el pedido.
+  </p>
+  <a class="btn-grande ok-wsp-btn" href="https://wa.me/{{ WHATSAPP }}" target="_blank" rel="noopener">Escribir por WhatsApp ahora</a>
   {% if simulado %}
-    <h1>Resumen del pedido (modo prueba)</h1>
-    <p class="aviso">Este pedido <b>no se grabó</b>. Con <code>PERMITIR_ESCRIBIR_PEDIDOS=1</code> se registraría en el sistema del local.</p>
-  {% else %}
-    <h1>¡Pedido recibido!</h1>
-    <p>Tu número de pedido es <b>#{{ numero }}</b>. Te contactamos por WhatsApp para coordinar el día de entrega.</p>
+    <p class="aviso">Modo prueba: este pedido <b>no se grabó</b> en el sistema del local.</p>
   {% endif %}
 
   <div class="ok-caja">
