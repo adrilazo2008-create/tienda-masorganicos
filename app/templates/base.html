@@ -31,17 +31,14 @@
              aria-label="Buscar productos" autocomplete="off" enterkeyhint="search">
       <button type="submit" aria-label="Buscar"><span aria-hidden="true">🔍</span></button>
     </form>
-    <nav class="cab-acc" aria-label="Tu cuenta y carrito">
+    <nav class="cab-acc" aria-label="Navegación principal">
+      <a href="/catalogo" class="acc-prod">Productos</a>
       <a href="/cuenta" class="acc-cuenta">{{ cliente.nombre if cliente else 'Mi cuenta' }}</a>
       <a href="/carrito" class="acc-carrito">Carrito
         <span id="carrito-badge" class="badge" aria-live="polite" aria-label="{{ carrito_n }} productos en el carrito">{{ carrito_n }}</span>
       </a>
     </nav>
   </div>
-  <nav class="menu" aria-label="Rubros">
-    <a href="/catalogo">Todo</a>
-    {% for r in rubros %}<a href="/catalogo?rubro={{ r.id }}">{{ r.nombre }}</a>{% endfor %}
-  </nav>
 </header>
 
 <main class="cont" id="contenido">

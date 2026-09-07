@@ -50,6 +50,44 @@ document.body.addEventListener('htmx:afterSwap', function(e){
   }
 });
 
+// carrusel de la home: scroll-snap + auto-avance + dots
+document.addEventListener('DOMContentLoaded', function(){
+  var track = document.getElementById('carrusel-track');
+  if (!track) return;
+  var car = track.closest('.carrusel');
+  var slides = track.children;
+  var dots = car.querySelectorAll('.carrusel-dots button');
+  var i = 0, timer = null;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function ir(n){
+    i = (n + slides.length) % slides.length;
+    track.scrollTo({ left: slides[i].offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+    dots.forEach(function(d, k){ d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+  }
+  function arrancar(){ if (!reduce) timer = setInterval(function(){ ir(i + 1); }, 5000); }
+  function parar(){ clearInterval(timer); }
+
+  car.querySelector('.carrusel-nav.prev').addEventListener('click', function(){ ir(i - 1); parar(); arrancar(); });
+  car.querySelector('.carrusel-nav.next').addEventListener('click', function(){ ir(i + 1); parar(); arrancar(); });
+  dots.forEach(function(d, k){ d.addEventListener('click', function(){ ir(k); parar(); arrancar(); }); });
+
+  // sincronizar dots cuando el usuario hace swipe
+  var st;
+  track.addEventListener('scroll', function(){
+    clearTimeout(st);
+    st = setTimeout(function(){
+      var n = Math.round(track.scrollLeft / track.clientWidth);
+      if (n !== i){ i = n; dots.forEach(function(d, k){ d.setAttribute('aria-selected', k === i ? 'true' : 'false'); }); }
+    }, 120);
+  });
+
+  car.addEventListener('mouseenter', parar);
+  car.addEventListener('mouseleave', arrancar);
+  car.addEventListener('focusin', parar);
+  arrancar();
+});
+
 // checkout: evitar doble submit y hacer foco en el primer error
 document.addEventListener('DOMContentLoaded', function(){
   var f = document.getElementById('form-checkout');

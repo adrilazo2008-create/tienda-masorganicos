@@ -2,6 +2,24 @@
 {% block title %}{{ titulo }} — Más Orgánicos{% endblock %}
 {% block contenido %}
 
+<nav class="rubros-chips" aria-label="Rubros">
+  <a href="/catalogo" class="{{ 'act' if not rubro_actual and not busqueda }}">Todo</a>
+  {% for r in rubros %}
+    <a href="/catalogo?rubro={{ r.id }}"
+       class="{{ 'act' if rubro_actual and rubro_actual.id == r.id }}">{{ r.nombre }}</a>
+  {% endfor %}
+</nav>
+{% if rubro_actual and rubro_actual.categorias|length > 1 %}
+<nav class="rubros-chips subcats-chips" aria-label="Categorías de {{ rubro_actual.nombre }}">
+  <a href="/catalogo?rubro={{ rubro_actual.id }}"
+     class="{{ 'act' if not categoria_actual }}">Todo {{ rubro_actual.nombre }}</a>
+  {% for c in rubro_actual.categorias %}
+    <a href="/catalogo?categoria={{ c.id }}"
+       class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">{{ c.nombre }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
 <div class="cat-layout">
   <aside class="cat-side">
     <h2>Comprá por rubro</h2>

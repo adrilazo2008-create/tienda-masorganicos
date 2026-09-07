@@ -2,12 +2,39 @@
 {% block contenido %}
 
 <section class="hero">
-  <p class="hero-eyebrow">Verdulería agroecológica · Almacén natural · Zona Norte, GBA y CABA</p>
-  <h1>Comida real, del productor a tu casa</h1>
-  <p class="hero-lead">Frutas y verduras de estación que cambian cada semana, elegidas junto a productores que cultivan sin agrotóxicos. Armás tu pedido, lo coordinamos por WhatsApp y pagás al recibir.</p>
-  <div class="hero-cta">
-    <a href="/catalogo" class="btn-grande">Ver productos</a>
-    <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
+  <div class="carrusel" aria-roledescription="carrusel" aria-label="Novedades">
+    <div class="carrusel-track" id="carrusel-track">
+      {% set slides = [
+        ('02.jpg', 'Frutas y verduras agroecológicas'),
+        ('04.jpg', 'Del campo, a tu casa'),
+        ('03.jpg', 'Delivery a Zona Norte y CABA'),
+      ] %}
+      {% for archivo, texto in slides %}
+      <a class="carrusel-slide" href="/catalogo" aria-label="{{ texto }}">
+        <img src="{{ IMG_BASE }}/carrousel/{{ archivo }}" alt="{{ texto }}"
+             width="1280" height="400" decoding="async"
+             {{ 'fetchpriority=high' if loop.first else 'loading=lazy' }}>
+      </a>
+      {% endfor %}
+    </div>
+    <button type="button" class="carrusel-nav prev" aria-label="Anterior">‹</button>
+    <button type="button" class="carrusel-nav next" aria-label="Siguiente">›</button>
+    <div class="carrusel-dots" role="tablist" aria-label="Elegir imagen">
+      {% for archivo, texto in slides %}
+      <button type="button" role="tab" aria-label="Imagen {{ loop.index }}"
+              aria-selected="{{ 'true' if loop.first else 'false' }}"></button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="hero-txt">
+    <p class="hero-eyebrow">Verdulería agroecológica · Almacén natural · Zona Norte, GBA y CABA</p>
+    <h1 class="hero-h1">Del productor a tu casa</h1>
+    <p class="hero-lead">Frutas y verduras de estación elegidas junto a productores que cultivan sin agrotóxicos. Armás tu pedido, lo coordinamos por WhatsApp y pagás al recibir.</p>
+    <div class="hero-cta">
+      <a href="/catalogo" class="btn-grande">Ver productos</a>
+      <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
+    </div>
   </div>
 </section>
 

@@ -26,6 +26,9 @@ UNIDADES = {90000001: "UN", 90000003: "KG", 90000004: "LT", 90000011: "PQTE"}
 # Debajo de este stock se muestra el cartel "pocas unidades / sujeto a confirmación".
 STOCK_ALERTA = 3
 
+# El stock que cuenta para la web es SOLO el del depósito Central (sucursales.Central).
+DEPOSITO_CENTRAL = 50000004
+
 # Orden de los rubros en el menú (Codigo del parámetro 33).
 ORDEN_RUBROS = [1, 2, 3, 5, 4, 15, 14, 10, 16]
 
@@ -125,7 +128,7 @@ SELECT  m.id                     AS id,
 FROM        mprimas    m
 LEFT JOIN   categorias c   ON c.CodigoUnificado = m.categoria
 LEFT JOIN   parametros rub ON rub.Parametro = 33 AND rub.Codigo = c.Id_rubro
-LEFT JOIN   Stock      s   ON s.Codigo = m.Codigo
+LEFT JOIN   StockDepo  s   ON s.Codigo = m.Codigo AND s.deposito = 50000004
 WHERE   m.noweb = 0 AND m.Activo = 'SI'
 """
 
