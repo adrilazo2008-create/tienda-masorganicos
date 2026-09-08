@@ -39,6 +39,21 @@
 </section>
 
 
+{% if productores %}
+<section class="bloque productores" aria-label="Productores con los que trabajamos">
+  <h2>Detrás de cada producto hay un productor real</h2>
+  <p class="prod-sub">Trabajamos mano a mano con familias y cooperativas que cultivan y elaboran sin agrotóxicos.</p>
+  <ul class="prod-logos">
+    {% for pr in productores %}
+    <li>
+      {% if pr.logo %}<img src="{{ IMG_BASE }}/productores/{{ pr.logo }}" alt="{{ pr.nombre }}" loading="lazy" decoding="async" height="44">
+      {% else %}<span>{{ pr.nombre }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <section class="bloque">
   <div class="bloque-cab"><h2>Productos destacados</h2><a href="/catalogo">Ver todo →</a></div>
   <div class="grid">

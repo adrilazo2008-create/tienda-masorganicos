@@ -117,6 +117,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .bloque-cab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem;gap:1rem}
 .bloque-cab a{font-size:.9rem;font-weight:500;white-space:nowrap}
 
+/* productores / trabajamos con */
+.productores{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:1.6rem 1.4rem}
+.productores h2{margin:0 0 .3rem}
+.prod-sub{color:var(--gris);margin:0 0 1.1rem;font-size:.98rem}
+.prod-logos{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.6rem .7rem;align-items:center}
+.prod-logos li{display:flex;align-items:center}
+.prod-logos img{height:40px;width:auto;object-fit:contain;filter:grayscale(1);opacity:.7;transition:filter .15s,opacity .15s}
+.prod-logos img:hover{filter:none;opacity:1}
+.prod-logos span{display:inline-block;padding:.4rem .8rem;border:1px solid var(--linea);border-radius:999px;
+  font-size:.85rem;font-weight:500;color:var(--verde-osc);background:var(--verde-claro)}
+
 /* grid de productos */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.1rem}
 .card{background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .18s,transform .18s,border-color .18s}

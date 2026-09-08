@@ -1,9 +1,24 @@
 """Contenido editable de la tienda (carrousel, textos, FAQ) — base de la tienda."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from sqlalchemy import text
 
 from .db import engine_tienda
+
+_DATA = Path(__file__).resolve().parent / "data"
+
+
+def productores() -> list[dict]:
+    """Productores/comercializadoras con los que trabaja Más Orgánicos.
+    Se edita en app/data/productores.json ({nombre, logo}; logo opcional -> archivo
+    en {IMG_BASE}/productores/)."""
+    try:
+        return json.loads((_DATA / "productores.json").read_text(encoding="utf-8"))
+    except OSError:
+        return []
 
 
 def carrousel() -> list[dict]:
