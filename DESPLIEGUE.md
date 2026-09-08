@@ -66,6 +66,11 @@ El **mapa de Google (My Maps)** ahora solo define las **formas** de las zonas.
 Si se redibuja una zona ahí, hay que re-exportar los polígonos a
 `app/data/zonas_poligonos.json` (script en `_handoff/` o pedirle a Claude).
 
+**Barrios / countries** (Nordelta, barrios privados): `app/data/barrios.json`.
+Cada fila = `{match: "texto en minúscula", id_zona: N, etiqueta: "lo que va en Localidad"}`.
+El checkout, si la dirección tipeada contiene ese `match`, asigna esa zona sin geocodificar.
+Para sumar barrios: editar ese archivo o pedirle a Claude ("agregá el barrio X a Nordelta").
+
 ## Pendientes menores
 
 - Borrar 2 filas de prueba en la base (usuario `ClaudeTest`): ver HALLAZGOS_SESION_2.md §8.5.

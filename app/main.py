@@ -155,6 +155,18 @@ def envios_geojson():
                         headers={"Cache-Control": "public, max-age=3600"})
 
 
+@app.get("/envios/barrios.json")
+def envios_barrios():
+    import json
+    from fastapi.responses import JSONResponse
+    ruta = BASE_DIR / "data" / "barrios.json"
+    try:
+        datos = json.loads(ruta.read_text(encoding="utf-8"))
+    except OSError:
+        datos = []
+    return JSONResponse(datos, headers={"Cache-Control": "public, max-age=3600"})
+
+
 # --------------------------------------------------------------------------- carrito
 
 @app.post("/carrito/agregar")

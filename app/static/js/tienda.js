@@ -56,6 +56,25 @@ function iniciarBuscaZona(){
     });
   }).catch(function(){});
 
+  var barrios = [];
+  fetch('/envios/barrios.json').then(function(r){ return r.json(); })
+    .then(function(d){ barrios = d || []; }).catch(function(){});
+
+  function limpiarDireccion(){
+    form.direccion.value = '';
+    form.altura.value = '';
+    form.localidad.value = '';
+  }
+  function fijarZona(zid, textoOk){
+    if (zid && tieneOpcion(zid)){
+      sel.value = String(zid);
+      recalcularEnvio();
+      msg.textContent = textoOk;
+      return true;
+    }
+    return false;
+  }
+
   function pip(x, y, ring){
     var dentro = false;
     for (var i = 0, j = ring.length - 1; i < ring.length; j = i++){
@@ -68,10 +87,35 @@ function iniciarBuscaZona(){
     for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value == v) return true;
     return false;
   }
+  function opcionTexto(v){
+    for (var i = 0; i < sel.options.length; i++)
+      if (sel.options[i].value == v) return sel.options[i].text.split(' — ')[0];
+    return '';
+  }
 
   function buscar(){
     var q = (inp.value || '').trim();
     if (q.length < 4){ msg.textContent = 'Escribí tu dirección con la localidad.'; return; }
+    limpiarDireccion();
+    sel.value = '0'; recalcularEnvio();
+
+    // 1) ¿es un barrio / country conocido? (Nordelta, barrios privados, etc.)
+    var ql = q.toLowerCase();
+    for (var b = 0; b < barrios.length; b++){
+      if (ql.indexOf(barrios[b].match) !== -1){
+        form.localidad.value = barrios[b].etiqueta;
+        var nro0 = (q.match(/\b(\d{1,5})\b/) || [])[1];
+        if (nro0) form.altura.value = nro0;
+        if (fijarZona(barrios[b].id_zona,
+              'Barrio reconocido: ' + barrios[b].etiqueta +
+              '. Completá calle / lote / casa. Revisá la zona.')) {
+          btn.disabled = false; btn.textContent = 'Detectar';
+          return;
+        }
+      }
+    }
+
+    // 2) geocodificar la dirección
     btn.disabled = true; btn.textContent = 'Buscando…';
     var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=ar&q='
       + encodeURIComponent(q + ', Buenos Aires, Argentina');
@@ -79,7 +123,7 @@ function iniciarBuscaZona(){
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (!d || !d.length){
-          msg.textContent = 'No encontramos esa dirección. Completá los campos y elegí la zona en la lista.';
+          msg.textContent = 'No encontramos esa dirección. Completá calle, altura y localidad, y elegí la zona en la lista.';
           return;
         }
         var h = d[0], lat = parseFloat(h.lat), lng = parseFloat(h.lon), a = h.address || {};
@@ -93,12 +137,9 @@ function iniciarBuscaZona(){
         for (var i = 0; i < polis.length; i++){
           if (pip(lng, lat, polis[i].geometry.coordinates[0])){ zid = polis[i].properties.id_zona || 0; break; }
         }
-        if (zid && tieneOpcion(zid)){
-          sel.value = String(zid);
-          recalcularEnvio();
-          var nombre = sel.options[sel.selectedIndex].text.split(' — ')[0];
-          msg.textContent = 'Zona detectada: ' + nombre + '. Revisá que sea correcta y ajustá si hace falta.';
-        } else {
+        var ok = fijarZona(zid, 'Zona detectada: ' + opcionTexto(zid) +
+              '. Revisá que sea correcta y ajustá si hace falta.');
+        if (!ok){
           msg.textContent = 'Completamos tu dirección, pero no pudimos detectar la zona — elegila en la lista.';
         }
       })
