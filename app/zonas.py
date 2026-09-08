@@ -18,6 +18,8 @@ class Zona:
     minimo_compra: Decimal   # compra mínima para despachar a esta zona
     envio_gratis: Decimal    # a partir de este subtotal el envío es gratis
     descuento: int = 0        # % de descuento del envío el día que repartimos la zona
+    texto: str = ""           # "Realizamos envios los miercoles ... {0}" ({0}=horario, {1}=descuento)
+    horario: str = ""         # "15hs a 19hs aprox"
 
     @property
     def precio_dia(self) -> Decimal:
@@ -25,6 +27,12 @@ class Zona:
         if not self.descuento:
             return self.precio
         return (self.precio * (100 - self.descuento) / 100).quantize(Decimal("1"))
+
+    @property
+    def mensaje(self) -> str:
+        """Frase para mostrar en el checkout: día y horario de reparto de la zona."""
+        t = (self.texto or "").replace("{0}", self.horario or "").replace("{1}", str(self.descuento))
+        return " ".join(t.split()).strip()
 
 
 @dataclass(frozen=True)
@@ -37,13 +45,13 @@ class Sucursal:
 
 
 def zonas() -> list[Zona]:
-    sql = """SELECT id_zona, titulo, precio, mim_compra, envio_gratis, descuento
+    sql = """SELECT id_zona, titulo, precio, mim_compra, envio_gratis, descuento, texto, horario
              FROM zonas WHERE activo = 1 ORDER BY titulo"""
     with engine_tienda.connect() as cx:
         return [
             Zona(int(r.id_zona), r.titulo.strip(), Decimal(str(r.precio)),
                  Decimal(str(r.mim_compra)), Decimal(str(r.envio_gratis)),
-                 int(r.descuento or 0))
+                 int(r.descuento or 0), (r.texto or "").strip(), (r.horario or "").strip())
             for r in cx.execute(text(sql))
         ]
 

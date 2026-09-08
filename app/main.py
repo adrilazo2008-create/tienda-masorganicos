@@ -207,27 +207,23 @@ def checkout(request: Request):
     if car.vacio:
         return RedirectResponse("/catalogo", status_code=303)
     cli = _cliente_actual(request)
-    dir_ppal = None
-    if cli:
-        dirs = clientes.direcciones(cli.id)
-        dir_ppal = dirs[0] if dirs else None
+    dirs = clientes.direcciones(cli.id) if cli else []
     return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                   sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
-                  direccion_ppal=dir_ppal)
+                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs)
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
 def checkout_identificar(request: Request, telefono: str = Form(...)):
     c = clientes.buscar_por_telefono(telefono)
-    dir_ppal = None
+    dirs = []
     if c:
         request.session["checkout_cliente_id"] = c.id
         dirs = clientes.direcciones(c.id)
-        dir_ppal = dirs[0] if dirs else None
     return render(request, "_checkout_identidad.html",
                   existe=c is not None, cliente_encontrado=c, telefono=telefono,
-                  direccion_ppal=dir_ppal)
+                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs)
 
 
 @app.post("/checkout/confirmar", response_class=HTMLResponse)

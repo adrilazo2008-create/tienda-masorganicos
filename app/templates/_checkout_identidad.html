@@ -11,23 +11,49 @@
     </div>
     <label>Email <input type="email" name="email" autocomplete="email" spellcheck="false"></label>
   </details>
-  {% if direccion_ppal %}
+  {% if direcciones_cliente and direcciones_cliente|length > 1 %}
+  <label>Dirección de entrega
+    <select id="dir-guardada-sel">
+      {% for d in direcciones_cliente %}
+      <option value="{{ loop.index0 }}">{{ d.direccion }} {{ d.altura }}, {{ d.localidad }}{% if d.principal %} (principal){% endif %}</option>
+      {% endfor %}
+      <option value="-1">Otra dirección…</option>
+    </select>
+  </label>
+  <p class="chico">Elegí una de tus direcciones o escribí una nueva abajo.</p>
+  {% elif direccion_ppal %}
   <p class="chico" id="dir-guardada">📍 Usamos tu dirección guardada: {{ direccion_ppal.direccion }} {{ direccion_ppal.altura }}, {{ direccion_ppal.localidad }}. Podés cambiarla abajo.</p>
+  {% endif %}
+  {% if direcciones_cliente %}
   <script>
   (function(){
-    var d = {{ direccion_ppal|tojson }};
-    function fill(){
+    var dirs = {{ direcciones_cliente|tojson }};
+    function fill(i){
       var f = document.getElementById('form-checkout');
-      if (!f || !d) return;
-      if (f.direccion)      f.direccion.value = d.direccion || '';
-      if (f.altura)         f.altura.value = d.altura || '';
-      if (f.localidad)      f.localidad.value = d.localidad || '';
-      if (f.info_adicional) f.info_adicional.value = d.info || '';
-      if (f.id_zona && d.id_zona) { f.id_zona.value = String(d.id_zona); }
+      if (!f) return;
+      var d = dirs[i];
+      if (i === -1 || !d){
+        if (f.direccion) f.direccion.value = '';
+        if (f.altura) f.altura.value = '';
+        if (f.localidad) f.localidad.value = '';
+        if (f.info_adicional) f.info_adicional.value = '';
+        if (f.id_zona) f.id_zona.value = '0';
+      } else {
+        if (f.direccion)      f.direccion.value = d.direccion || '';
+        if (f.altura)         f.altura.value = d.altura || '';
+        if (f.localidad)      f.localidad.value = d.localidad || '';
+        if (f.info_adicional) f.info_adicional.value = d.info || '';
+        if (f.id_zona) f.id_zona.value = d.id_zona ? String(d.id_zona) : '0';
+      }
       if (window.recalcularEnvio) recalcularEnvio();
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fill);
-    else fill();
+    function init(){
+      var sel = document.getElementById('dir-guardada-sel');
+      if (sel) sel.addEventListener('change', function(){ fill(parseInt(sel.value, 10)); });
+      fill(0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   })();
   </script>
   {% endif %}

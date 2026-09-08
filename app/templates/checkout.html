@@ -58,12 +58,15 @@
           <select name="id_zona" id="sel-zona" onchange="recalcularEnvio()">
             <option value="0">Elegí tu zona…</option>
             {% for z in zonas %}
-              <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}" data-min="{{ z.minimo_compra }}">
+              <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}"
+                      data-min="{{ z.minimo_compra }}" data-diaprecio="{{ z.precio_dia }}"
+                      data-mensaje="{{ z.mensaje }}">
                 {{ z.titulo }} — envío {{ pesos(z.precio) }}
               </option>
             {% endfor %}
           </select>
         </label>
+        <p class="chico zona-detalle" id="zona-detalle" aria-live="polite"></p>
         <p class="chico" id="envio-info" aria-live="polite"></p>
         <div class="grid2">
           <label>Calle <input name="direccion" autocomplete="address-line1"></label>

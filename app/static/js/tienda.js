@@ -21,20 +21,30 @@ function recalcularEnvio(){
   var sel = document.querySelector('select[name=id_zona]');
   var subEl = document.getElementById('r-subtotal');
   var sub = parseFloat(subEl.dataset.v || '0');
-  var envio = 0, info = '';
+  var envio = 0, info = '', detalle = '';
   var entregaEnvio = document.querySelector('input[name=entrega][value=envio]').checked;
   if (entregaEnvio && sel && sel.value !== '0'){
     var o = sel.options[sel.selectedIndex];
     var precio = parseFloat(o.dataset.precio || '0');
     var gratis = parseFloat(o.dataset.gratis || '0');
     var minc   = parseFloat(o.dataset.min || '0');
+    var diapre = parseFloat(o.dataset.diaprecio || '0');
     envio = (gratis && sub >= gratis) ? 0 : precio;
     if (envio === 0 && precio > 0) info = 'Envío gratis por superar ' + fmtPeso(gratis);
     if (minc && sub < minc) info = 'Compra mínima para esta zona: ' + fmtPeso(minc);
+
+    var msg = (o.dataset.mensaje || '').trim();
+    if (msg) detalle = msg + '.';
+    if (diapre && diapre < precio) {
+      detalle += ' Envío el día de tu zona: ' + fmtPeso(diapre) + '.';
+    } else if (diapre) {
+      detalle += ' Envío: ' + fmtPeso(diapre) + '.';
+    }
   }
   document.getElementById('r-envio').textContent = entregaEnvio ? fmtPeso(envio) : 'retiro sin costo';
   document.getElementById('r-total').textContent = fmtPeso(sub + envio);
   var ei = document.getElementById('envio-info'); if (ei) ei.textContent = info;
+  var zd = document.getElementById('zona-detalle'); if (zd) zd.textContent = detalle.trim();
 }
 function fmtPeso(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
 function iniciarCheckout(){ toggleEntrega(); iniciarBuscaZona(); }
