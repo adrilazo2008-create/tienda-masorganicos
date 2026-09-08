@@ -10,6 +10,12 @@ function stepCant(btn, dir){
   inp.value = Number.isInteger(v) ? v : String(v).replace('.', ',');
 }
 
+// + / - en el carrito: ajusta la cantidad y guarda (submit del form)
+function stepCarrito(btn, dir){
+  stepCant(btn, dir);                       // el input es hermano dentro de .cant
+  if (btn.form) btn.form.submit();
+}
+
 // checkout: mostrar/ocultar bloques y recalcular total
 function toggleEntrega(){
   var envio = document.querySelector('input[name=entrega][value=envio]').checked;

@@ -216,8 +216,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cl-info a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cl-unit{font-size:.8rem;color:var(--gris)}
 .cl-obs{font-size:.8rem;font-style:italic;color:var(--gris)}
-.cl-cant input{width:56px;text-align:center;border:1px solid var(--linea);border-radius:8px;padding:.3rem}
-.cl-cant span{font-size:.75rem;color:var(--gris);margin-left:.2rem}
+.cl-cant{display:flex;align-items:center;gap:.35rem}
+.cl-cant .cant input{width:44px;text-align:center;border:0;border-radius:0;padding:.3rem 0;font:inherit}
+.cl-cant .cant button{width:30px;height:32px}
+.cl-cant span{font-size:.75rem;color:var(--gris)}
 .cl-sub{font-weight:700}
 .cl-quitar button{border:0;background:none;color:var(--gris);font-size:1rem;cursor:pointer}
 .carrito-resumen,.co-resumen{background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:1rem;align-self:start;position:sticky;top:110px;display:flex;flex-direction:column;gap:.5rem}

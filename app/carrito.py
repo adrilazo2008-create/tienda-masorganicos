@@ -38,13 +38,22 @@ def _norm_cant(valor) -> Decimal:
 def agregar(session, producto_id: int, cantidad, observacion: str = "") -> None:
     items = _leer(session)
     cant = _norm_cant(cantidad)
+    pid = int(producto_id)
+    obs_nueva = (observacion or "").strip()[:191]
+    # Se junta en una sola línea si es el mismo producto y las observaciones
+    # coinciden o alguna está vacía. Solo quedan líneas separadas si ambas
+    # tienen una nota distinta (ej. "bien maduro" vs "bien verde").
     for it in items:
-        if it["producto_id"] == producto_id and it.get("observacion", "") == (observacion or ""):
+        if it["producto_id"] != pid:
+            continue
+        obs_it = it.get("observacion", "")
+        if obs_it == obs_nueva or not obs_it or not obs_nueva:
             it["cantidad"] = str(_norm_cant(Decimal(it["cantidad"]) + cant))
+            if obs_nueva and not obs_it:
+                it["observacion"] = obs_nueva
             _guardar(session, items)
             return
-    items.append({"producto_id": int(producto_id), "cantidad": str(cant),
-                  "observacion": (observacion or "").strip()[:191]})
+    items.append({"producto_id": pid, "cantidad": str(cant), "observacion": obs_nueva})
     _guardar(session, items)
 
 

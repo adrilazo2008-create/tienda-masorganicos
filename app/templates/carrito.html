@@ -20,8 +20,15 @@
       </div>
       <form method="post" action="/carrito/actualizar" class="cl-cant">
         <input type="hidden" name="indice" value="{{ l.indice }}">
-        <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
-               aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off" onchange="this.form.submit()">
+        <div class="cant" role="group" aria-label="Cantidad de {{ l.producto.nombre }}">
+          <button type="button" onclick="stepCarrito(this,-1)" aria-label="Quitar uno">−</button>
+          <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
+                 data-step="{{ '0.25' if l.producto.fraccionable else '1' }}"
+                 data-min="{{ '0.25' if l.producto.fraccionable else '1' }}"
+                 aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off"
+                 onchange="this.form.submit()">
+          <button type="button" onclick="stepCarrito(this,1)" aria-label="Agregar uno">+</button>
+        </div>
         <span>{{ l.producto.unidad }}</span>
       </form>
       <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
@@ -42,4 +49,5 @@
   </aside>
 </div>
 {% endif %}
+<script src="/static/js/tienda.js?v={{ V }}"></script>
 {% endblock %}
