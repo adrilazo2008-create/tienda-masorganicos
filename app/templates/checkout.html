@@ -19,18 +19,23 @@
       <label>Celular
         <input name="telefono" id="telefono" type="tel" inputmode="tel" autocomplete="tel"
                required placeholder="11 5504 6740"
+               value="{{ cliente_checkout.telefono if cliente_checkout else '' }}"
                hx-post="/checkout/identificar" hx-trigger="change" hx-target="#identidad" hx-include="this">
       </label>
       <p class="chico">Con tu celular te reconocemos la próxima vez. Coordinamos todo por WhatsApp.</p>
       <div id="identidad" aria-live="polite">
-        <div class="grid2">
-          <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
-          <label>Apellido <input name="apellido" autocomplete="family-name" required></label>
-        </div>
-        <label>Email
-          <input type="email" name="email" autocomplete="email" spellcheck="false"
-                 placeholder="para enviarte el resumen (opcional)">
-        </label>
+        {% if cliente_checkout %}
+          {% include "_checkout_identidad.html" %}
+        {% else %}
+          <div class="grid2">
+            <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
+            <label>Apellido <input name="apellido" autocomplete="family-name" required></label>
+          </div>
+          <label>Email
+            <input type="email" name="email" autocomplete="email" spellcheck="false"
+                   placeholder="para enviarte el resumen (opcional)">
+          </label>
+        {% endif %}
       </div>
     </fieldset>
 

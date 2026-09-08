@@ -16,14 +16,18 @@
   <script>
   (function(){
     var d = {{ direccion_ppal|tojson }};
-    var f = document.getElementById('form-checkout');
-    if (!f || !d) return;
-    if (f.direccion)      f.direccion.value = d.direccion || '';
-    if (f.altura)         f.altura.value = d.altura || '';
-    if (f.localidad)      f.localidad.value = d.localidad || '';
-    if (f.info_adicional) f.info_adicional.value = d.info || '';
-    if (f.id_zona && d.id_zona) { f.id_zona.value = d.id_zona; }
-    if (window.recalcularEnvio) recalcularEnvio();
+    function fill(){
+      var f = document.getElementById('form-checkout');
+      if (!f || !d) return;
+      if (f.direccion)      f.direccion.value = d.direccion || '';
+      if (f.altura)         f.altura.value = d.altura || '';
+      if (f.localidad)      f.localidad.value = d.localidad || '';
+      if (f.info_adicional) f.info_adicional.value = d.info || '';
+      if (f.id_zona && d.id_zona) { f.id_zona.value = String(d.id_zona); }
+      if (window.recalcularEnvio) recalcularEnvio();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fill);
+    else fill();
   })();
   </script>
   {% endif %}

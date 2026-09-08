@@ -206,8 +206,15 @@ def checkout(request: Request):
     car = carrito_mod.resolver(request.session)
     if car.vacio:
         return RedirectResponse("/catalogo", status_code=303)
+    cli = _cliente_actual(request)
+    dir_ppal = None
+    if cli:
+        dirs = clientes.direcciones(cli.id)
+        dir_ppal = dirs[0] if dirs else None
     return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
-                  sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos)
+                  sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
+                  cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
+                  direccion_ppal=dir_ppal)
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
