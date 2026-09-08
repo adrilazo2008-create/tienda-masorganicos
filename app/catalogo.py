@@ -44,8 +44,10 @@ STOCK_ALERTA = 3
 DEPOSITO_CENTRAL = 50000004
 
 # Orden de los rubros en el menú (Codigo del parámetro 33).
-# 16 = "Varios" quedó vacío al mover "Limpieza" a "Belleza e Higiene" (10) en el ERP.
-ORDEN_RUBROS = [1, 2, 3, 5, 4, 15, 14, 10, 16]
+# Reagrupamiento hecho en el ERP (sept 2026): Limpieza(Varios)→Belleza,
+# Bebidas→Almacén, Suplementos Dietarios→Belleza (rubro 10 renombrado
+# "Salud, Higiene y Belleza"). Quedaron 6 rubros; 14/15/16 vacíos.
+ORDEN_RUBROS = [1, 2, 3, 5, 4, 10]
 
 # etiquetas (iconos): id -> (nombre legible, orden de prioridad para mostrar)
 ETIQUETAS = {
