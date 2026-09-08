@@ -83,6 +83,7 @@ def ctx(request: Request, **extra):
         carrito_n=car.cantidad_items,
         cliente=_cliente_actual(request),
         entorno=S.entorno,
+        anuncio=contenido.anuncio(),
     )
     base.update(extra)
     return base

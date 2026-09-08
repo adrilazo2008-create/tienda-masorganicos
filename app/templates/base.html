@@ -20,6 +20,29 @@
 <a href="#contenido" class="skip">Saltar al contenido</a>
 {% if entorno != 'production' %}<div class="banda-dev">entorno de prueba — los pedidos no se graban salvo que se active</div>{% endif %}
 
+{% if anuncio %}
+<div class="barra-anuncio" id="barra-anuncio" data-clave="{{ anuncio.texto | truncate(40, true, '') }}" hidden>
+  <p>
+    {{ anuncio.texto }}
+    {% if anuncio.link %}<a href="{{ anuncio.link }}">{{ anuncio.link_texto or 'Ver más' }}</a>{% endif %}
+  </p>
+  <button type="button" class="barra-anuncio-x" aria-label="Cerrar aviso" onclick="cerrarAnuncio()">×</button>
+</div>
+<script>
+  function cerrarAnuncio(){
+    var b = document.getElementById('barra-anuncio');
+    if (b){ b.hidden = true; try { localStorage.setItem('anuncio-visto', b.dataset.clave); } catch(e){} }
+  }
+  (function(){
+    var b = document.getElementById('barra-anuncio');
+    if (!b) return;
+    var visto = '';
+    try { visto = localStorage.getItem('anuncio-visto') || ''; } catch(e){}
+    if (visto !== b.dataset.clave) b.hidden = false;
+  })();
+</script>
+{% endif %}
+
 <header class="cab">
   <div class="cab-in">
     <a href="/" class="logo" translate="no">

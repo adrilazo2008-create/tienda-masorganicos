@@ -1,5 +1,11 @@
 {
-  "_ayuda": "productores_img: nombre de archivo en {IMG_BASE}/productores/. Vacío = no se muestra la sección.",
+  "_ayuda": "productores_img: nombre de archivo en {IMG_BASE}/productores/. Vacío = no se muestra la sección. anuncio: barra superior site-wide; activo=false la oculta; link/link_texto opcionales.",
+  "anuncio": {
+    "activo": true,
+    "texto": "Envío bonificado el día que repartimos tu zona. Pedí antes de las 18 h del día previo.",
+    "link": "/envios",
+    "link_texto": "Ver zonas y días"
+  },
   "productores_img": "productores.jpg",
   "productores_titulo": "Trabajamos con estos productores y comercializadoras"
 }

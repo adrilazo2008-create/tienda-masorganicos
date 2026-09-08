@@ -71,6 +71,23 @@ Cada fila = `{match: "texto en minúscula", id_zona: N, etiqueta: "lo que va en 
 El checkout, si la dirección tipeada contiene ese `match`, asigna esa zona sin geocodificar.
 Para sumar barrios: editar ese archivo o pedirle a Claude ("agregá el barrio X a Nordelta").
 
+## Barra de anuncio superior
+
+Franja verde arriba de todo, en todas las páginas, descartable (se recuerda por
+navegador). El texto sale de la tabla **`genericos`**, fila con
+`titulo = 'BARRA_ANUNCIO'`:
+
+- `texto`   → el aviso (se le quitan las etiquetas HTML automáticamente).
+- `linkMapa` → link opcional. Formato `url | texto del link` (ej: `/envios | Ver zonas`).
+- `activo`  → `1` la muestra, `0` la apaga.
+
+Si esa fila no existe o está inactiva, cae al fallback en `app/data/home.json`
+(clave `anuncio`). Editar el texto en phpMyAdmin no necesita deploy.
+
+> Ojo: `masorganicos.online` (tienda vieja) también lee `genericos`. La fila
+> `BARRA_ANUNCIO` está excluida de los avisos de la home nueva; verificar que la
+> tienda vieja no la muestre como aviso suelto.
+
 ## Pendientes menores
 
 - Borrar 2 filas de prueba en la base (usuario `ClaudeTest`): ver HALLAZGOS_SESION_2.md §8.5.

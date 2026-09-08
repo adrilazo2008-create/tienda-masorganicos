@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from sqlalchemy import text
@@ -17,6 +18,44 @@ def home_config() -> dict:
         return json.loads((_DATA / "home.json").read_text(encoding="utf-8"))
     except OSError:
         return {}
+
+
+_TAGS = re.compile(r"<[^>]+>")
+
+
+def anuncio() -> dict:
+    """Barra de anuncio superior (site-wide).
+
+    Fuente 1 (preferida): fila de `genericos` con titulo = 'BARRA_ANUNCIO' y activo = 1.
+      - texto  -> el aviso (se le quitan las etiquetas HTML)
+      - linkMapa -> link opcional; si es "url | texto" se parte en link + link_texto
+      Para apagar la barra: activo = 0 en esa fila.
+    Fuente 2 (fallback): app/data/home.json, clave "anuncio" {activo, texto, link, link_texto}.
+    """
+    try:
+        with engine_tienda.connect() as cx:
+            row = cx.execute(text(
+                "SELECT texto, linkMapa FROM genericos "
+                "WHERE activo = 1 AND titulo = 'BARRA_ANUNCIO' ORDER BY id LIMIT 1"
+            )).first()
+    except Exception:
+        row = None
+
+    if row and (row.texto or "").strip():
+        texto = " ".join(_TAGS.sub(" ", row.texto).split()).strip()
+        link, link_texto = (row.linkMapa or "").strip(), ""
+        if "|" in link:
+            link, link_texto = (p.strip() for p in link.split("|", 1))
+        return {"texto": texto, "link": link, "link_texto": link_texto}
+
+    a = home_config().get("anuncio") or {}
+    if not a.get("activo") or not (a.get("texto") or "").strip():
+        return {}
+    return {
+        "texto": a["texto"].strip(),
+        "link": (a.get("link") or "").strip(),
+        "link_texto": (a.get("link_texto") or "").strip(),
+    }
 
 
 def carrusel_home() -> list[dict]:
@@ -52,7 +91,8 @@ def avisos(limite: int = 2) -> list[str]:
     """Textos de `genericos` (avisos de la home: feriados, mínimos de envío, etc.)."""
     with engine_tienda.connect() as cx:
         rows = cx.execute(text(
-            "SELECT texto FROM genericos WHERE activo = 1 ORDER BY id")).all()
+            "SELECT texto FROM genericos WHERE activo = 1 "
+            "AND titulo <> 'BARRA_ANUNCIO' ORDER BY id")).all()
     textos = [r.texto.strip() for r in rows if (r.texto or "").strip()]
     return textos[:limite]
 
