@@ -4,35 +4,40 @@
 
 <div class="ok-final">
   <h1>¡Pedido recibido! 🌱</h1>
-  {% if numero %}<p class="ok-num">Tu número de pedido es <b>#{{ numero }}</b>.</p>{% endif %}
+  {% if ok.numero %}<p class="ok-num">Tu número de pedido es <b>#{{ ok.numero }}</b>.</p>{% endif %}
   <p class="ok-wsp">
     <b>Te vamos a escribir por WhatsApp</b> para confirmar disponibilidad y coordinar el día y horario de entrega.
     No hace falta que pagues nada ahora: se abona al recibir el pedido.
   </p>
   <a class="btn-grande ok-wsp-btn" href="https://wa.me/{{ WHATSAPP }}" target="_blank" rel="noopener">Escribir por WhatsApp ahora</a>
-  {% if simulado %}
+  {% if ok.simulado %}
     <p class="aviso">Modo prueba: este pedido <b>no se grabó</b> en el sistema del local.</p>
   {% endif %}
 
   <div class="ok-caja">
-    <p><b>Cliente:</b> {{ cliente.nombre_completo }} · {{ cliente.telefono }}{% if cliente.email %} · {{ cliente.email }}{% endif %}</p>
+    <p><b>Cliente:</b> {{ ok.cliente }} · {{ ok.telefono }}{% if ok.email %} · {{ ok.email }}{% endif %}</p>
     <p><b>Entrega:</b>
-      {% if pedido.id_sucursal %}Retira en sucursal{% else %}Envío (zona #{{ pedido.id_zona_envio }}) · {{ pesos(pedido.precio_envio) }}{% endif %}
+      {% if ok.retira %}Retira en {{ ok.sucursal or 'sucursal' }}{% else %}Envío a domicilio · {{ pesos(ok.envio) }}{% endif %}
     </p>
-    <p><b>Pago:</b> {{ 'Efectivo' if pedido.efectivo else 'Transferencia / tarjeta / MP (a coordinar)' }}</p>
-    {% if pedido.codigo_descuento %}<p><b>Código:</b> {{ pedido.codigo_descuento }}</p>{% endif %}
+    <p><b>Pago:</b> {{ 'Efectivo' if ok.efectivo else 'Transferencia / tarjeta / Cuenta DNI / Mercado Pago (a coordinar)' }}</p>
+    {% if ok.descuento %}<p><b>Código:</b> {{ ok.descuento }}</p>{% endif %}
     <table class="ok-items">
       <thead>
-        <tr><th scope="col">Cant.</th><th scope="col">Producto</th><th scope="col">Precio</th><th scope="col">Subtotal</th></tr>
+        <tr><th scope="col">Cant.</th><th scope="col">Producto</th><th scope="col">Subtotal</th></tr>
       </thead>
       <tbody>
-      {% for it in pedido.items %}
-      <tr><td class="num">{{ fmt_cantidad(it.cantidad) }}</td><td>#{{ it.producto_id }}</td><td class="num">{{ pesos(it.precio_unitario) }}</td><td class="num">{{ pesos(it.cantidad * it.precio_unitario) }}</td></tr>
+      {% for it in ok['items'] %}
+      <tr>
+        <td class="num">{{ fmt_cantidad(it.cant) }} {{ it.unidad }}</td>
+        <td>{{ it.nombre }}</td>
+        <td class="num">{{ pesos(it.cant * it.precio) }}</td>
+      </tr>
       {% endfor %}
       </tbody>
     </table>
-    <p class="rr tot"><span>Subtotal</span><span class="num">{{ pesos(pedido.subtotal()) }}</span></p>
-    <p class="rr tot"><span>Total</span><span class="num">{{ pesos(pedido.total()) }}</span></p>
+    <p class="rr tot"><span>Subtotal</span><span class="num">{{ pesos(ok.subtotal) }}</span></p>
+    {% if ok.envio %}<p class="rr"><span>Envío (a confirmar)</span><span class="num">{{ pesos(ok.envio) }}</span></p>{% endif %}
+    <p class="rr tot"><span>Total estimado</span><span class="num">{{ pesos(ok.total) }}</span></p>
   </div>
 
   <a href="/catalogo" class="btn-grande">Seguir comprando</a>

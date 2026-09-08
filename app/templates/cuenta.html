@@ -14,7 +14,13 @@
     <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th></tr></thead>
     <tbody>
     {% for p in pedidos_cli %}
-      <tr><td class="num">{{ p.id }}</td><td>{{ p.fecha.strftime('%d/%m/%Y') }}</td><td>{{ p.estado }}</td><td class="num">{{ p.cantidad_items }}</td><td class="num">{{ pesos(p.total) }}</td></tr>
+      <tr>
+        <td class="num"><a href="/cuenta/pedido/{{ p.id }}">#{{ p.id }}</a></td>
+        <td>{{ p.fecha.strftime('%d/%m/%Y') }}</td>
+        <td>{{ p.estado }}</td>
+        <td class="num">{{ p.cantidad_items }}</td>
+        <td class="num">{{ pesos(p.total) }}</td>
+      </tr>
     {% endfor %}
     </tbody>
   </table>

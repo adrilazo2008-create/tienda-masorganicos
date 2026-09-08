@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Pedido #{{ p.id }} — Más Orgánicos{% endblock %}
+{% block contenido %}
+
+<nav class="miga" aria-label="Ruta de navegación">
+  <a href="/cuenta">Mi cuenta</a> / <span aria-current="page">Pedido #{{ p.id }}</span>
+</nav>
+
+<div class="ok-final">
+  <h1>Pedido #{{ p.id }}</h1>
+  <p class="ok-num">{{ p.fecha.strftime('%d/%m/%Y %H:%M') }} · {{ p.estado }}</p>
+
+  <div class="ok-caja">
+    {% if p.observacion %}<p><b>Aclaraciones:</b> {{ p.observacion }}</p>{% endif %}
+    {% if p.codigo_descuento %}<p><b>Código:</b> {{ p.codigo_descuento }}</p>{% endif %}
+    <table class="ok-items">
+      <thead>
+        <tr><th scope="col">Cant.</th><th scope="col">Producto</th><th scope="col">Subtotal</th></tr>
+      </thead>
+      <tbody>
+      {% for l in p.lineas %}
+      {% set prod = prods.get(l.producto_id) %}
+      <tr>
+        <td class="num">{{ fmt_cantidad(l.cantidad) }}{% if prod %} {{ prod.unidad }}{% endif %}</td>
+        <td>
+          {{ prod.nombre if prod else 'Producto #' ~ l.producto_id }}
+          {% if l.observacion %}<br><small>“{{ l.observacion }}”</small>{% endif %}
+        </td>
+        <td class="num">{{ pesos(l.cantidad * l.precio) }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="rr tot"><span>Subtotal</span><span class="num">{{ pesos(subtotal) }}</span></p>
+    {% if p.precio_envio %}<p class="rr"><span>Envío</span><span class="num">{{ pesos(p.precio_envio) }}</span></p>{% endif %}
+    <p class="rr tot"><span>Total</span><span class="num">{{ pesos(total) }}</span></p>
+  </div>
+
+  <p class="chico">Los precios y el stock se confirman al preparar el pedido. Coordinamos todo por WhatsApp.</p>
+  <a href="/cuenta" class="btn-sec">Volver a mis pedidos</a>
+</div>
+{% endblock %}

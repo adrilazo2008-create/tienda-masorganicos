@@ -296,8 +296,37 @@ def checkout_confirmar(
         numero = pedidos.crear(p)
         carrito_mod.vaciar(request.session)
         request.session["cliente_id"] = cli.id
-    return render(request, "checkout_ok.html", numero=numero, pedido=p, cliente=cli,
-                  simulado=not S.permitir_escribir_pedidos)
+
+    suc_nombre = ""
+    if id_sucursal:
+        suc_nombre = next((s.descripcion for s in zonas.sucursales() if s.id == id_sucursal), "")
+
+    request.session["pedido_ok"] = {
+        "numero": numero,
+        "simulado": not graba,
+        "cliente": cli.nombre_completo,
+        "telefono": cli.telefono,
+        "email": cli.email,
+        "retira": bool(id_sucursal),
+        "sucursal": suc_nombre,
+        "envio": float(precio_envio),
+        "efectivo": pago == "efectivo",
+        "descuento": cod,
+        "items": [{"cant": float(l.cantidad), "nombre": l.producto.nombre,
+                   "unidad": l.producto.unidad, "precio": float(l.producto.precio)}
+                  for l in car.lineas],
+        "subtotal": float(p.subtotal()),
+        "total": float(p.total()),
+    }
+    return RedirectResponse("/checkout/ok", status_code=303)
+
+
+@app.get("/checkout/ok", response_class=HTMLResponse)
+def checkout_ok(request: Request):
+    ok = request.session.pop("pedido_ok", None)
+    if not ok:
+        return RedirectResponse("/", status_code=303)
+    return render(request, "checkout_ok.html", ok=ok)
 
 
 # --------------------------------------------------------------------------- mi cuenta
@@ -309,6 +338,20 @@ def cuenta(request: Request):
         return render(request, "cuenta_login.html")
     return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id),
                   direcciones=clientes.direcciones(c.id))
+
+
+@app.get("/cuenta/pedido/{pedido_id}", response_class=HTMLResponse)
+def cuenta_pedido(request: Request, pedido_id: int):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    d = pedidos.detalle(pedido_id, c.id)
+    if not d:
+        return RedirectResponse("/cuenta", status_code=303)
+    prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
+    return render(request, "cuenta_pedido.html", p=d, prods=prods,
+                  subtotal=subtotal, total=subtotal + d["precio_envio"])
 
 
 @app.post("/cuenta/entrar", response_class=HTMLResponse)

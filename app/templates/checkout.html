@@ -10,7 +10,8 @@
   <p class="aviso">Modo prueba: el pedido <b>no</b> se graba. Se muestra el resumen para revisar el flujo.</p>
 {% endif %}
 
-<form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout">
+<form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout"
+      onkeydown="if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();}">
   <div class="co-col">
 
     <fieldset class="co-box">
