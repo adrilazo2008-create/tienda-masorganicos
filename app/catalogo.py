@@ -46,6 +46,12 @@ DEPOSITO_CENTRAL = 50000004
 # Orden de los rubros en el menú (Codigo del parámetro 33).
 ORDEN_RUBROS = [1, 2, 3, 5, 4, 15, 14, 10, 16]
 
+# Reagrupamiento de rubros SOLO para la web (NO toca el ERP ni el VB6).
+# categoria_id (parametros P=32 / categorias.CodigoUnificado) -> rubro_id destino.
+CATEGORIA_A_RUBRO: dict[int, int] = {
+    320000034: 10,   # "Limpieza": pasa de "Varios" (16) a "Belleza e Higiene" (10)
+}
+
 # etiquetas (iconos): id -> (nombre legible, orden de prioridad para mostrar)
 ETIQUETAS = {
     4: ("Orgánico", 0), 5: ("Agroecológico", 1), 6: ("Pastoril", 2),
@@ -147,7 +153,25 @@ WHERE   m.noweb = 0 AND m.Activo = 'SI'
 """
 
 
+def _nombre_rubro(rubro_id: int) -> str:
+    nombres = _cacheado("nombres_rubro", 600, _cargar_nombres_rubro)
+    return nombres.get(rubro_id, "Varios")
+
+
+def _cargar_nombres_rubro() -> dict[int, str]:
+    sql = "SELECT Codigo AS id, Descripcion AS nombre FROM parametros WHERE Parametro = 33"
+    with engine_erp.connect() as cx:
+        return {int(r.id): titulo(r.nombre) for r in cx.execute(text(sql))}
+
+
 def _fila_a_producto(r) -> Producto:
+    cid = int(r.categoria_id or 0)
+    rid = int(r.rubro_id or 16)
+    if cid in CATEGORIA_A_RUBRO:
+        rid = CATEGORIA_A_RUBRO[cid]
+        rubro_nom = _nombre_rubro(rid)
+    else:
+        rubro_nom = titulo(r.rubro)
     return Producto(
         id=int(r.id),
         codigo=str(r.codigo or "").strip(),
@@ -156,10 +180,10 @@ def _fila_a_producto(r) -> Producto:
         precio=Decimal(str(r.precio or 0)),
         tasa_iva=float(r.tasa_iva or 21),
         unidad_id=int(r.unidad_id or 90000001),
-        categoria_id=int(r.categoria_id or 0),
+        categoria_id=cid,
         categoria=titulo(r.categoria),
-        rubro_id=int(r.rubro_id or 16),
-        rubro=titulo(r.rubro),
+        rubro_id=rid,
+        rubro=rubro_nom,
         destacado=bool(r.destacado),
         stock=float(r.stock or 0),
     )
@@ -267,11 +291,12 @@ def _rubros() -> list[dict]:
         nombres = {int(r.id): titulo(r.nombre) for r in cx.execute(text(sql_rub))}
         porrub: dict[int, dict] = {}
         for r in cx.execute(text(sql_cat)):
-            rid = int(r.rid or 16)
+            cid = int(r.cid)
+            rid = CATEGORIA_A_RUBRO.get(cid, int(r.rid or 16))   # reagrupamiento web
             d = porrub.setdefault(rid, {"id": rid, "nombre": nombres.get(rid, "Varios"),
                                         "n": 0, "categorias": []})
             d["n"] += int(r.n)
-            d["categorias"].append(dict(id=int(r.cid), nombre=titulo(r.nombre), n=int(r.n)))
+            d["categorias"].append(dict(id=cid, nombre=titulo(r.nombre), n=int(r.n)))
     orden = {rid: i for i, rid in enumerate(ORDEN_RUBROS)}
     salida = sorted(porrub.values(), key=lambda d: orden.get(d["id"], 99))
     for d in salida:
