@@ -17,7 +17,7 @@
   <div class="ok-caja">
     <p><b>Cliente:</b> {{ ok.cliente }} · {{ ok.telefono }}{% if ok.email %} · {{ ok.email }}{% endif %}</p>
     <p><b>Entrega:</b>
-      {% if ok.retira %}Retira en {{ ok.sucursal or 'sucursal' }}{% else %}Envío a domicilio · {{ pesos(ok.envio) }}{% endif %}
+      {% if ok.retira %}Retira en {{ ok.sucursal or 'sucursal' }}{% else %}Envío a domicilio · {{ pesos(ok.envio) }}{% if ok.envio_modalidad %} ({{ ok.envio_modalidad }}){% endif %}{% endif %}
     </p>
     <p><b>Pago:</b> {{ 'Efectivo' if ok.efectivo else 'Transferencia / tarjeta / Cuenta DNI / Mercado Pago (a coordinar)' }}</p>
     {% if ok.descuento %}<p><b>Código:</b> {{ ok.descuento }}</p>{% endif %}

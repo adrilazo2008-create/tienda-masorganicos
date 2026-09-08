@@ -23,24 +23,37 @@ function recalcularEnvio(){
   var sub = parseFloat(subEl.dataset.v || '0');
   var envio = 0, info = '', detalle = '';
   var entregaEnvio = document.querySelector('input[name=entrega][value=envio]').checked;
+  var modBox = document.getElementById('modalidad-envio');
+  var eligeModalidad = false;
+
   if (entregaEnvio && sel && sel.value !== '0'){
     var o = sel.options[sel.selectedIndex];
     var precio = parseFloat(o.dataset.precio || '0');
     var gratis = parseFloat(o.dataset.gratis || '0');
     var minc   = parseFloat(o.dataset.min || '0');
-    var diapre = parseFloat(o.dataset.diaprecio || '0');
-    envio = (gratis && sub >= gratis) ? 0 : precio;
-    if (envio === 0 && precio > 0) info = 'Envío gratis por superar ' + fmtPeso(gratis);
+    var diapre = parseFloat(o.dataset.diaprecio || '0') || precio;
+
+    eligeModalidad = diapre < precio;
+    var modalidad = 'dia';
+    var mr = document.querySelector('input[name=modalidad_envio]:checked');
+    if (mr) modalidad = mr.value;
+    if (!eligeModalidad) modalidad = 'coordinar';   // sin bonificación: un solo precio
+    var costo = (modalidad === 'coordinar') ? precio : diapre;
+
+    envio = (gratis && sub >= gratis) ? 0 : costo;
+    if (envio === 0 && costo > 0) info = 'Envío gratis por superar ' + fmtPeso(gratis);
     if (minc && sub < minc) info = 'Compra mínima para esta zona: ' + fmtPeso(minc);
 
     var msg = (o.dataset.mensaje || '').trim();
     if (msg) detalle = msg + '.';
-    if (diapre && diapre < precio) {
-      detalle += ' Envío el día de tu zona: ' + fmtPeso(diapre) + '.';
-    } else if (diapre) {
-      detalle += ' Envío: ' + fmtPeso(diapre) + '.';
-    }
+
+    var od = document.getElementById('opt-dia');
+    var oc = document.getElementById('opt-coord');
+    if (od) od.textContent = 'El día que pasamos por tu zona — ' + fmtPeso(diapre);
+    if (oc) oc.textContent = 'Otro día / horario a coordinar — ' + fmtPeso(precio);
   }
+  if (modBox) modBox.hidden = !eligeModalidad;
+
   document.getElementById('r-envio').textContent = entregaEnvio ? fmtPeso(envio) : 'retiro sin costo';
   document.getElementById('r-total').textContent = fmtPeso(sub + envio);
   var ei = document.getElementById('envio-info'); if (ei) ei.textContent = info;

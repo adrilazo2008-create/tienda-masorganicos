@@ -233,6 +233,7 @@ def checkout_confirmar(
     telefono: str = Form(...), email: str = Form(""),
     entrega: str = Form("envio"),
     id_zona: int = Form(0), id_sucursal: int = Form(0),
+    modalidad_envio: str = Form("dia"),
     direccion: str = Form(""), altura: str = Form(""), localidad: str = Form(""),
     info_adicional: str = Form(""),
     pago: str = Form("efectivo"),
@@ -270,18 +271,26 @@ def checkout_confirmar(
                                email=email, tiene_pin=False)
 
     id_dir, id_zona_envio, precio_envio = 0, 0, Decimal("0.00")
+    obs_envio = ""
     if entrega == "retira":
         id_sucursal = id_sucursal or 1
     else:
         id_sucursal = 0
         id_zona_envio = z.id
-        precio_envio = zonas.costo_envio(z, car.subtotal)
+        coordina = modalidad_envio == "coordinar" and z.precio_dia < z.precio
+        precio_envio = zonas.costo_envio(z, car.subtotal, "coordinar" if coordina else "dia")
+        obs_envio = ("Envío a coordinar día/horario" if coordina
+                     else "Envío el día de reparto de la zona")
         if graba:
             id_dir = clientes.guardar_direccion(cli.id, direccion, int(altura or 0),
                                                 localidad, z.id, info_adicional)
 
     d = descuentos.validar(codigo_descuento)
     cod = d.codigo if d else ""
+
+    obs_final = observacion.strip()
+    if obs_envio:
+        obs_final = (obs_final + " · " if obs_final else "") + obs_envio
 
     p = pedidos.PedidoNuevo(
         cliente_id=cli.id,
@@ -291,7 +300,7 @@ def checkout_confirmar(
             observacion=l.observacion) for l in car.lineas],
         efectivo=(pago == "efectivo"),
         id_sucursal=id_sucursal, id_direccion_envio=id_dir, id_zona_envio=id_zona_envio,
-        precio_envio=precio_envio, codigo_descuento=cod, observacion=observacion,
+        precio_envio=precio_envio, codigo_descuento=cod, observacion=obs_final,
     )
 
     numero = None
@@ -313,6 +322,7 @@ def checkout_confirmar(
         "retira": bool(id_sucursal),
         "sucursal": suc_nombre,
         "envio": float(precio_envio),
+        "envio_modalidad": obs_envio,
         "efectivo": pago == "efectivo",
         "descuento": cod,
         "items": [{"cant": float(l.cantidad), "nombre": l.producto.nombre,
