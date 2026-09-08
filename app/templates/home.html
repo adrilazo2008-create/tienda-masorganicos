@@ -46,6 +46,15 @@
   </div>
 </section>
 
+{% if home_cfg.productores_img %}
+<section class="bloque productores-banner">
+  <h2>{{ home_cfg.productores_titulo or 'Nuestros productores' }}</h2>
+  <img src="{{ IMG_BASE }}/productores/{{ home_cfg.productores_img }}"
+       alt="Productores y comercializadoras con las que trabaja Más Orgánicos"
+       loading="lazy" decoding="async">
+</section>
+{% endif %}
+
 <section class="bloque rubros-home">
   <h2>Nuestros rubros</h2>
   <div class="rubros-grid">

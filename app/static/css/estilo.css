@@ -123,6 +123,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
   font-size:1rem;line-height:1.5}
 .trust-band b{color:var(--verde-osc)}
 
+/* banner de productores (imagen pareja armada aparte) */
+.productores-banner{text-align:center}
+.productores-banner h2{margin:0 0 .9rem}
+.productores-banner img{width:100%;max-width:900px;height:auto;border-radius:12px;
+  border:1px solid var(--linea)}
+
 /* grid de productos */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.1rem}
 .card{background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .18s,transform .18s,border-color .18s}

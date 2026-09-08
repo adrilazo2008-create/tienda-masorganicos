@@ -99,6 +99,7 @@ def home(request: Request):
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
                   slides=contenido.carrusel_home(),
+                  home_cfg=contenido.home_config(),
                   avisos=contenido.avisos())
 
 

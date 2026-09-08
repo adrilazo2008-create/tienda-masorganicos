@@ -1,0 +1,5 @@
+{
+  "_ayuda": "productores_img: nombre de archivo en {IMG_BASE}/productores/ (imagen pareja con los logos de productores, tipo grilla ~1200x800). Vacío = no se muestra la sección.",
+  "productores_img": "",
+  "productores_titulo": "Trabajamos con productores y comercializadoras que cultivan y elaboran sin agrotóxicos"
+}

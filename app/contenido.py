@@ -11,6 +11,14 @@ from .db import engine_tienda
 _DATA = Path(__file__).resolve().parent / "data"
 
 
+def home_config() -> dict:
+    """Config editable de la home (app/data/home.json)."""
+    try:
+        return json.loads((_DATA / "home.json").read_text(encoding="utf-8"))
+    except OSError:
+        return {}
+
+
 def carrusel_home() -> list[dict]:
     """Imágenes del banner de la home ({img, alt}). Editar app/data/carrusel_home.json;
     los archivos van en {IMG_BASE}/carrousel/."""
