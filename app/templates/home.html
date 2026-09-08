@@ -4,14 +4,9 @@
 <section class="hero">
   <div class="carrusel" aria-roledescription="carrusel" aria-label="Novedades">
     <div class="carrusel-track" id="carrusel-track">
-      {% set slides = [
-        ('02.jpg', 'Frutas y verduras agroecológicas'),
-        ('04.jpg', 'Del campo, a tu casa'),
-        ('03.jpg', 'Delivery a Zona Norte y CABA'),
-      ] %}
-      {% for archivo, texto in slides %}
-      <a class="carrusel-slide" href="/catalogo" aria-label="{{ texto }}">
-        <img src="{{ IMG_BASE }}/carrousel/{{ archivo }}" alt="{{ texto }}"
+      {% for s in slides %}
+      <a class="carrusel-slide" href="/catalogo" aria-label="{{ s.alt }}">
+        <img src="{{ IMG_BASE }}/carrousel/{{ s.img }}" alt="{{ s.alt }}"
              width="1280" height="400" decoding="async"
              {{ 'fetchpriority=high' if loop.first else 'loading=lazy' }}>
       </a>
@@ -20,7 +15,7 @@
     <button type="button" class="carrusel-nav prev" aria-label="Anterior">‹</button>
     <button type="button" class="carrusel-nav next" aria-label="Siguiente">›</button>
     <div class="carrusel-dots" role="tablist" aria-label="Elegir imagen">
-      {% for archivo, texto in slides %}
+      {% for s in slides %}
       <button type="button" role="tab" aria-label="Imagen {{ loop.index }}"
               aria-selected="{{ 'true' if loop.first else 'false' }}"></button>
       {% endfor %}
@@ -28,7 +23,7 @@
   </div>
 
   <div class="hero-txt">
-    <p class="hero-eyebrow">Verdulería agroecológica · Almacén natural · Zona Norte, GBA y CABA</p>
+    <p class="hero-eyebrow">Verdulería agroecológica · Almacén saludable · Zona Norte, GBA y CABA</p>
     <h1 class="hero-h1">Del productor a tu casa</h1>
     <p class="hero-lead">Frutas y verduras de estación elegidas junto a productores que cultivan sin agrotóxicos. Armás tu pedido, lo coordinamos por WhatsApp y pagás al recibir.</p>
     <div class="hero-cta">
@@ -39,20 +34,10 @@
 </section>
 
 
-{% if productores %}
-<section class="bloque productores" aria-label="Productores con los que trabajamos">
-  <h2>Detrás de cada producto hay un productor real</h2>
-  <p class="prod-sub">Trabajamos mano a mano con familias y cooperativas que cultivan y elaboran sin agrotóxicos.</p>
-  <ul class="prod-logos">
-    {% for pr in productores %}
-    <li>
-      {% if pr.logo %}<img src="{{ IMG_BASE }}/productores/{{ pr.logo }}" alt="{{ pr.nombre }}" loading="lazy" decoding="async" height="44">
-      {% else %}<span>{{ pr.nombre }}</span>{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
+<p class="trust-band">
+  <b>Desde 2019</b> ayudando a más de <b>5.000 familias</b> a elegir lo que les hace bien,
+  con información y alimentos confiables.
+</p>
 
 <section class="bloque">
   <div class="bloque-cab"><h2>Productos destacados</h2><a href="/catalogo">Ver todo →</a></div>

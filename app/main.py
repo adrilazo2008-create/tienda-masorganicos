@@ -98,8 +98,7 @@ def render(request: Request, plantilla: str, **extra):
 def home(request: Request):
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
-                  carrousel=contenido.carrousel(),
-                  productores=contenido.productores(),
+                  slides=contenido.carrusel_home(),
                   avisos=contenido.avisos())
 
 
