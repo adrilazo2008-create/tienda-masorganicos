@@ -233,7 +233,7 @@ def checkout_confirmar(
     telefono: str = Form(...), email: str = Form(""),
     entrega: str = Form("envio"),
     id_zona: int = Form(0), id_sucursal: int = Form(0),
-    modalidad_envio: str = Form("dia"),
+    modalidad_envio: str = Form("coordinar"),
     direccion: str = Form(""), altura: str = Form(""), localidad: str = Form(""),
     info_adicional: str = Form(""),
     pago: str = Form("efectivo"),
@@ -277,10 +277,10 @@ def checkout_confirmar(
     else:
         id_sucursal = 0
         id_zona_envio = z.id
-        coordina = modalidad_envio == "coordinar" and z.precio_dia < z.precio
-        precio_envio = zonas.costo_envio(z, car.subtotal, "coordinar" if coordina else "dia")
-        obs_envio = ("Envío a coordinar día/horario" if coordina
-                     else "Envío el día de reparto de la zona")
+        elige_dia = modalidad_envio == "dia" and z.precio_dia < z.precio
+        precio_envio = zonas.costo_envio(z, car.subtotal, "dia" if elige_dia else "coordinar")
+        obs_envio = ("Envío el día de reparto de la zona" if elige_dia
+                     else "Envío a coordinar día/horario")
         if graba:
             id_dir = clientes.guardar_direccion(cli.id, direccion, int(altura or 0),
                                                 localidad, z.id, info_adicional)
@@ -288,9 +288,9 @@ def checkout_confirmar(
     d = descuentos.validar(codigo_descuento)
     cod = d.codigo if d else ""
 
-    obs_final = observacion.strip()
-    if obs_envio:
-        obs_final = (obs_final + " · " if obs_final else "") + obs_envio
+    # la modalidad de envío va PRIMERO; la aclaración que escribió la persona se conserva tal cual
+    obs_cliente = observacion.strip()
+    obs_final = obs_envio + (". " + obs_cliente if obs_cliente else "") if obs_envio else obs_cliente
 
     p = pedidos.PedidoNuevo(
         cliente_id=cli.id,

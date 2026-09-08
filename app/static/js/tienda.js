@@ -34,11 +34,11 @@ function recalcularEnvio(){
     var diapre = parseFloat(o.dataset.diaprecio || '0') || precio;
 
     eligeModalidad = diapre < precio;
-    var modalidad = 'dia';
+    var modalidad = 'coordinar';
     var mr = document.querySelector('input[name=modalidad_envio]:checked');
     if (mr) modalidad = mr.value;
     if (!eligeModalidad) modalidad = 'coordinar';   // sin bonificación: un solo precio
-    var costo = (modalidad === 'coordinar') ? precio : diapre;
+    var costo = (modalidad === 'dia') ? diapre : precio;
 
     envio = (gratis && sub >= gratis) ? 0 : costo;
     if (envio === 0 && costo > 0) info = 'Envío gratis por superar ' + fmtPeso(gratis);
@@ -49,8 +49,8 @@ function recalcularEnvio(){
 
     var od = document.getElementById('opt-dia');
     var oc = document.getElementById('opt-coord');
+    if (oc) oc.textContent = 'Día y horario a coordinar — ' + fmtPeso(precio);
     if (od) od.textContent = 'El día que pasamos por tu zona — ' + fmtPeso(diapre);
-    if (oc) oc.textContent = 'Otro día / horario a coordinar — ' + fmtPeso(precio);
   }
   if (modBox) modBox.hidden = !eligeModalidad;
 

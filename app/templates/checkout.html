@@ -69,8 +69,8 @@
         <p class="chico zona-detalle" id="zona-detalle" aria-live="polite"></p>
         <div id="modalidad-envio" hidden>
           <p class="chico" style="font-weight:600;margin:.4rem 0 .2rem">¿Cuándo querés recibirlo?</p>
-          <label class="radio"><input type="radio" name="modalidad_envio" value="dia" checked onchange="recalcularEnvio()"> <span id="opt-dia">El día que pasamos por tu zona</span></label>
-          <label class="radio"><input type="radio" name="modalidad_envio" value="coordinar" onchange="recalcularEnvio()"> <span id="opt-coord">Otro día / horario a coordinar</span></label>
+          <label class="radio"><input type="radio" name="modalidad_envio" value="coordinar" checked onchange="recalcularEnvio()"> <span id="opt-coord">Día y horario a coordinar</span></label>
+          <label class="radio"><input type="radio" name="modalidad_envio" value="dia" onchange="recalcularEnvio()"> <span id="opt-dia">El día que pasamos por tu zona</span></label>
         </div>
         <p class="chico" id="envio-info" aria-live="polite"></p>
         <div class="grid2">
