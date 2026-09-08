@@ -180,6 +180,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cat-count{color:var(--gris);font-size:.85rem;margin-top:-.3rem}
 
 /* producto */
+.btn-volver{display:inline-flex;align-items:center;gap:.3rem;background:#fff;border:1px solid var(--linea);
+  border-radius:999px;padding:.4rem .95rem;font:inherit;font-size:.9rem;font-weight:500;
+  color:var(--verde-osc);cursor:pointer;margin-bottom:.9rem}
+.btn-volver:hover{background:var(--verde-claro);border-color:var(--verde)}
 .miga{font-size:.8rem;color:var(--gris);margin-bottom:.8rem}
 .prod{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;background:#fff;border:1px solid var(--linea);border-radius:16px;padding:2rem}
 .prod-img-col{display:flex;flex-direction:column;gap:.6rem}

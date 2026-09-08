@@ -233,3 +233,59 @@ document.addEventListener('DOMContentLoaded', function(){
   var err = document.getElementById('checkout-error') || document.getElementById('login-error');
   if (err) err.focus();
 });
+
+/* volver a la lista en el mismo punto -------------------------------------- */
+(function(){
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+  var esLista = location.pathname === '/' || location.pathname.indexOf('/catalogo') === 0;
+  var clave = 'scroll:' + location.pathname + location.search;
+
+  function guardarScroll(){
+    try { sessionStorage.setItem(clave, String(window.pageYOffset)); } catch (e) {}
+  }
+
+  if (!esLista) return;
+
+  // marcar al entrar a una ficha de producto desde esta lista
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href*="/producto/"]');
+    if (a){ guardarScroll(); try { sessionStorage.setItem('volverLista', '1'); } catch (x) {} }
+  });
+  var tId;
+  window.addEventListener('scroll', function(){
+    clearTimeout(tId); tId = setTimeout(guardarScroll, 200);
+  }, { passive: true });
+  window.addEventListener('pagehide', guardarScroll);
+
+  // restaurar el scroll si volvemos de una ficha de producto
+  try {
+    var volviendo = sessionStorage.getItem('volverLista') === '1' ||
+                    /\/producto\//.test(document.referrer || '');
+    var y = sessionStorage.getItem(clave);
+    sessionStorage.removeItem('volverLista');
+    if (volviendo && y){
+      var yy = parseInt(y, 10);
+      window.scrollTo(0, yy);
+      requestAnimationFrame(function(){ window.scrollTo(0, yy); });
+      setTimeout(function(){ window.scrollTo(0, yy); }, 150);
+    }
+  } catch (e) {}
+})();
+
+// botón "← Volver" de la ficha de producto
+function volverALista(e){
+  if (e && e.preventDefault) e.preventDefault();
+  var ref = document.referrer || '';
+  if (ref.indexOf(location.origin) === 0 && history.length > 1) history.back();
+  else location.href = '/catalogo';
+}
+
+// ficha de producto: al agregar al carrito, volver a lo que estabas viendo
+document.addEventListener('DOMContentLoaded', function(){
+  var f = document.querySelector('form.prod-add');
+  if (!f) return;
+  f.addEventListener('htmx:afterRequest', function(e){
+    if (e.detail && e.detail.successful) setTimeout(volverALista, 900);
+  });
+});

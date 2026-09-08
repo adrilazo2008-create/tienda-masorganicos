@@ -3,6 +3,8 @@
 {% block descripcion %}{{ p.detalle|default(p.nombre) }}{% endblock %}
 {% block contenido %}
 
+<button type="button" class="btn-volver" onclick="volverALista(event)">← Volver</button>
+
 <nav class="miga" aria-label="Ruta de navegación">
   <a href="/catalogo">Productos</a>
   / <a href="/catalogo?rubro={{ p.rubro_id }}">{{ p.rubro }}</a>
