@@ -12,6 +12,7 @@ Estructura de categorías (2 niveles):
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Optional
@@ -19,6 +20,19 @@ from typing import Optional
 from sqlalchemy import bindparam, text
 
 from .db import engine_erp
+
+# --- caché en memoria con TTL para consultas que casi no cambian --------------
+_cache: dict[str, tuple[float, object]] = {}
+
+
+def _cacheado(clave: str, ttl: float, calc):
+    ahora = time.monotonic()
+    hit = _cache.get(clave)
+    if hit and ahora - hit[0] < ttl:
+        return hit[1]
+    val = calc()
+    _cache[clave] = (ahora, val)
+    return val
 
 # parametros con Parametro = 9
 UNIDADES = {90000001: "UN", 90000003: "KG", 90000004: "LT", 90000011: "PQTE"}
@@ -231,7 +245,11 @@ def categorias() -> list[dict]:
 
 
 def rubros() -> list[dict]:
-    """Rubros (nivel 1) con sus categorías (nivel 2), solo lo que tiene stock web."""
+    """Rubros (nivel 1) con sus categorías (nivel 2). Cacheado 5 min (se llama en cada página)."""
+    return _cacheado("rubros", 300, _rubros)
+
+
+def _rubros() -> list[dict]:
     sql_cat = """
         SELECT c.Id_rubro AS rid, c.CodigoUnificado AS cid, c.Descripcion AS nombre, COUNT(*) AS n
         FROM mprimas m JOIN categorias c ON c.CodigoUnificado = m.categoria

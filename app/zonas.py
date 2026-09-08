@@ -45,6 +45,11 @@ class Sucursal:
 
 
 def zonas() -> list[Zona]:
+    from .catalogo import _cacheado
+    return _cacheado("zonas", 120, _zonas)   # cambios en la tabla se ven a los ~2 min
+
+
+def _zonas() -> list[Zona]:
     sql = """SELECT id_zona, titulo, precio, mim_compra, envio_gratis, descuento, texto, horario
              FROM zonas WHERE activo = 1 ORDER BY titulo"""
     with engine_tienda.connect() as cx:
