@@ -187,29 +187,29 @@ def _con_etiquetas(prods: list[Producto]) -> list[Producto]:
     return [replace(p, etiquetas=etq.get(p.id, ())) for p in prods]
 
 
+def _todos_los_productos() -> list[Producto]:
+    """Todos los productos vendibles en web + etiquetas. Consulta pesada -> se cachea."""
+    sql = _SELECT + " ORDER BY m.destacado DESC, m.Descripcion"
+    with engine_erp.connect() as cx:
+        prods = [_fila_a_producto(r) for r in cx.execute(text(sql))]
+    return _con_etiquetas(prods)
+
+
 def listar(categoria_id: Optional[int] = None, rubro_id: Optional[int] = None,
            busqueda: Optional[str] = None, solo_destacados: bool = False,
            limite: Optional[int] = None, con_etiquetas: bool = True) -> list[Producto]:
-    sql = _SELECT
-    params: dict = {}
+    """Filtra sobre el catálogo completo cacheado (3 min). Evita ir a la base en cada request."""
+    res = _cacheado("catalogo_todos", 180, _todos_los_productos)
     if categoria_id:
-        sql += " AND m.categoria = :cat"
-        params["cat"] = categoria_id
+        res = [p for p in res if p.categoria_id == categoria_id]
     if rubro_id:
-        sql += " AND c.Id_rubro = :rub"
-        params["rub"] = rubro_id
+        res = [p for p in res if p.rubro_id == rubro_id]
     if busqueda:
-        sql += " AND (m.Descripcion LIKE :q OR m.detalle LIKE :q)"
-        params["q"] = f"%{busqueda.strip()}%"
+        q = busqueda.strip().lower()
+        res = [p for p in res if q in p.nombre.lower() or q in p.detalle.lower()]
     if solo_destacados:
-        sql += " AND m.destacado = 1"
-    sql += " ORDER BY m.destacado DESC, m.Descripcion"
-    if limite:
-        sql += " LIMIT :lim"
-        params["lim"] = int(limite)
-    with engine_erp.connect() as cx:
-        prods = [_fila_a_producto(r) for r in cx.execute(text(sql), params)]
-    return _con_etiquetas(prods) if con_etiquetas else prods
+        res = [p for p in res if p.destacado]
+    return res[:limite] if limite else list(res)
 
 
 def obtener(producto_id: int) -> Optional[Producto]:
