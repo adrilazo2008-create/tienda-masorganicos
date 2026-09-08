@@ -51,7 +51,8 @@
   <h2>{{ home_cfg.productores_titulo or 'Nuestros productores' }}</h2>
   <img src="{{ IMG_BASE }}/productores/{{ home_cfg.productores_img }}"
        alt="Productores y comercializadoras con las que trabaja Más Orgánicos"
-       loading="lazy" decoding="async">
+       loading="lazy" decoding="async"
+       onerror="this.closest('.productores-banner').hidden=true">
 </section>
 {% endif %}
 
