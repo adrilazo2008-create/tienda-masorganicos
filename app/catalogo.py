@@ -244,6 +244,12 @@ def categorias() -> list[dict]:
                 for r in cx.execute(text(sql))]
 
 
+def destacados(limite: int = 12) -> list["Producto"]:
+    """Productos destacados para la home. Cacheado 5 min."""
+    return _cacheado(f"destacados:{limite}", 300,
+                     lambda: listar(solo_destacados=True, limite=limite))
+
+
 def rubros() -> list[dict]:
     """Rubros (nivel 1) con sus categorías (nivel 2). Cacheado 5 min (se llama en cada página)."""
     return _cacheado("rubros", 300, _rubros)

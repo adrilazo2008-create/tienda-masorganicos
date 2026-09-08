@@ -97,7 +97,7 @@ def render(request: Request, plantilla: str, **extra):
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return render(request, "home.html",
-                  destacados=catalogo.listar(solo_destacados=True, limite=12),
+                  destacados=catalogo.destacados(12),
                   carrousel=contenido.carrousel(),
                   avisos=contenido.avisos())
 
