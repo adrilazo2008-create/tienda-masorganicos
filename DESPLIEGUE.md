@@ -52,10 +52,10 @@ Todos viven en **una sola tabla: `zonas`** (base `iebbbhrt_prueba_paginaweb`), c
 
 | Columna | Qué es |
 |---|---|
-| `precio` | costo de envío normal |
-| `descuento` | % de descuento el día que se reparte esa zona |
+| `precio` | costo de envío a coordinar día/horario — **se cobra siempre** |
+| `descuento` | % que se descuenta si eligen "el día que repartimos tu zona" |
 | `mim_compra` | compra mínima para despachar |
-| `envio_gratis` | subtotal a partir del cual el envío es gratis |
+| `envio_gratis` | subtotal a partir del cual el envío es **sin cargo, pero solo si eligen "el día de reparto de la zona"** (a coordinar siempre se cobra) |
 | `titulo` / `activo` | nombre y si está vigente |
 
 Editar por **cPanel → phpMyAdmin → tabla `zonas`**, o pedirle a Claude

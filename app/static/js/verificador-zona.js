@@ -125,7 +125,7 @@ function iniciarVerificadorZona() {
         p.push(linea);
       }
       if (zona.minimo) p.push('pedido mínimo ' + plata(zona.minimo));
-      if (zona.gratis) p.push('envío gratis desde ' + plata(zona.gratis));
+      if (zona.gratis) p.push('sin cargo desde ' + plata(zona.gratis) + ' el día que repartimos tu zona');
       var detalle = p.length ? ' — ' + p.join(' · ') + '.' : '';
       mostrar('✅ ¡Sí, llegamos a tu zona!' + detalle +
         ' El costo exacto se calcula al hacer el pedido; coordinamos día y horario por WhatsApp.', 'ok');

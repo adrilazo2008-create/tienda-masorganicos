@@ -39,16 +39,20 @@ function recalcularEnvio(){
     var minc   = parseFloat(o.dataset.min || '0');
     var diapre = parseFloat(o.dataset.diaprecio || '0') || precio;
 
-    eligeModalidad = diapre < precio;
+    // "a coordinar" = SIEMPRE precio completo, nunca gratis.
+    // "el día de la zona" = sin cargo si supera el valor de envío gratis; si no, precio del día.
+    var costoCoord = precio;
+    var costoDia = (gratis && sub >= gratis) ? 0 : diapre;
+    eligeModalidad = costoDia < costoCoord;   // solo ofrecemos elegir si "el día" conviene
+
     var modalidad = 'coordinar';
     var mr = document.querySelector('input[name=modalidad_envio]:checked');
-    if (mr) modalidad = mr.value;
-    if (!eligeModalidad) modalidad = 'coordinar';   // sin bonificación: un solo precio
-    var costo = (modalidad === 'dia') ? diapre : precio;
+    if (mr && eligeModalidad) modalidad = mr.value;
+    envio = (modalidad === 'dia') ? costoDia : costoCoord;
 
-    envio = (gratis && sub >= gratis) ? 0 : costo;
-    if (envio === 0 && costo > 0) info = 'Envío gratis por superar ' + fmtPeso(gratis);
     if (minc && sub < minc) info = 'Compra mínima para esta zona: ' + fmtPeso(minc);
+    else if (modalidad === 'dia' && envio === 0) info = 'Envío sin cargo el día que repartimos tu zona.';
+    else if (eligeModalidad && costoDia === 0) info = 'Elegí “el día que pasamos por tu zona” y el envío es sin cargo.';
 
     var msg = (o.dataset.mensaje || '').trim();
     if (msg) detalle = msg + '.';
@@ -56,7 +60,7 @@ function recalcularEnvio(){
     var od = document.getElementById('opt-dia');
     var oc = document.getElementById('opt-coord');
     if (oc) oc.textContent = 'Día y horario a coordinar — ' + fmtPeso(precio);
-    if (od) od.textContent = 'El día que pasamos por tu zona — ' + fmtPeso(diapre);
+    if (od) od.textContent = 'El día que pasamos por tu zona — ' + (costoDia === 0 ? 'sin cargo' : fmtPeso(diapre));
   }
   if (modBox) modBox.hidden = !eligeModalidad;
 

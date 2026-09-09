@@ -15,12 +15,12 @@
 {% set pct = (car.subtotal / umbral_envio * 100) if car.subtotal < umbral_envio else 100 %}
 <div class="envio-progreso {{ 'listo' if falta <= 0 else '' }}">
   {% if falta > 0 %}
-  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío bonificado</b>.</p>
+  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío sin cargo</b> el día que repartimos tu zona.</p>
   {% else %}
-  <p>🎉 ¡Sumaste el <b>envío bonificado</b>! Se aplica según tu zona al cerrar el pedido.</p>
+  <p>🎉 Con este total el <b>envío es sin cargo</b> el día que repartimos tu zona. Elegís la modalidad al cerrar el pedido.</p>
   {% endif %}
   <div class="ep-barra"><span style="width: {{ pct|round(0, 'floor') }}%"></span></div>
-  {% if falta > 0 %}<p class="chico">Según la zona, el envío es sin cargo desde {{ pesos(umbral_envio) }}.</p>{% endif %}
+  {% if falta > 0 %}<p class="chico">Sin cargo desde {{ pesos(umbral_envio) }} eligiendo el día de reparto de tu zona. A coordinar día y horario, el envío se cobra siempre.</p>{% endif %}
 </div>
 {% endif %}
 

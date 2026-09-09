@@ -303,7 +303,7 @@ def checkout_confirmar(
     else:
         id_sucursal = 0
         id_zona_envio = z.id
-        elige_dia = modalidad_envio == "dia" and z.precio_dia < z.precio
+        elige_dia = modalidad_envio == "dia"
         precio_envio = zonas.costo_envio(z, car.subtotal, "dia" if elige_dia else "coordinar")
         obs_envio = ("Envío el día de reparto de la zona" if elige_dia
                      else "Envío a coordinar día/horario")

@@ -123,8 +123,13 @@ def sucursales() -> list[Sucursal]:
 
 
 def costo_envio(z: Zona, subtotal: Decimal, modalidad: str = "coordinar") -> Decimal:
-    """modalidad: 'dia' = el día que repartimos la zona (con bonificación) ·
-    'coordinar' = día y horario a convenir (precio completo)."""
+    """modalidad:
+      'coordinar' = día y horario a convenir -> SIEMPRE se cobra el precio completo.
+      'dia'       = el día que repartimos la zona -> sin cargo si supera el mínimo
+                    de envío gratis; si no, el precio bonificado del día.
+    El envío gratis SOLO existe en la modalidad 'dia'."""
+    if modalidad != "dia":
+        return z.precio
     if z.envio_gratis and subtotal >= z.envio_gratis:
         return Decimal("0.00")
-    return z.precio if modalidad == "coordinar" else z.precio_dia
+    return z.precio_dia
