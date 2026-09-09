@@ -210,6 +210,13 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 
 /* carrito */
 .carrito{display:grid;grid-template-columns:1fr 320px;gap:1.5rem}
+.envio-progreso{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:12px;padding:.8rem 1rem;margin:0 0 1rem}
+.envio-progreso p{margin:0 0 .5rem;color:var(--verde-osc)}
+.envio-progreso p.chico{margin:.45rem 0 0;color:var(--gris)}
+.envio-progreso.listo{background:#eaf7e6;border-color:var(--verde)}
+.ep-barra{height:8px;background:#fff;border:1px solid #cfe3c2;border-radius:999px;overflow:hidden}
+.ep-barra span{display:block;height:100%;background:var(--verde);border-radius:999px;transition:width .3s}
+
 .cl{display:grid;grid-template-columns:64px 1fr auto auto auto;gap:.8rem;align-items:center;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:.6rem;margin-bottom:.6rem}
 .cl img{width:64px;height:64px;object-fit:cover;border-radius:8px}
 .cl-info{display:flex;flex-direction:column;min-width:0}

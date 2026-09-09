@@ -7,6 +7,21 @@
 {% if car.vacio %}
   <p class="vacio">Todavía no agregaste nada. <a href="/catalogo">Ver productos →</a></p>
 {% else %}
+
+{% if umbral_envio %}
+{% set falta = umbral_envio - car.subtotal %}
+{% set pct = (car.subtotal / umbral_envio * 100) if car.subtotal < umbral_envio else 100 %}
+<div class="envio-progreso {{ 'listo' if falta <= 0 else '' }}">
+  {% if falta > 0 %}
+  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío bonificado</b>.</p>
+  {% else %}
+  <p>🎉 ¡Sumaste el <b>envío bonificado</b>! Se aplica según tu zona al cerrar el pedido.</p>
+  {% endif %}
+  <div class="ep-barra"><span style="width: {{ pct|round(0, 'floor') }}%"></span></div>
+  {% if falta > 0 %}<p class="chico">Según la zona, el envío es sin cargo desde {{ pesos(umbral_envio) }}.</p>{% endif %}
+</div>
+{% endif %}
+
 <div class="carrito">
   <div class="carrito-lineas">
     {% for l in car.lineas %}

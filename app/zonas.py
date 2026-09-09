@@ -104,6 +104,13 @@ def zona(id_zona: int) -> Optional[Zona]:
     return next((z for z in zonas() if z.id == id_zona), None)
 
 
+def umbral_envio_gratis() -> Decimal:
+    """El subtotal más bajo a partir del cual alguna zona tiene envío bonificado.
+    Sirve para la barra de progreso del carrito, antes de saber la zona."""
+    vals = [z.envio_gratis for z in zonas() if z.envio_gratis]
+    return min(vals) if vals else Decimal("0")
+
+
 def sucursales() -> list[Sucursal]:
     sql = """SELECT id_sucursal, descripcion, direccion, altura, ciudad
              FROM sucursal WHERE activo = 1 ORDER BY descripcion"""

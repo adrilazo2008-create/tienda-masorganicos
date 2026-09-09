@@ -186,7 +186,8 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
-    return render(request, "carrito.html", car=carrito_mod.resolver(request.session))
+    return render(request, "carrito.html", car=carrito_mod.resolver(request.session),
+                  umbral_envio=zonas.umbral_envio_gratis())
 
 
 @app.post("/carrito/actualizar")
