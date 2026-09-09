@@ -1,3 +1,11 @@
+// catálogo mobile: centrar el rubro activo en la fila deslizable
+(function(){
+  var fila = document.querySelector('.rubros-chips.compacta');
+  if (!fila) return;
+  var act = fila.querySelector('a.act');
+  if (act && act.scrollIntoView) act.scrollIntoView({inline: 'center', block: 'nearest'});
+})();
+
 // + / - de cantidad, con soporte para fracciones (KG/LT)
 function stepCant(btn, dir){
   var inp = btn.parentElement.querySelector('input');

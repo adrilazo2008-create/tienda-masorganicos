@@ -73,16 +73,27 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .acc-prod:hover{text-decoration:underline}
 
 /* chips de rubros (navegación de catálogo en mobile) */
-.rubros-chips{display:none}
-.subcats-chips a{background:var(--verde-claro)}
+.rubros-chips,.subcats-bloque{display:none}
 @media(max-width:900px){
   .rubros-chips{display:flex;flex-wrap:wrap;gap:.4rem;padding:.1rem 0 .8rem}
   .rubros-chips a{padding:.4rem .8rem;border:1px solid var(--linea);border-radius:999px;
-    background:#fff;font-size:.85rem;font-weight:500;color:var(--tinta)}
+    background:#fff;font-size:.85rem;font-weight:500;color:var(--tinta);white-space:nowrap}
   .rubros-chips a.act{background:var(--verde);color:#fff;border-color:var(--verde)}
-  .subcats-chips{gap:.35rem;margin-top:-.4rem}
-  .subcats-chips a{font-size:.8rem;padding:.32rem .7rem}
-  .subcats-chips a.act{background:var(--verde-osc);border-color:var(--verde-osc)}
+
+  /* dentro de un rubro: la fila de rubros se colapsa a una sola línea deslizable */
+  .rubros-chips.compacta{flex-wrap:nowrap;overflow-x:auto;gap:.35rem;padding:.1rem 0 .6rem;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .rubros-chips.compacta::-webkit-scrollbar{display:none}
+  .rubros-chips.compacta a{flex:0 0 auto;font-size:.8rem;padding:.32rem .75rem}
+
+  /* las subcategorías, en su propio panel etiquetado */
+  .subcats-bloque{display:block;background:var(--verde-claro);border:1px solid #cfe3c2;
+    border-radius:12px;padding:.7rem .8rem;margin:0 0 1.1rem}
+  .subcats-titulo{margin:0 0 .5rem;font-size:.85rem;color:var(--verde-osc)}
+  .subcats-chips{display:flex;flex-wrap:wrap;gap:.4rem}
+  .subcats-chips a{padding:.36rem .8rem;border:1px solid #cfe3c2;border-radius:999px;
+    background:#fff;font-size:.83rem;font-weight:500;color:var(--verde-osc);white-space:nowrap}
+  .subcats-chips a.act{background:var(--verde);color:#fff;border-color:var(--verde)}
 }
 
 /* hero */

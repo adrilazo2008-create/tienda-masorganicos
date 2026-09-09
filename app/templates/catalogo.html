@@ -2,7 +2,7 @@
 {% block title %}{{ titulo }} — Más Orgánicos{% endblock %}
 {% block contenido %}
 
-<nav class="rubros-chips" aria-label="Rubros">
+<nav class="rubros-chips {{ 'compacta' if rubro_actual }}" aria-label="Rubros">
   <a href="/catalogo" class="{{ 'act' if not rubro_actual and not busqueda }}">Todo</a>
   {% for r in rubros %}
     <a href="/catalogo?rubro={{ r.id }}"
@@ -10,14 +10,17 @@
   {% endfor %}
 </nav>
 {% if rubro_actual and rubro_actual.categorias|length > 1 %}
-<nav class="rubros-chips subcats-chips" aria-label="Categorías de {{ rubro_actual.nombre }}">
-  <a href="/catalogo?rubro={{ rubro_actual.id }}"
-     class="{{ 'act' if not categoria_actual }}">Todo {{ rubro_actual.nombre }}</a>
-  {% for c in rubro_actual.categorias %}
-    <a href="/catalogo?categoria={{ c.id }}"
-       class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">{{ c.nombre }}</a>
-  {% endfor %}
-</nav>
+<div class="subcats-bloque">
+  <p class="subcats-titulo">Filtrá dentro de <b>{{ rubro_actual.nombre }}</b></p>
+  <nav class="subcats-chips" aria-label="Categorías de {{ rubro_actual.nombre }}">
+    <a href="/catalogo?rubro={{ rubro_actual.id }}"
+       class="{{ 'act' if not categoria_actual }}">Todo</a>
+    {% for c in rubro_actual.categorias %}
+      <a href="/catalogo?categoria={{ c.id }}"
+         class="{{ 'act' if categoria_actual and categoria_actual.id == c.id }}">{{ c.nombre }}</a>
+    {% endfor %}
+  </nav>
+</div>
 {% endif %}
 
 <div class="cat-layout">
