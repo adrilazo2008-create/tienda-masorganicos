@@ -192,12 +192,13 @@ function iniciarBuscaZona(){
   inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); buscar(); } });
 }
 
-// toasts: quitar cada uno después de unos segundos
+// toasts: quitar cada uno después de unos segundos + evento AddToCart (Meta)
 document.body.addEventListener('htmx:afterSwap', function(e){
   if (e.detail && e.detail.target && e.detail.target.id === 'toasts'){
     var t = e.detail.target.firstElementChild;
     if (t && !t.dataset.timed){
       t.dataset.timed = '1';
+      if (window.fbq) fbq('track', 'AddToCart');
       setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 220); }, 2600);
     }
   }

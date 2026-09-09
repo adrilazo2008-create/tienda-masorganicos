@@ -42,4 +42,7 @@
 
   <a href="/catalogo" class="btn-grande">Seguir comprando</a>
 </div>
+{% if meta_pixel and not ok.simulado %}
+<script>if(window.fbq)fbq('track','Purchase',{value:{{ ok.total }},currency:'ARS',num_items:{{ ok['items']|length }}});</script>
+{% endif %}
 {% endblock %}

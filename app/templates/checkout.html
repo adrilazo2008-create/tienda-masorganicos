@@ -121,4 +121,5 @@
 
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 <script>iniciarCheckout();</script>
+{% if meta_pixel %}<script>if(window.fbq)fbq('track','InitiateCheckout',{value:{{ car.subtotal }},currency:'ARS',num_items:{{ car.lineas|length }}});</script>{% endif %}
 {% endblock %}

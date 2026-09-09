@@ -101,6 +101,7 @@ def ctx(request: Request, **extra):
         cliente=_cliente_actual(request),
         entorno=S.entorno,
         anuncio=contenido.anuncio(),
+        meta_pixel=contenido.meta_pixel_id(),
     )
     base.update(extra)
     return base

@@ -57,4 +57,5 @@
 {% endif %}
 
 <script src="/static/js/tienda.js?v={{ V }}"></script>
+{% if meta_pixel %}<script>if(window.fbq)fbq('track','ViewContent',{content_name:{{ p.nombre|tojson }},content_ids:[{{ p.id }}],value:{{ p.precio }},currency:'ARS'});</script>{% endif %}
 {% endblock %}

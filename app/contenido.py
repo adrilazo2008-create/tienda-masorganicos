@@ -20,6 +20,15 @@ def home_config() -> dict:
         return {}
 
 
+def meta_pixel_id() -> str:
+    """ID del Pixel de Meta (app/data/integraciones.json). Vacío = sin pixel."""
+    try:
+        data = json.loads((_DATA / "integraciones.json").read_text(encoding="utf-8"))
+        return str(data.get("meta_pixel_id") or "").strip()
+    except OSError:
+        return ""
+
+
 _TAGS = re.compile(r"<[^>]+>")
 
 
