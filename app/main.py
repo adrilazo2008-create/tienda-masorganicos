@@ -164,6 +164,11 @@ def ver_faq(request: Request):
     return render(request, "faq.html", faq=contenido.faq())
 
 
+@app.get("/privacidad", response_class=HTMLResponse)
+def ver_privacidad(request: Request):
+    return render(request, "privacidad.html")
+
+
 @app.get("/envios", response_class=HTMLResponse)
 def ver_envios(request: Request):
     return render(request, "envios.html", zonas=zonas.zonas(), sucursales=zonas.sucursales())

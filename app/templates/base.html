@@ -8,15 +8,18 @@
 <meta name="description" content="{% block descripcion %}Frutas, verduras agroecológicas y almacén saludable con envío a Zona Norte, GBA y CABA. Comprá online, pagás al recibir.{% endblock %}">
 {% if meta_pixel %}
 <script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,
-'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','{{ meta_pixel }}');fbq('track','PageView');
+/* Meta Pixel: solo se carga si la persona acepta las cookies de medición. */
+window.cargarPixel = function(){
+  if (window.fbq && window.fbq.loaded) return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,
+  'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init','{{ meta_pixel }}');fbq('track','PageView');
+};
+try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } catch(e){}
 </script>
-<noscript><img height="1" width="1" style="display:none" alt=""
-  src="https://www.facebook.com/tr?id={{ meta_pixel }}&ev=PageView&noscript=1"></noscript>
 {% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,6 +95,7 @@ fbq('init','{{ meta_pixel }}');fbq('track','PageView');
       <a href="/envios">Zonas y costos de envío</a>
       <a href="/faq">Preguntas frecuentes</a>
       <a href="/cuenta">Mis pedidos</a>
+      <a href="/privacidad">Privacidad y cookies</a>
     </div>
     <div>
       <h4>Novedades</h4>
@@ -115,5 +119,33 @@ fbq('init','{{ meta_pixel }}');fbq('track','PageView');
 </a>
 
 <div id="toasts" role="status" aria-live="polite"></div>
+
+{% if meta_pixel %}
+<div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookies" aria-live="polite" hidden>
+  <p>
+    Usamos cookies propias para que funcione tu carrito y tu sesión, y cookies de
+    <b>Meta</b> para medir nuestras campañas. Podés aceptarlas o rechazarlas.
+    <a href="/privacidad">Más información</a>.
+  </p>
+  <div class="cookie-acc">
+    <button type="button" class="btn-sec" onclick="cookiesElegir('no')">Rechazar</button>
+    <button type="button" class="btn-grande" onclick="cookiesElegir('si')">Aceptar</button>
+  </div>
+</div>
+<script>
+  function cookiesElegir(v){
+    try { localStorage.setItem('mo-cookies', v); } catch(e){}
+    var b = document.getElementById('cookie-banner'); if (b) b.hidden = true;
+    if (v === 'si' && window.cargarPixel) window.cargarPixel();
+  }
+  (function(){
+    var elegido = '';
+    try { elegido = localStorage.getItem('mo-cookies') || ''; } catch(e){}
+    if (elegido !== 'si' && elegido !== 'no'){
+      var b = document.getElementById('cookie-banner'); if (b) b.hidden = false;
+    }
+  })();
+</script>
+{% endif %}
 </body>
 </html>

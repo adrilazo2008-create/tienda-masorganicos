@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Privacidad y cookies — Más Orgánicos{% endblock %}
+{% block descripcion %}Cómo Más Orgánicos usa tus datos y las cookies del sitio, y cómo ejercer tus derechos.{% endblock %}
+{% block contenido %}
+
+<article class="prosa">
+  <h1>Privacidad y cookies</h1>
+  <p class="chico">Última actualización: 09/09/2026</p>
+
+  <p>
+    En <b>Más Orgánicos</b> cuidamos tus datos igual que cuidamos lo que comés.
+    Acá te contamos qué información usamos, para qué, y qué podés decidir.
+  </p>
+
+  <h2>Quién es responsable</h2>
+  <p>
+    Más Orgánicos — verdulería agroecológica y almacén saludable, Zona Norte del Gran Buenos Aires.
+    Consultas sobre tus datos: escribinos por WhatsApp al
+    <a href="https://wa.me/5491155046740" rel="noopener">11&nbsp;5504&nbsp;6740</a>.
+  </p>
+
+  <h2>Qué datos usamos</h2>
+  <ul>
+    <li><b>Los que cargás para tu pedido:</b> nombre, celular, dirección de entrega y, si lo dejás, tu email.
+      Los usamos para preparar y coordinar la entrega, y para reconocerte la próxima vez que compres.</li>
+    <li><b>Datos de navegación en el sitio</b> (páginas que visitás, productos que mirás, si cerrás un pedido):
+      solo si aceptaste las cookies de medición (ver abajo).</li>
+  </ul>
+  <p>No pedimos ni guardamos datos de tarjetas: el pago se coordina y se abona al recibir el pedido.</p>
+
+  <h2>Para qué los usamos</h2>
+  <ul>
+    <li>Preparar, coordinar y entregar tus pedidos.</li>
+    <li>Contactarte por WhatsApp para confirmar disponibilidad y el día de entrega.</li>
+    <li>Entender qué funciona en la tienda y medir el resultado de nuestras campañas de publicidad.</li>
+  </ul>
+
+  <h2>Cookies</h2>
+  <ul>
+    <li><b>Propias y funcionales</b> (siempre activas): guardan tu carrito y tu sesión mientras usás el sitio.
+      Sin ellas la tienda no funciona. No se comparten con nadie.</li>
+    <li><b>De medición — Meta (Facebook / Instagram)</b>: solo se activan si tocás <b>“Aceptar”</b> en el aviso de cookies.
+      Le informan a Meta acciones anónimas de navegación (visitas, productos vistos, pedidos) para medir y mejorar
+      nuestras campañas. Si tocás <b>“Rechazar”</b>, no se cargan.</li>
+  </ul>
+  <p>
+    <button type="button" class="btn-sec" onclick="cambiarPrefCookies()">Cambiar mis preferencias de cookies</button>
+  </p>
+  <p class="chico">También podés bloquear o borrar cookies desde la configuración de tu navegador.</p>
+
+  <h2>Con quién se comparten</h2>
+  <ul>
+    <li><b>El sistema de gestión del local</b>, para preparar tu pedido.</li>
+    <li><b>Meta</b>, únicamente los datos de medición y solo si aceptaste esas cookies.</li>
+  </ul>
+  <p>No vendemos ni cedemos tus datos a terceros con fines comerciales.</p>
+
+  <h2>Tus derechos</h2>
+  <p>
+    Podés pedirnos acceder a tus datos, corregirlos o eliminarlos cuando quieras
+    (Ley&nbsp;25.326 de Protección de los Datos Personales). Escribinos por WhatsApp y lo resolvemos.
+  </p>
+  <p class="chico">
+    La autoridad de control es la <b>Agencia de Acceso a la Información Pública (AAIP)</b>,
+    ante la que podés presentar un reclamo si lo considerás necesario.
+  </p>
+
+  <p><a href="/catalogo" class="btn-grande">Volver a la tienda</a></p>
+</article>
+
+<script>
+  function cambiarPrefCookies(){
+    try { localStorage.removeItem('mo-cookies'); } catch(e){}
+    location.reload();
+  }
+</script>
+{% endblock %}
