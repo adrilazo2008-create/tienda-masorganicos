@@ -287,6 +287,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .pin-zona span{display:block;width:20px;height:20px;border-radius:50% 50% 50% 0;background:var(--rojo);
   border:2px solid #fff;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.4);margin:3px}
 
+.btn-mini{background:#fff;border:1px solid var(--verde);color:var(--verde-osc);border-radius:999px;
+  padding:.3rem .8rem;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-mini:hover{background:var(--verde-claro)}
+.carrito-flash{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);
+  border-radius:10px;padding:.7rem 1rem;margin:0 0 1rem;font-size:.95rem}
+.repetir-pedido{margin:1rem 0 .4rem}
+.sugeridos{margin-top:1.6rem;border-top:1px solid var(--linea);padding-top:1.4rem}
+
 .tabla-zonas,.tabla-pedidos{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden;font-size:.9rem}
 .tabla-zonas th,.tabla-pedidos th{background:var(--verde);color:#fff;text-align:left;padding:.5rem}
 .tabla-zonas td,.tabla-pedidos td{padding:.5rem;border-top:1px solid var(--linea)}

@@ -37,6 +37,9 @@
   </div>
 
   <p class="chico">Los precios y el stock se confirman al preparar el pedido. Coordinamos todo por WhatsApp.</p>
+  <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir" class="repetir-pedido">
+    <button type="submit" class="btn-grande">Repetir este pedido</button>
+  </form>
   <a href="/cuenta" class="btn-sec">Volver a mis pedidos</a>
 </div>
 {% endblock %}

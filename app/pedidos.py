@@ -153,6 +153,28 @@ def historial(cliente_id: int, limite: int = 30) -> list[PedidoResumen]:
         ]
 
 
+def habituales(cliente_id: int, limite: int = 20) -> list[int]:
+    """producto_id de lo que este cliente ya compró, los más frecuentes primero.
+    Junta TODOS sus pedidos (tienda nueva y la vieja masorganicos.online)."""
+    sql = """
+        SELECT t.producto_id AS pid, COUNT(*) AS veces, MAX(g.created_at) AS ult
+        FROM transacciones t
+        JOIN grupos g ON g.id = t.grupo
+        WHERE g.cliente = :c AND g.activo = 1
+        GROUP BY t.producto_id
+        ORDER BY veces DESC, ult DESC
+        LIMIT :lim
+    """
+    out: list[int] = []
+    with engine_tienda.connect() as cx:
+        for r in cx.execute(text(sql), {"c": cliente_id, "lim": limite}):
+            try:
+                out.append(int(r.pid))
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
 def detalle(pedido_id: int, cliente_id: Optional[int] = None) -> Optional[dict]:
     with engine_tienda.connect() as cx:
         g = cx.execute(text("SELECT * FROM grupos WHERE id = :id"), {"id": pedido_id}).first()

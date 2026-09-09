@@ -39,8 +39,17 @@
   con información y alimentos confiables.
 </p>
 
+{% if habituales %}
 <section class="bloque">
-  <div class="bloque-cab"><h2>Productos destacados</h2><a href="/catalogo">Ver todo →</a></div>
+  <div class="bloque-cab"><h2>Volvé a comprar</h2><a href="/cuenta">Ver todo →</a></div>
+  <div class="grid">
+    {% for p in habituales %}{% include "_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="bloque">
+  <div class="bloque-cab"><h2>{{ 'Descubrí' if habituales else 'Productos destacados' }}</h2><a href="/catalogo">Ver todo →</a></div>
   <div class="grid">
     {% for p in destacados %}{% include "_card.html" %}{% endfor %}
   </div>

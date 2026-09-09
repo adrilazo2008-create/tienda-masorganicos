@@ -76,6 +76,23 @@ def _cliente_actual(request: Request):
     return clientes.obtener(cid) if cid else None
 
 
+def _habituales(cli, limite: int, excluir=()) -> list:
+    """Productos que el cliente suele comprar, listos para <_card.html>.
+    Cacheado por cliente (se refresca a los ~3 min o al reiniciar la app)."""
+    if not cli:
+        return []
+    from .catalogo import _cacheado
+
+    def _resolver():
+        ids = pedidos.habituales(cli.id, 24)
+        d = catalogo.obtener_varios(ids)
+        return [d[i] for i in ids if i in d]
+
+    base = _cacheado(f"habituales:{cli.id}", 180, _resolver)
+    excluir = set(excluir)
+    return [p for p in base if p.id not in excluir][:limite]
+
+
 def ctx(request: Request, **extra):
     car = carrito_mod.resolver(request.session)
     base = dict(
@@ -99,6 +116,7 @@ def render(request: Request, plantilla: str, **extra):
 def home(request: Request):
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
+                  habituales=_habituales(_cliente_actual(request), 8),
                   slides=contenido.carrusel_home(),
                   home_cfg=contenido.home_config(),
                   avisos=contenido.avisos())
@@ -186,8 +204,13 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
-    return render(request, "carrito.html", car=carrito_mod.resolver(request.session),
-                  umbral_envio=zonas.umbral_envio_gratis())
+    car = carrito_mod.resolver(request.session)
+    en_carrito = {l.producto.id for l in car.lineas}
+    sugeridos = _habituales(_cliente_actual(request), 4, excluir=en_carrito)
+    return render(request, "carrito.html", car=car,
+                  umbral_envio=zonas.umbral_envio_gratis(),
+                  sugeridos=sugeridos,
+                  carrito_msg=request.session.pop("carrito_msg", None))
 
 
 @app.post("/carrito/actualizar")
@@ -352,8 +375,9 @@ def cuenta(request: Request):
     c = _cliente_actual(request)
     if not c:
         return render(request, "cuenta_login.html")
-    return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id),
-                  direcciones=clientes.direcciones(c.id))
+    return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id, limite=5),
+                  direcciones=clientes.direcciones(c.id),
+                  habituales=_habituales(c, 12))
 
 
 @app.get("/cuenta/pedido/{pedido_id}", response_class=HTMLResponse)
@@ -368,6 +392,29 @@ def cuenta_pedido(request: Request, pedido_id: int):
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
     return render(request, "cuenta_pedido.html", p=d, prods=prods,
                   subtotal=subtotal, total=subtotal + d["precio_envio"])
+
+
+@app.post("/cuenta/pedido/{pedido_id}/repetir")
+def cuenta_pedido_repetir(request: Request, pedido_id: int):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    d = pedidos.detalle(pedido_id, c.id)
+    if not d:
+        return RedirectResponse("/cuenta", status_code=303)
+    disponibles = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    agregados = sin_stock = 0
+    for l in d["lineas"]:
+        if l["producto_id"] in disponibles:
+            carrito_mod.agregar(request.session, l["producto_id"], l["cantidad"], l["observacion"])
+            agregados += 1
+        else:
+            sin_stock += 1
+    msg = f"Sumamos {agregados} producto{'s' if agregados != 1 else ''} de tu pedido #{pedido_id} al carrito."
+    if sin_stock:
+        msg += f" {sin_stock} no está{'n' if sin_stock != 1 else ''} disponible{'s' if sin_stock != 1 else ''} ahora."
+    request.session["carrito_msg"] = msg
+    return RedirectResponse("/carrito", status_code=303)
 
 
 @app.post("/cuenta/entrar", response_class=HTMLResponse)

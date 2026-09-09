@@ -4,6 +4,8 @@
 
 <h1>Tu carrito</h1>
 
+{% if carrito_msg %}<p class="carrito-flash">✓ {{ carrito_msg }}</p>{% endif %}
+
 {% if car.vacio %}
   <p class="vacio">Todavía no agregaste nada. <a href="/catalogo">Ver productos →</a></p>
 {% else %}
@@ -63,6 +65,15 @@
     <a href="/catalogo" class="btn-sec">Seguir comprando</a>
   </aside>
 </div>
+
+{% if sugeridos %}
+<section class="bloque sugeridos">
+  <h2>También solés llevar</h2>
+  <div class="grid">
+    {% for p in sugeridos %}{% include "_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endif %}
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 {% endblock %}

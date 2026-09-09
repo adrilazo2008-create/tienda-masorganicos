@@ -7,11 +7,11 @@
 </div>
 
 <section class="bloque">
-  <h2>Mis pedidos</h2>
+  <h2>Mis últimos pedidos</h2>
   {% if pedidos_cli %}
   <div class="tabla-scroll">
   <table class="tabla-pedidos">
-    <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th></tr></thead>
+    <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col"><span class="sr-only">Repetir</span></th></tr></thead>
     <tbody>
     {% for p in pedidos_cli %}
       <tr>
@@ -20,6 +20,7 @@
         <td>{{ p.estado }}</td>
         <td class="num">{{ p.cantidad_items }}</td>
         <td class="num">{{ pesos(p.total) }}</td>
+        <td><form method="post" action="/cuenta/pedido/{{ p.id }}/repetir"><button type="submit" class="btn-mini">Repetir</button></form></td>
       </tr>
     {% endfor %}
     </tbody>
@@ -27,6 +28,16 @@
   </div>
   {% else %}<p class="vacio">Todavía no tenés pedidos.</p>{% endif %}
 </section>
+
+{% if habituales %}
+<section class="bloque">
+  <div class="bloque-cab"><h2>Mis habituales</h2><a href="/catalogo">Ver toda la tienda →</a></div>
+  <p class="chico">Lo que más pedís. Agregá lo que necesites y completá con el resto de la tienda.</p>
+  <div class="grid">
+    {% for p in habituales %}{% include "_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="bloque">
   <h2>Mis direcciones</h2>
