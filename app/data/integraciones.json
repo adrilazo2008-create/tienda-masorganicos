@@ -1,4 +1,4 @@
 {
   "_ayuda": "meta_pixel_id: el ID numérico del Pixel de Meta (Administrador de eventos de Meta Business). Vacío = desactivado. Eventos que dispara la tienda: PageView (todas las páginas), ViewContent (ficha de producto), AddToCart, InitiateCheckout (checkout), Purchase (pedido confirmado, con valor y moneda ARS).",
-  "meta_pixel_id": ""
+  "meta_pixel_id": "1101405808098438"
 }
