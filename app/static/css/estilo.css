@@ -138,6 +138,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .carrusel-dots button[aria-selected="true"]{background:#fff;width:22px;border-radius:4px}
 @media(max-width:640px){
   .carrusel-nav{width:32px;height:32px;font-size:1.2rem}
+  .hero{margin-bottom:1rem}
+  .hero-txt{padding:1rem 1.15rem 1.2rem}
+  .hero-eyebrow{margin-bottom:.35rem}
+  .hero-h1{margin:.1rem 0 .35rem}
+  .hero-lead{font-size:1rem}
+  .hero-cta{margin-top:.9rem;gap:.55rem}
 }
 
 .aviso-slim{background:#fdf6e7;border:1px solid #efe0bd;border-radius:999px;padding:.5rem 1.1rem;margin:0 0 1.2rem;font-size:.85rem;color:#7a5a1e}
