@@ -42,7 +42,7 @@
       {% if p.fraccionable %}<small class="hint">Podés pedir 0,25 · 0,5 · 0,75 kg</small>{% endif %}
       <label for="obs-{{ p.id }}">Observación (opcional)</label>
       <input id="obs-{{ p.id }}" class="obs" name="observacion" autocomplete="off"
-             placeholder="Ej: bien maduro, cambiar por otro si no hay…" maxlength="191">
+             placeholder="{{ p.sugerencia_obs }}" maxlength="191">
       <button type="submit" class="btn-grande">Agregar al carrito</button>
     </form>
     <p class="prod-nota">El precio y la disponibilidad se confirman al preparar tu pedido.</p>

@@ -71,6 +71,7 @@ try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } c
     </form>
     <nav class="cab-acc" aria-label="Navegación principal">
       <a href="/catalogo" class="acc-prod">Productos</a>
+      <a href="/catalogo?categoria=320000008" class="acc-combos">Combos</a>
       <a href="/cuenta" class="acc-cuenta">{{ cliente.nombre if cliente else 'Mi cuenta' }}</a>
       <a href="/carrito" class="acc-carrito">Carrito
         <span id="carrito-badge" class="badge" aria-live="polite" aria-label="{{ carrito_n }} productos en el carrito">{{ carrito_n }}</span>

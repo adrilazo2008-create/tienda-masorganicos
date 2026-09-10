@@ -85,6 +85,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .badge{background:var(--verde);color:#fff;border-radius:999px;padding:.05rem .5rem;font-size:.78rem;font-weight:600}
 .acc-prod{font-weight:600;color:var(--verde-osc)!important}
 .acc-prod:hover{text-decoration:underline}
+.acc-combos{font-weight:600;color:var(--acento)!important}
+.acc-combos:hover{text-decoration:underline}
 
 /* chips de rubros (navegación de catálogo en mobile) */
 .rubros-chips,.subcats-bloque{display:none}
@@ -359,6 +361,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
   .pie-in{grid-template-columns:1fr}
   .cab-in{flex-wrap:wrap}
   .buscador{order:3;max-width:none;width:100%}
+  .cab-acc{gap:.85rem;font-size:.88rem}
 }
 
 @media(max-width:560px){

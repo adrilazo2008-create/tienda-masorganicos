@@ -127,6 +127,14 @@ class Producto:
     def poco_stock(self) -> bool:
         return self.stock < STOCK_ALERTA
 
+    @property
+    def sugerencia_obs(self) -> str:
+        """Placeholder para la observación del producto. En verduras/frutas por
+        kg conviene sugerir la cantidad de unidades (además de la maduración)."""
+        if self.unidad == "KG" and self.rubro_id in (1, 2):   # 1 Verduras, 2 Frutas
+            return "Ej: quiero 4 unidades, bien maduras…"
+        return "Bien maduro, sin bolsa…"
+
 
 _SELECT = """
 SELECT  m.id                     AS id,
