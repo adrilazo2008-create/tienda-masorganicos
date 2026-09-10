@@ -215,10 +215,15 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 def ver_carrito(request: Request):
     car = carrito_mod.resolver(request.session)
     en_carrito = {l.producto.id for l in car.lineas}
-    sugeridos = _habituales(_cliente_actual(request), 4, excluir=en_carrito)
+    # sugerencias: primero los habituales del cliente, después completamos con
+    # destacados (para que siempre haya "para descubrir", logueado o no).
+    sug = _habituales(_cliente_actual(request), 6, excluir=en_carrito)
+    if len(sug) < 6:
+        ya = en_carrito | {p.id for p in sug}
+        sug += [p for p in catalogo.destacados(12) if p.id not in ya][:6 - len(sug)]
     return render(request, "carrito.html", car=car,
                   umbral_envio=zonas.umbral_envio_gratis(),
-                  sugeridos=sugeridos,
+                  sugeridos=sug[:6],
                   carrito_msg=request.session.pop("carrito_msg", None))
 
 

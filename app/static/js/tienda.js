@@ -315,3 +315,13 @@ document.addEventListener('DOMContentLoaded', function(){
     if (e.detail && e.detail.successful) setTimeout(volverALista, 900);
   });
 });
+
+// carrito: al agregar desde "Sumá a tu pedido", refrescar para que se vea en el carrito
+if (location.pathname === '/carrito') {
+  document.body.addEventListener('htmx:afterRequest', function(e){
+    var f = e.detail && e.detail.elt;
+    if (f && f.classList && f.classList.contains('card-add') && e.detail.successful){
+      setTimeout(function(){ location.reload(); }, 750);
+    }
+  });
+}
