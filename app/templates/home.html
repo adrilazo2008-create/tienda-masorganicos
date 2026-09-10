@@ -5,11 +5,12 @@
   <div class="carrusel" aria-roledescription="carrusel" aria-label="Novedades">
     <div class="carrusel-track" id="carrusel-track">
       {% for s in slides %}
-      <a class="carrusel-slide" href="/catalogo" aria-label="{{ s.alt }}">
+      {% set destino = s.link if s.link is defined else '/catalogo' %}
+      <{{ 'a' if destino else 'div' }} class="carrusel-slide"{% if destino %} href="{{ destino }}"{% endif %} aria-label="{{ s.alt }}">
         <img src="{{ IMG_BASE }}/carrousel/{{ s.img }}" alt="{{ s.alt }}"
              width="1280" height="400" decoding="async"
              {{ 'fetchpriority=high' if loop.first else 'loading=lazy' }}>
-      </a>
+      </{{ 'a' if destino else 'div' }}>
       {% endfor %}
     </div>
     <button type="button" class="carrusel-nav prev" aria-label="Anterior">‹</button>
@@ -28,6 +29,7 @@
     <p class="hero-lead">Frutas y verduras de estación elegidas junto a productores que cultivan sin agrotóxicos. Armás tu pedido, lo coordinamos por WhatsApp y pagás al recibir.</p>
     <div class="hero-cta">
       <a href="/catalogo" class="btn-grande">Ver productos</a>
+      <a href="/catalogo?categoria=320000008" class="btn-combos">Combos y ofertas</a>
       <a href="/envios" class="btn-sec">¿Llegamos a tu zona?</a>
     </div>
   </div>
@@ -38,6 +40,27 @@
   <b>Desde 2019</b> ayudando a más de <b>5.000 familias</b> a elegir lo que les hace bien,
   con información y alimentos confiables.
 </p>
+
+<section class="bloque como-funciona" id="como-funciona">
+  <h2>Cómo funciona</h2>
+  <ol class="cf-pasos">
+    <li>
+      <span class="cf-num">1</span>
+      <h3>Armás tu pedido</h3>
+      <p>Elegís frutas y verduras agroecológicas y almacén saludable. Hay una compra mínima según tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">2</span>
+      <h3>Coordinamos por WhatsApp</h3>
+      <p>Te escribimos para confirmar disponibilidad y el día y horario de entrega de tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">3</span>
+      <h3>Pagás al recibir</h3>
+      <p>Efectivo, transferencia, débito, crédito, Cuenta DNI o Mercado Pago. No se cobra nada en el sitio.</p>
+    </li>
+  </ol>
+</section>
 
 {% if habituales %}
 <section class="bloque">

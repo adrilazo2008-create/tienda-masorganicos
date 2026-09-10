@@ -9,6 +9,8 @@
   --fuente:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:5rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 body{margin:0;font-family:var(--fuente);color:var(--tinta);background:var(--fondo);line-height:1.55;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 a{color:var(--verde-osc);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -85,8 +87,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .badge{background:var(--verde);color:#fff;border-radius:999px;padding:.05rem .5rem;font-size:.78rem;font-weight:600}
 .acc-prod{font-weight:600;color:var(--verde-osc)!important}
 .acc-prod:hover{text-decoration:underline}
-.acc-combos{font-weight:600;color:var(--acento)!important}
-.acc-combos:hover{text-decoration:underline}
+.acc-como:hover{text-decoration:underline}
 
 /* chips de rubros (navegación de catálogo en mobile) */
 .rubros-chips,.subcats-bloque{display:none}
@@ -146,6 +147,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .btn-grande:active{transform:translateY(1px)}
 .btn-sec{background:transparent;border:1.5px solid var(--verde);color:var(--verde-osc);padding:.75rem 1.4rem;border-radius:999px;font-weight:600;display:inline-block;text-align:center;transition:background .15s}
 .btn-sec:hover{background:var(--verde-claro);text-decoration:none}
+.btn-combos{background:var(--acento);color:#fff;padding:.8rem 1.4rem;border-radius:999px;font-weight:600;
+  display:inline-block;text-align:center;transition:background .15s}
+.btn-combos:hover{background:#c07620;text-decoration:none}
 
 .avisos{margin-bottom:1.2rem}
 .aviso{background:#fdf6e7;border:1px solid #efe0bd;border-radius:var(--radio);padding:.7rem 1rem;margin-bottom:.5rem;font-size:.9rem}
@@ -159,6 +163,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
   border:1px solid #cfe3c2;border-radius:12px;text-align:center;color:var(--verde-osc);
   font-size:1rem;line-height:1.5}
 .trust-band b{color:var(--verde-osc)}
+
+/* cómo funciona (3 pasos) */
+.como-funciona h2{text-align:center;margin:0 0 1.2rem}
+.cf-pasos{list-style:none;margin:0;padding:0;display:grid;gap:1rem;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.cf-pasos li{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:1.3rem 1.2rem;text-align:center}
+.cf-num{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;
+  border-radius:50%;background:var(--verde);color:#fff;font-weight:700;margin-bottom:.6rem}
+.cf-pasos h3{margin:.2rem 0 .4rem;font-size:1.05rem;color:var(--verde-osc)}
+.cf-pasos p{margin:0;font-size:.92rem;color:var(--gris);line-height:1.5}
 
 /* banner de productores (imagen pareja armada aparte) */
 .productores-banner{text-align:center}
