@@ -211,13 +211,19 @@ document.addEventListener('DOMContentLoaded', function(){
   var car = track.closest('.carrusel');
   var slides = track.children;
   var dots = car.querySelectorAll('.carrusel-dots button');
-  var i = 0, timer = null;
+  var i = 0, timer = null, animando = 0;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  function marcarDots(){
+    dots.forEach(function(d, k){ d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+  }
   function ir(n){
     i = (n + slides.length) % slides.length;
-    track.scrollTo({ left: slides[i].offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
-    dots.forEach(function(d, k){ d.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+    // durante el scroll programado, ignoramos el listener de scroll (si no,
+    // lee una posición intermedia y corrompe el índice).
+    clearTimeout(animando); animando = setTimeout(function(){ animando = 0; }, 500);
+    track.scrollTo({ left: i * track.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+    marcarDots();
   }
   function arrancar(){ if (!reduce) timer = setInterval(function(){ ir(i + 1); }, 5000); }
   function parar(){ clearInterval(timer); }
@@ -226,14 +232,15 @@ document.addEventListener('DOMContentLoaded', function(){
   car.querySelector('.carrusel-nav.next').addEventListener('click', function(){ ir(i + 1); parar(); arrancar(); });
   dots.forEach(function(d, k){ d.addEventListener('click', function(){ ir(k); parar(); arrancar(); }); });
 
-  // sincronizar dots cuando el usuario hace swipe
+  // sincronizar dots cuando el usuario hace swipe (no cuando scrollea ir())
   var st;
   track.addEventListener('scroll', function(){
     clearTimeout(st);
     st = setTimeout(function(){
+      if (animando) return;
       var n = Math.round(track.scrollLeft / track.clientWidth);
-      if (n !== i){ i = n; dots.forEach(function(d, k){ d.setAttribute('aria-selected', k === i ? 'true' : 'false'); }); }
-    }, 120);
+      if (n >= 0 && n < slides.length && n !== i){ i = n; marcarDots(); }
+    }, 140);
   });
 
   car.addEventListener('mouseenter', parar);
