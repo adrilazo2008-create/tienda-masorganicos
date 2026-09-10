@@ -42,10 +42,13 @@ app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 *
 async def _cache_headers(request: Request, call_next):
     resp = await call_next(request)
     p = request.url.path
-    if p.startswith("/static/") or p.startswith("/img/"):
-        # las URLs de estáticos llevan ?v=... -> se pueden cachear fuerte
+    es_estatico = p.startswith("/static/") or p.startswith("/img/")
+    if es_estatico and resp.status_code == 200:
+        # las URLs de estáticos llevan ?v=... -> se pueden cachear fuerte.
+        # OJO: solo en 200; un 404 cacheado 1 semana deja una imagen rota
+        # aunque después se suba el archivo.
         resp.headers["Cache-Control"] = "public, max-age=604800"
-    else:
+    elif not es_estatico:
         # el HTML es dinámico y por-sesión: que ningún proxy lo cachee
         resp.headers["Cache-Control"] = "no-store, must-revalidate"
     return resp
