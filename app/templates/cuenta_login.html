@@ -2,15 +2,19 @@
 {% block title %}Mi cuenta — Más Orgánicos{% endblock %}
 {% block contenido %}
 <div class="login-box">
-  <h1>Mis pedidos</h1>
-  <p>Ingresá con el celular que usaste al comprar.</p>
+  <p>Ingresá tu celular para ver tus pedidos anteriores.</p>
   {% if error %}<p class="err-box" tabindex="-1" id="login-error">{{ error }}</p>{% endif %}
+  {% if saludo %}<p class="ok-box" tabindex="-1" id="login-saludo">{{ saludo }}</p>{% endif %}
   <form method="post" action="/cuenta/entrar">
     <label>Celular
-      <input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required>
+      <input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required
+             value="{{ telefono|default('') }}">
     </label>
-    <button type="submit" class="btn-grande">Ver mis pedidos</button>
+    <button type="submit" class="btn-grande">Loguearme / Ver mis pedidos</button>
   </form>
+  {% if mostrar_catalogo %}
+  <a href="/catalogo" class="btn-sec" style="display:block;margin-top:.7rem;text-align:center">Empezar mi primer pedido</a>
+  {% endif %}
 </div>
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 {% endblock %}

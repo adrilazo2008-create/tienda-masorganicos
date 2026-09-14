@@ -501,7 +501,15 @@ def cuenta_entrar(request: Request, telefono: str = Form(...)):
     if c:
         request.session["cliente_id"] = c.id
         return RedirectResponse("/cuenta", status_code=303)
-    return render(request, "cuenta_login.html",
+    # todavía no pidió por la web, pero puede ya ser cliente (local/ERP): no
+    # tiene pedidos para mostrar, pero al menos la reconocemos y la invitamos
+    # a hacer el primero en vez de decirle "no te encontramos".
+    sugerido = clientes.buscar_en_erp(telefono)
+    if sugerido and sugerido["nombre"]:
+        return render(request, "cuenta_login.html", telefono=telefono, mostrar_catalogo=True,
+                      saludo=f"¡Hola {sugerido['nombre']}! Ya te conocemos, pero todavía no "
+                             f"hiciste ningún pedido por acá.")
+    return render(request, "cuenta_login.html", telefono=telefono,
                   error="No encontramos pedidos con ese celular. Revisá el número o hacé tu primer pedido.")
 
 
