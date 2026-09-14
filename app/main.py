@@ -4,6 +4,9 @@ Arranque local:   uvicorn app.main:app --reload
 """
 from __future__ import annotations
 
+import logging
+import time
+import traceback
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional
@@ -36,6 +39,56 @@ ASSET_VER = _asset_ver()
 
 app = FastAPI(title="Tienda MasOrgánicos")
 app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 30)
+
+# --------------------------------------------------------------------------- errores
+# Log de errores 500 a un archivo dentro de la app (se puede bajar por FTP/File
+# Manager). Antes, un error sin manejar tiraba la página en blanco de Passenger
+# ("Internal Server Error") sin dejar rastro ni avisarle nada a la persona.
+_LOG_DIR = BASE_DIR / "logs"
+try:
+    _LOG_DIR.mkdir(exist_ok=True)
+    _error_handler = logging.FileHandler(_LOG_DIR / "errores.log", encoding="utf-8")
+    _error_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+    logger_errores = logging.getLogger("tienda.errores")
+    logger_errores.setLevel(logging.ERROR)
+    logger_errores.addHandler(_error_handler)
+except OSError:
+    logger_errores = logging.getLogger("tienda.errores")  # sin archivo (ej. sin permiso): al menos no explota
+
+_PAGINA_ERROR_500 = """<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uy, algo falló — Más Orgánicos</title>
+<style>
+body{{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f6f0;
+  color:#232620;margin:0;padding:2rem 1rem;line-height:1.55}}
+.caja{{max-width:480px;margin:2rem auto;background:#fff;border:1px solid #e3e5dd;
+  border-radius:14px;padding:1.8rem 1.6rem;text-align:center}}
+h1{{font-size:1.3rem;color:#1f5423;margin:0 0 .6rem}}
+p{{margin:.5rem 0}}
+.wa{{display:inline-block;margin-top:1rem;background:#25d366;color:#fff;text-decoration:none;
+  padding:.8rem 1.4rem;border-radius:999px;font-weight:600}}
+.chico{{font-size:.82rem;color:#5d6158;margin-top:1.2rem}}
+</style></head><body>
+<div class="caja">
+  <h1>Uy, algo falló de nuestro lado 😕</h1>
+  <p>Tu pedido <b>no se guardó</b> y no se cobró nada.</p>
+  <p>Escribinos por WhatsApp contándonos qué querías pedir y lo cerramos así, sin vueltas.</p>
+  <a class="wa" href="https://wa.me/5491155046740" rel="noopener">Escribir por WhatsApp</a>
+  <p class="chico">Código para contarnos: {codigo}</p>
+</div>
+</body></html>"""
+
+
+@app.exception_handler(Exception)
+async def _error_500(request: Request, exc: Exception) -> HTMLResponse:
+    codigo = f"{int(time.time())}"
+    logger_errores.error(
+        "500 en %s %s (código %s)\n%s",
+        request.method, request.url.path, codigo, traceback.format_exc(),
+    )
+    # Página mínima y autónoma (sin templates ni consultas a la base): si lo que
+    # rompió fue justamente la base de datos, esta pantalla igual tiene que andar.
+    return HTMLResponse(_PAGINA_ERROR_500.format(codigo=codigo), status_code=500)
 
 
 @app.middleware("http")
