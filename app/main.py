@@ -213,7 +213,7 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
-    car = carrito_mod.resolver(request.session)
+    car, _ = carrito_mod.resolver_y_avisar(request.session)
     en_carrito = {l.producto.id for l in car.lineas}
     # sugerencias: primero los habituales del cliente, después completamos con
     # destacados (para que siempre haya "para descubrir", logueado o no).
@@ -243,7 +243,7 @@ def carrito_quitar(request: Request, indice: int = Form(...)):
 
 @app.get("/checkout", response_class=HTMLResponse)
 def checkout(request: Request):
-    car = carrito_mod.resolver(request.session)
+    car, _ = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio:
         return RedirectResponse("/catalogo", status_code=303)
     cli = _cliente_actual(request)
@@ -251,7 +251,8 @@ def checkout(request: Request):
     return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                   sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
-                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs)
+                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                  aviso_stock=request.session.pop("carrito_msg", None))
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
@@ -279,9 +280,14 @@ def checkout_confirmar(
     pago: str = Form("efectivo"),
     codigo_descuento: str = Form(""), observacion: str = Form(""),
 ):
-    car = carrito_mod.resolver(request.session)
+    car, hubo_cambios = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio:
         return RedirectResponse("/catalogo", status_code=303)
+    if hubo_cambios:
+        # algo se quedó sin stock justo ahora, al confirmar: no completamos el
+        # pedido con menos productos de los que la persona ve en pantalla sin
+        # avisarle. Volvemos a /checkout con el carrito actualizado y el aviso.
+        return RedirectResponse("/checkout", status_code=303)
 
     graba = S.permitir_escribir_pedidos
 

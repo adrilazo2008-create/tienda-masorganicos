@@ -4,6 +4,7 @@
 
 <h1>Confirmá tu pedido</h1>
 {% if error %}<p class="err-box" tabindex="-1" id="checkout-error">{{ error }}</p>{% endif %}
+{% if aviso_stock %}<p class="err-box" tabindex="-1" id="checkout-aviso">⚠ {{ aviso_stock }} Revisá el pedido antes de confirmar.</p>{% endif %}
 {% if permitir_escribir %}
   <p class="chico">El pedido se va a registrar y aparecerá en el sistema del local.</p>
 {% else %}

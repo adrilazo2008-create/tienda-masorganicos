@@ -269,6 +269,19 @@ def obtener_varios(ids: list[int]) -> dict[int, Producto]:
     return {p.id: p for p in _filtrar_por_stock(_con_etiquetas(prods))}
 
 
+def nombres_por_id(ids: list[int]) -> dict[int, str]:
+    """Nombre de productos por id, SIN filtrar por stock ni por Activo/noweb.
+    Solo para armar mensajes ("se quitó X de tu pedido") cuando un producto
+    ya no está disponible; no usar para mostrar/vender."""
+    ids = [int(i) for i in ids]
+    if not ids:
+        return {}
+    q = text("SELECT m.id AS id, m.Descripcion AS nombre FROM mprimas m WHERE m.id IN :ids") \
+        .bindparams(bindparam("ids", expanding=True))
+    with engine_erp.connect() as cx:
+        return {int(r.id): (r.nombre or "").strip() for r in cx.execute(q, {"ids": ids})}
+
+
 def categorias() -> list[dict]:
     """Categorías planas con al menos un producto web (compatibilidad)."""
     sql = """
