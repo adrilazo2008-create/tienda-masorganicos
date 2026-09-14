@@ -312,12 +312,17 @@ def checkout(request: Request):
 def checkout_identificar(request: Request, telefono: str = Form(...)):
     c = clientes.buscar_por_telefono(telefono)
     dirs = []
+    sugerido = None
     if c:
         request.session["checkout_cliente_id"] = c.id
         dirs = clientes.direcciones(c.id)
+    else:
+        # todavía no pidió por la web, pero puede ya ser cliente (local/ERP)
+        sugerido = clientes.buscar_en_erp(telefono)
     return render(request, "_checkout_identidad.html",
                   existe=c is not None, cliente_encontrado=c, telefono=telefono,
-                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs)
+                  direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                  sugerido=sugerido)
 
 
 @app.post("/checkout/confirmar", response_class=HTMLResponse)

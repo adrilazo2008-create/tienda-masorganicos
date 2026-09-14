@@ -17,7 +17,7 @@ from typing import Optional
 import bcrypt
 from sqlalchemy import bindparam, text
 
-from .db import engine_tienda
+from .db import engine_erp, engine_tienda
 
 _INT_MAX = 2147483647  # límite de la columna telefono INT(11) con signo
 
@@ -115,6 +115,58 @@ def buscar_por_telefono(telefono: str) -> Optional[Cliente]:
     with engine_tienda.connect() as cx:
         r = cx.execute(sql, {"ts": tels}).first()
     return _fila(r) if r else None
+
+
+def _partir_nombre(razon_social: str) -> tuple[str, str]:
+    """'Sandra Granata' -> ('Sandra', 'Granata'). La ficha del ERP no separa
+    nombre y apellido, es un solo campo de texto libre; separamos por la
+    primera palabra nomás, a falta de algo mejor."""
+    partes = (razon_social or "").strip().split(None, 1)
+    if len(partes) == 2:
+        return partes[0], partes[1]
+    return (partes[0] if partes else "", "")
+
+
+def buscar_en_erp(telefono: str) -> Optional[dict]:
+    """Si alguien ya es cliente (compró antes en el local, o está cargado en
+    el sistema de escritorio) pero nunca hizo un pedido por la web, no está
+    en `users` y `buscar_por_telefono` no lo encuentra — tendría que volver a
+    escribir todos sus datos como si fuera la primera vez.
+
+    Esto busca en `clientes` del ERP (la ficha que usa el sistema de
+    escritorio) por los últimos 8 dígitos del celular: `Telefonos`/`Celular`
+    son texto libre (con o sin código de área, con "/" si hay más de uno,
+    etc.), así que comparar solo la punta evita quedar afuera por el formato.
+
+    Devuelve un dict {nombre, apellido, email, direccion, localidad} para
+    sugerir/precargar el formulario, o None si no hay coincidencia. No se usa
+    para nada más (no reemplaza a `users`, no se guarda solo): recién se crea
+    el cliente de la tienda cuando complete el pedido, como siempre.
+    """
+    tel = normalizar_telefono(telefono)
+    if not tel:
+        return None
+    ultimos8 = str(tel)[-8:]
+    if len(ultimos8) < 8:
+        return None
+    sql = text("""
+        SELECT RazonSocial, EMail, Direccion, Localidad
+        FROM clientes
+        WHERE (Telefonos LIKE :t OR Celular LIKE :t) AND RazonSocial <> ''
+        ORDER BY Codigo DESC LIMIT 1
+    """)
+    with engine_erp.connect() as cx:
+        r = cx.execute(sql, {"t": f"%{ultimos8}%"}).first()
+    if not r or not (r.RazonSocial or "").strip():
+        return None
+    nombre, apellido = _partir_nombre(r.RazonSocial)
+    return {
+        "nombre": nombre,
+        "apellido": apellido,
+        "email": (r.EMail or "").strip(),
+        "direccion": (r.Direccion or "").strip(),
+        "localidad": (r.Localidad or "").strip(),
+    }
 
 
 def buscar_por_email(email: str) -> Optional[Cliente]:

@@ -58,11 +58,26 @@
   </script>
   {% endif %}
 {% else %}
+  {% if sugerido %}
+  <p class="chico">Te encontramos en nuestros registros — revisá que estos datos estén bien.</p>
+  {% endif %}
   <div class="grid2">
-    <label>Nombre <input name="nombre" autocomplete="given-name" required></label>
-    <label>Apellido <input name="apellido" autocomplete="family-name" required></label>
+    <label>Nombre <input name="nombre" autocomplete="given-name" required value="{{ sugerido.nombre if sugerido else '' }}"></label>
+    <label>Apellido <input name="apellido" autocomplete="family-name" required value="{{ sugerido.apellido if sugerido else '' }}"></label>
   </div>
   <label>Email
-    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="para enviarte el resumen">
+    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="para enviarte el resumen"
+           value="{{ sugerido.email if sugerido else '' }}">
   </label>
+  {% if sugerido and (sugerido.direccion or sugerido.localidad) %}
+  <script>
+  (function(){
+    var f = document.getElementById('form-checkout');
+    if (!f) return;
+    if (f.direccion && !f.direccion.value) f.direccion.value = {{ sugerido.direccion|tojson }};
+    if (f.localidad && !f.localidad.value) f.localidad.value = {{ sugerido.localidad|tojson }};
+    if (window.recalcularEnvio) recalcularEnvio();
+  })();
+  </script>
+  {% endif %}
 {% endif %}
