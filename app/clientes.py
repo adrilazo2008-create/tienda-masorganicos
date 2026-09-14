@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Optional
 
 import bcrypt
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 
 from .db import engine_tienda
 
@@ -37,7 +37,14 @@ def normalizar_telefono(valor: str) -> int:
     """'11 5504-6740' -> 1155046740. Devuelve 0 si no hay dígitos usables.
 
     Las zonas de reparto son todas AMBA/GBA/CABA (área 11), así que 10 dígitos
-    entran en un INT. Se saca un prefijo 54 / 549 / 0 si viene.
+    entran en un INT. Se saca un prefijo 54 / 549 / 0 si viene, y se
+    normalizan las dos costumbres viejas de cargar un celular de AMBA:
+      - "11 15 5504-6740"  (área + 15 completo)      -> se saca el 15
+      - "15 5504-6740"     (solo la marca "es celu",
+                             sin código de área)       -> el 15 pasa a ser 11
+    para que todos los números nuevos se guarden en la forma moderna
+    ("11 5504-6740"). Ver `_variante_11_15` para reconocer a alguien que ya
+    estaba cargado en una de las formas viejas.
     """
     d = re.sub(r"\D", "", valor or "")
     if d.startswith("549"):
@@ -45,10 +52,29 @@ def normalizar_telefono(valor: str) -> int:
     elif d.startswith("54"):
         d = d[2:]
     d = d.lstrip("0")
+    if d[:2] == "11" and d[2:4] == "15":
+        d = d[:2] + d[4:]
+    elif d[:2] == "15":
+        d = "11" + d[2:]
     if not d:
         return 0
     n = int(d)
     return n if n <= _INT_MAX else int(d[-9:])  # fallback defensivo
+
+
+def _variante_11_15(tel: int) -> Optional[int]:
+    """La otra forma del mismo número: en la base conviven celulares de AMBA
+    cargados con código de área ("11 5504-6740") y cargados a la vieja usanza,
+    marcando "es un celu" en vez del área ("15 5504-6740"). Las dos terminan
+    siendo un número de 10 dígitos que empieza con 11 o con 15.
+    `buscar_por_telefono` prueba las dos para no dejar de reconocer a alguien
+    solo porque quedó cargado de la forma vieja."""
+    d = str(tel)
+    if d.startswith("11"):
+        return int("15" + d[2:])
+    if d.startswith("15"):
+        return int("11" + d[2:])
+    return None
 
 
 def _slug_name(nombre: str, apellido: str, email: str) -> str:
@@ -80,9 +106,14 @@ def buscar_por_telefono(telefono: str) -> Optional[Cliente]:
     tel = normalizar_telefono(telefono)
     if not tel:
         return None
-    sql = "SELECT id,nombre,apellido,telefono,email,password FROM users WHERE telefono = :t AND activo = 1 ORDER BY id DESC LIMIT 1"
+    variante = _variante_11_15(tel)
+    tels = [tel, variante] if variante else [tel]
+    sql = text(
+        "SELECT id,nombre,apellido,telefono,email,password FROM users "
+        "WHERE telefono IN :ts AND activo = 1 ORDER BY id DESC LIMIT 1"
+    ).bindparams(bindparam("ts", expanding=True))
     with engine_tienda.connect() as cx:
-        r = cx.execute(text(sql), {"t": tel}).first()
+        r = cx.execute(sql, {"ts": tels}).first()
     return _fila(r) if r else None
 
 
