@@ -19,6 +19,7 @@ Nada más. NO hay que tocar el ERP ni las vistas.
 """
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -32,6 +33,36 @@ from .db import engine_tienda
 STATUS_NUEVO = 0
 STATUS_IMPORTADO = 1
 STATUS_FACTURADO = 2
+
+_RESERVA_CACHE: dict[str, tuple] = {}
+_RESERVA_TTL = 60  # segundos
+
+
+def stock_reservado() -> dict[int, Decimal]:
+    """Cuánto de cada producto está en pedidos web ya grabados (`grupos.status=0`,
+    la cola 'Nuevo' del VB6) pero todavía no bajado al sistema de escritorio.
+    `catalogo` lo resta del stock del ERP para no mostrar como disponible algo
+    que en la práctica ya está comprometido. Cacheado 60s."""
+    ahora = time.monotonic()
+    hit = _RESERVA_CACHE.get("r")
+    if hit and ahora - hit[0] < _RESERVA_TTL:
+        return hit[1]
+    sql = """
+        SELECT t.producto_id AS pid, SUM(t.cantidad) AS cant
+        FROM transacciones t
+        JOIN grupos g ON g.id = t.grupo
+        WHERE g.status = 0 AND g.activo = 1
+        GROUP BY t.producto_id
+    """
+    val: dict[int, Decimal] = {}
+    with engine_tienda.connect() as cx:
+        for r in cx.execute(text(sql)):
+            try:
+                val[int(r.pid)] = Decimal(str(r.cant or 0))
+            except (TypeError, ValueError, ArithmeticError):
+                continue
+    _RESERVA_CACHE["r"] = (ahora, val)
+    return val
 
 
 @dataclass

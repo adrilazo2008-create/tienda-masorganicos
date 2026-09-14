@@ -43,6 +43,13 @@ STOCK_ALERTA = 3
 # El stock que cuenta para la web es SOLO el del depósito Central (sucursales.Central).
 DEPOSITO_CENTRAL = 50000004
 
+# Rubros donde NO se controla stock para mostrar/ocultar: llega mercadería fresca
+# seguido y el stock del ERP no refleja bien lo disponible. En el resto (almacén,
+# comidas elaboradas, salud/higiene/belleza) si no queda stock DISPONIBLE
+# (= stock del ERP menos lo ya pedido por la web y sin bajar al sistema todavía,
+# ver pedidos.stock_reservado) el producto directamente se saca de la tienda.
+RUBROS_SIN_CONTROL_STOCK = {1, 2, 3}  # Verduras, Frutas, Granja y Tambo
+
 # Orden de los rubros en el menú (Codigo del parámetro 33).
 # Reagrupamiento hecho en el ERP (sept 2026): Limpieza(Varios)→Belleza,
 # Bebidas→Almacén, Suplementos Dietarios→Belleza (rubro 10 renombrado
@@ -198,12 +205,31 @@ def _con_etiquetas(prods: list[Producto]) -> list[Producto]:
     return [replace(p, etiquetas=etq.get(p.id, ())) for p in prods]
 
 
+def _filtrar_por_stock(prods: list[Producto]) -> list[Producto]:
+    """Aplica RUBROS_SIN_CONTROL_STOCK: fuera de verduras/frutas/granja, si no
+    queda stock disponible (contando lo reservado por pedidos web sin bajar al
+    sistema) el producto se saca de la lista. El stock que queda en el Producto
+    ya viene descontado, para que "pocas unidades" también sea preciso."""
+    from . import pedidos  # import diferido: pedidos no depende de catalogo
+
+    reservado = pedidos.stock_reservado()
+    salida = []
+    for p in prods:
+        if p.rubro_id in RUBROS_SIN_CONTROL_STOCK:
+            salida.append(p)
+            continue
+        disponible = p.stock - float(reservado.get(p.id, 0))
+        if disponible > 0:
+            salida.append(replace(p, stock=disponible))
+    return salida
+
+
 def _todos_los_productos() -> list[Producto]:
     """Todos los productos vendibles en web + etiquetas. Consulta pesada -> se cachea."""
     sql = _SELECT + " ORDER BY m.destacado DESC, m.Descripcion"
     with engine_erp.connect() as cx:
         prods = [_fila_a_producto(r) for r in cx.execute(text(sql))]
-    return _con_etiquetas(prods)
+    return _filtrar_por_stock(_con_etiquetas(prods))
 
 
 def listar(categoria_id: Optional[int] = None, rubro_id: Optional[int] = None,
@@ -228,7 +254,9 @@ def obtener(producto_id: int) -> Optional[Producto]:
         r = cx.execute(text(_SELECT + " AND m.id = :id"), {"id": producto_id}).first()
     if not r:
         return None
-    return _con_etiquetas([_fila_a_producto(r)])[0]
+    p = _con_etiquetas([_fila_a_producto(r)])[0]
+    filtrado = _filtrar_por_stock([p])
+    return filtrado[0] if filtrado else None
 
 
 def obtener_varios(ids: list[int]) -> dict[int, Producto]:
@@ -238,7 +266,7 @@ def obtener_varios(ids: list[int]) -> dict[int, Producto]:
     q = text(_SELECT + " AND m.id IN :ids").bindparams(bindparam("ids", expanding=True))
     with engine_erp.connect() as cx:
         prods = [_fila_a_producto(r) for r in cx.execute(q, {"ids": ids})]
-    return {p.id: p for p in _con_etiquetas(prods)}
+    return {p.id: p for p in _filtrar_por_stock(_con_etiquetas(prods))}
 
 
 def categorias() -> list[dict]:
@@ -267,26 +295,25 @@ def rubros() -> list[dict]:
 
 
 def _rubros() -> list[dict]:
-    sql_cat = """
-        SELECT c.Id_rubro AS rid, c.CodigoUnificado AS cid, c.Descripcion AS nombre, COUNT(*) AS n
-        FROM mprimas m JOIN categorias c ON c.CodigoUnificado = m.categoria
-        WHERE m.noweb = 0 AND m.Activo = 'SI'
-        GROUP BY c.Id_rubro, c.CodigoUnificado, c.Descripcion
-    """
+    """Rubros/categorías con sus conteos, calculados sobre el catálogo YA
+    filtrado por stock (`_todos_los_productos`) para que los números del menú
+    coincidan con lo que realmente se puede ver/comprar."""
     sql_rub = "SELECT Codigo AS id, Descripcion AS nombre FROM parametros WHERE Parametro = 33"
     with engine_erp.connect() as cx:
         nombres = {int(r.id): titulo(r.nombre) for r in cx.execute(text(sql_rub))}
-        porrub: dict[int, dict] = {}
-        for r in cx.execute(text(sql_cat)):
-            rid = int(r.rid or 16)
-            d = porrub.setdefault(rid, {"id": rid, "nombre": nombres.get(rid, "Varios"),
-                                        "n": 0, "categorias": []})
-            d["n"] += int(r.n)
-            d["categorias"].append(dict(id=int(r.cid), nombre=titulo(r.nombre), n=int(r.n)))
+    porrub: dict[int, dict] = {}
+    for p in _cacheado("catalogo_todos", 180, _todos_los_productos):
+        d = porrub.setdefault(p.rubro_id, {"id": p.rubro_id,
+                                           "nombre": nombres.get(p.rubro_id, p.rubro),
+                                           "n": 0, "categorias": {}})
+        d["n"] += 1
+        c = d["categorias"].setdefault(p.categoria_id, {"id": p.categoria_id,
+                                                         "nombre": p.categoria, "n": 0})
+        c["n"] += 1
     orden = {rid: i for i, rid in enumerate(ORDEN_RUBROS)}
     salida = sorted(porrub.values(), key=lambda d: orden.get(d["id"], 99))
     for d in salida:
-        d["categorias"].sort(key=lambda c: c["nombre"])
+        d["categorias"] = sorted(d["categorias"].values(), key=lambda c: c["nombre"])
     return salida
 
 
