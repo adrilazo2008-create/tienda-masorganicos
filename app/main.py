@@ -5,6 +5,7 @@ Arranque local:   uvicorn app.main:app --reload
 from __future__ import annotations
 
 import logging
+import secrets
 import time
 import traceback
 import urllib.parse
@@ -332,7 +333,8 @@ def checkout(request: Request):
                   sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
-                  aviso_stock=request.session.pop("carrito_msg", None))
+                  aviso_stock=request.session.pop("carrito_msg", None),
+                  token=secrets.token_urlsafe(12))
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
@@ -364,7 +366,15 @@ def checkout_confirmar(
     info_adicional: str = Form(""),
     pago: str = Form("efectivo"),
     codigo_descuento: str = Form(""), observacion: str = Form(""),
+    token: str = Form(""),
 ):
+    # Mismo envío de vuelta (doble clic, "atrás" del navegador, reintento por
+    # lag): no duplicar el pedido, mostrar la confirmación que ya se generó.
+    ya_hecho = request.session.get("checkout_token_hecho")
+    if token and ya_hecho and ya_hecho.get("token") == token:
+        request.session["pedido_ok"] = ya_hecho["pedido_ok"]
+        return RedirectResponse("/checkout/ok", status_code=303)
+
     car, hubo_cambios = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio:
         return RedirectResponse("/catalogo", status_code=303)
@@ -462,6 +472,10 @@ def checkout_confirmar(
         "subtotal": float(p.subtotal()),
         "total": float(p.total()),
     }
+    if token:
+        request.session["checkout_token_hecho"] = {
+            "token": token, "pedido_ok": request.session["pedido_ok"],
+        }
     return RedirectResponse("/checkout/ok", status_code=303)
 
 

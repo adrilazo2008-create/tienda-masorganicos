@@ -12,7 +12,9 @@
 {% endif %}
 
 <form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout"
-      onkeydown="if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();}">
+      onkeydown="if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();}"
+      onsubmit="var b=document.getElementById('btn-confirmar'); if(b.dataset.enviando) return false; b.dataset.enviando='1'; b.textContent='Enviando…'; setTimeout(function(){ b.disabled=true; }, 0);">
+  <input type="hidden" name="token" value="{{ token }}">
   <div class="co-col">
 
     <fieldset class="co-box">
