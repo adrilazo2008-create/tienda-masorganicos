@@ -3,12 +3,12 @@
 {% block contenido %}
 <h1>Carrusel de la home</h1>
 <p class="chico">
-  El archivo de la imagen ya tiene que estar subido al servidor (por FTP), en la
-  carpeta de carrousel. Acá solo se elige cuáles se muestran, en qué orden y a
-  dónde llevan al hacer clic.
+  Subí la imagen con el botón de cada bloque (JPG, apaisada, idealmente
+  1280×400 y menos de ~150&nbsp;KB para que cargue rápido). Si preferís, también
+  podés subirla vos por FTP/cPanel y escribir el nombre del archivo a mano.
 </p>
 
-<form method="post" action="/admin/carrusel">
+<form method="post" action="/admin/carrusel" enctype="multipart/form-data">
   {% for s in slides %}
   <fieldset class="co-box">
     <legend>Imagen {{ loop.index }} — {{ s.img }}</legend>
@@ -16,6 +16,9 @@
       <label>Archivo <input name="img_{{ loop.index0 }}" value="{{ s.img }}" required></label>
       <label>Texto alternativo <input name="alt_{{ loop.index0 }}" value="{{ s.alt }}"></label>
     </div>
+    <label>Reemplazar la foto (opcional)
+      <input type="file" name="archivo_{{ loop.index0 }}" accept="image/*">
+    </label>
     <label>Al hacer clic
       <select name="modo_{{ loop.index0 }}">
         <option value="catalogo" {{ 'selected' if s.link is not defined }}>Va al catálogo (por defecto)</option>
@@ -32,6 +35,10 @@
 
   <fieldset class="co-box">
     <legend>Agregar imagen nueva</legend>
+    <label>Subir foto
+      <input type="file" name="archivo_nueva" accept="image/*">
+    </label>
+    <p class="chico">— o, si ya la subiste por otro lado, escribí el nombre del archivo a mano —</p>
     <div class="grid2">
       <label>Archivo <input name="img_nueva" placeholder="05.jpg"></label>
       <label>Texto alternativo <input name="alt_nueva"></label>

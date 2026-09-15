@@ -8,6 +8,7 @@ cortarle el acceso a alguien, se cambia la contraseña.
 """
 from __future__ import annotations
 
+import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -43,6 +44,36 @@ def _num(form, clave: str, default: str = "0") -> Decimal:
         return Decimal(str(form.get(clave, default)).replace(",", ".") or "0")
     except InvalidOperation:
         return Decimal("0")
+
+
+def _dir_imagenes(subcarpeta: str) -> Path:
+    """Carpeta física donde vive `{IMG_BASE}/<subcarpeta>/`, para poder guardar
+    ahí un archivo subido desde el admin.
+
+    En local, IMG_BASE_URL es "/img" y esos archivos viven en _migracion/fotos/.
+    En producción, IMG_BASE_URL es una URL absoluta a OTRO dominio
+    (masorganicos.com.ar) pero en la MISMA cuenta/filesystem: la carpeta
+    `claude2026/assets/img/` vive al lado de `claude2026/tienda/` (esta app)."""
+    if S.img_base_url.startswith("/"):
+        d = _BASE_DIR.parent / "_migracion" / "fotos" / subcarpeta
+    else:
+        d = _BASE_DIR.parent.parent / "assets" / "img" / subcarpeta
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+async def _guardar_archivo(subida, carpeta: Path) -> str:
+    """Guarda un archivo subido (UploadFile) en `carpeta`, con su nombre
+    original saneado. Devuelve el nombre final, o "" si no vino ningún archivo."""
+    nombre = getattr(subida, "filename", "") or ""
+    if not nombre:
+        return ""
+    nombre = re.sub(r"[^A-Za-z0-9._-]", "_", Path(nombre).name)
+    contenido = await subida.read()
+    if not contenido:
+        return ""
+    (carpeta / nombre).write_bytes(contenido)
+    return nombre
 
 
 # --------------------------------------------------------------------------- acceso
@@ -177,9 +208,15 @@ async def admin_carrusel_guardar(request: Request):
         return RedirectResponse("/admin/login", status_code=303)
     form = await request.form()
     actuales = contenido.carrusel_home()
+    carpeta = _dir_imagenes("carrousel")
 
-    def _armar(prefijo: str) -> dict | None:
+    async def _armar(prefijo: str) -> dict | None:
         img = str(form.get(f"img_{prefijo}", "")).strip()
+        subida = form.get(f"archivo_{prefijo}")
+        if subida is not None:
+            nombre = await _guardar_archivo(subida, carpeta)
+            if nombre:
+                img = nombre  # el archivo subido manda, aunque el campo de texto diga otra cosa
         if not img:
             return None
         slide = {"img": img, "alt": str(form.get(f"alt_{prefijo}", "")).strip()}
@@ -195,10 +232,10 @@ async def admin_carrusel_guardar(request: Request):
     for i in range(len(actuales)):
         if f"borrar_{i}" in form:
             continue
-        slide = _armar(str(i))
+        slide = await _armar(str(i))
         if slide:
             nuevos.append(slide)
-    nueva = _armar("nueva")
+    nueva = await _armar("nueva")
     if nueva:
         nuevos.append(nueva)
     contenido.guardar_carrusel_home(nuevos)
