@@ -284,17 +284,32 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
                     cantidad: str = Form("1"), observacion: str = Form("")):
     carrito_mod.agregar(request.session, producto_id, cantidad, observacion)
     if request.headers.get("HX-Request"):
-        n = carrito_mod.resolver(request.session).cantidad_items
-        return HTMLResponse(
+        car = carrito_mod.resolver(request.session)
+        n = car.cantidad_items
+        partes = [
             f'<span id="carrito-badge" class="badge" aria-live="polite" '
-            f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>'
-            f'<p class="toast-ok" role="status">Agregado al carrito</p>')
+            f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>',
+            '<p class="toast-ok" role="status">Agregado al carrito</p>',
+        ]
+        # Si el elemento que disparó el agregado vive dentro de #carrito-cuerpo
+        # (viene de "Sumá a tu pedido" en /carrito), ese id ya existe en la
+        # página: mandamos el cuerpo del carrito actualizado por OOB en vez de
+        # recargar todo. Si el id no existe (catálogo, home, ficha de
+        # producto), htmx simplemente ignora este fragmento de más.
+        en_carrito = {l.producto.id for l in car.lineas}
+        sug = _habituales(_cliente_actual(request), 6, excluir=en_carrito)
+        if len(sug) < 6:
+            ya = en_carrito | {p.id for p in sug}
+            sug += [p for p in catalogo.destacados(12) if p.id not in ya][:6 - len(sug)]
+        extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug[:6])
+        partes.append(templates.get_template("_carrito_cuerpo_oob.html").render(extra))
+        return HTMLResponse("".join(partes))
     return RedirectResponse("/catalogo", status_code=303)
 
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
-    car, _ = carrito_mod.resolver_y_avisar(request.session)
+    car, _, _ = carrito_mod.resolver_y_avisar(request.session)
     en_carrito = {l.producto.id for l in car.lineas}
     # sugerencias: primero los habituales del cliente, después completamos con
     # destacados (para que siempre haya "para descubrir", logueado o no).
@@ -324,8 +339,8 @@ def carrito_quitar(request: Request, indice: int = Form(...)):
 
 @app.get("/checkout", response_class=HTMLResponse)
 def checkout(request: Request):
-    car, _ = carrito_mod.resolver_y_avisar(request.session)
-    if car.vacio:
+    car, _, eliminados = carrito_mod.resolver_y_avisar(request.session)
+    if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
     cli = _cliente_actual(request)
     dirs = clientes.direcciones(cli.id) if cli else []
@@ -334,7 +349,7 @@ def checkout(request: Request):
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                   aviso_stock=request.session.pop("carrito_msg", None),
-                  token=secrets.token_urlsafe(12))
+                  eliminados=eliminados, token=secrets.token_urlsafe(12))
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
@@ -375,14 +390,24 @@ def checkout_confirmar(
         request.session["pedido_ok"] = ya_hecho["pedido_ok"]
         return RedirectResponse("/checkout/ok", status_code=303)
 
-    car, hubo_cambios = carrito_mod.resolver_y_avisar(request.session)
-    if car.vacio:
+    car, hubo_cambios, eliminados = carrito_mod.resolver_y_avisar(request.session)
+    if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
     if hubo_cambios:
         # algo se quedó sin stock justo ahora, al confirmar: no completamos el
-        # pedido con menos productos de los que la persona ve en pantalla sin
-        # avisarle. Volvemos a /checkout con el carrito actualizado y el aviso.
-        return RedirectResponse("/checkout", status_code=303)
+        # pedido a ciegas con menos productos de los que la persona ve en
+        # pantalla. Se vuelve a mostrar el checkout (en la MISMA respuesta,
+        # sin redirect, para no perder el detalle de qué se sacó) marcando
+        # ese producto tachado en el resumen y con las dos opciones claras:
+        # volver al carrito a reemplazarlo, o confirmar el resto tal cual.
+        request.session.pop("carrito_msg", None)  # ya se muestra tachado en el resumen
+        cli = _cliente_actual(request)
+        dirs = clientes.direcciones(cli.id) if cli else []
+        return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
+                      sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
+                      cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
+                      direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                      eliminados=eliminados, token=secrets.token_urlsafe(12))
 
     graba = S.permitir_escribir_pedidos
 

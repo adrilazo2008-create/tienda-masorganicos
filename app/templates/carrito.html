@@ -9,71 +9,9 @@
 {% if car.vacio %}
   <p class="vacio">Todavía no agregaste nada. <a href="/catalogo">Ver productos →</a></p>
 {% else %}
-
-{% if umbral_envio %}
-{% set falta = umbral_envio - car.subtotal %}
-{% set pct = (car.subtotal / umbral_envio * 100) if car.subtotal < umbral_envio else 100 %}
-<div class="envio-progreso {{ 'listo' if falta <= 0 else '' }}">
-  {% if falta > 0 %}
-  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío sin cargo</b> el día que repartimos tu zona.</p>
-  {% else %}
-  <p>🎉 Con este total el <b>envío es sin cargo</b> el día que repartimos tu zona. Elegís la modalidad al cerrar el pedido.</p>
-  {% endif %}
-  <div class="ep-barra"><span style="width: {{ pct|round(0, 'floor') }}%"></span></div>
-  {% if falta > 0 %}<p class="chico">Sin cargo desde {{ pesos(umbral_envio) }} eligiendo el día de reparto de tu zona. A coordinar día y horario, el envío se cobra siempre.</p>{% endif %}
+<div id="carrito-cuerpo">
+  {% include "_carrito_cuerpo.html" %}
 </div>
-{% endif %}
-
-<div class="carrito">
-  <div class="carrito-lineas">
-    {% for l in car.lineas %}
-    <div class="cl">
-      <img src="{{ img_producto(l.producto.codigo) }}" alt="" width="64" height="64"
-           loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
-      <div class="cl-info">
-        <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
-        <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
-        {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
-      </div>
-      <form method="post" action="/carrito/actualizar" class="cl-cant">
-        <input type="hidden" name="indice" value="{{ l.indice }}">
-        <div class="cant" role="group" aria-label="Cantidad de {{ l.producto.nombre }}">
-          <button type="button" onclick="stepCarrito(this,-1)" aria-label="Quitar uno">−</button>
-          <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
-                 data-step="{{ '0.25' if l.producto.fraccionable else '1' }}"
-                 data-min="{{ '0.25' if l.producto.fraccionable else '1' }}"
-                 aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off"
-                 onchange="this.form.submit()">
-          <button type="button" onclick="stepCarrito(this,1)" aria-label="Agregar uno">+</button>
-        </div>
-        <span>{{ l.producto.unidad }}</span>
-      </form>
-      <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
-      <form method="post" action="/carrito/quitar" class="cl-quitar">
-        <input type="hidden" name="indice" value="{{ l.indice }}">
-        <button type="submit" aria-label="Quitar">✕</button>
-      </form>
-    </div>
-    {% endfor %}
-  </div>
-
-  <aside class="carrito-resumen">
-    <h2>Resumen</h2>
-    <p class="rr"><span>Subtotal</span><span class="num">{{ pesos(car.subtotal) }}</span></p>
-    <p class="rr chico">El costo de envío se calcula en el próximo paso según tu zona. No se cobra en el sitio: pagás al recibir.</p>
-    <a href="/checkout" class="btn-grande">Cerrar pedido</a>
-    <a href="/catalogo" class="btn-sec">Seguir comprando</a>
-  </aside>
-</div>
-
-{% if sugeridos %}
-<section class="bloque sugeridos">
-  <h2>Sumá a tu pedido</h2>
-  <div class="grid">
-    {% for p in sugeridos %}{% include "_card.html" %}{% endfor %}
-  </div>
-</section>
-{% endif %}
 {% endif %}
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 {% endblock %}

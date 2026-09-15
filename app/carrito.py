@@ -105,30 +105,38 @@ class Carrito:
 
 
 def resolver(session) -> Carrito:
-    car, _ = _resolver(session)
+    car, _, _ = _resolver(session)
     return car
 
 
-def resolver_y_avisar(session) -> tuple[Carrito, bool]:
-    """Como resolver(), pero además devuelve `True` si algún producto se cayó
-    del carrito EN ESTE LLAMADO (se quedó sin stock justo ahora). Se usa en
-    /checkout al confirmar, para no completar un pedido a ciegas con menos
-    productos de los que la persona ve en pantalla."""
+def resolver_y_avisar(session) -> tuple[Carrito, bool, list[dict]]:
+    """Como resolver(), pero además devuelve:
+      - `True` si algún producto se cayó del carrito EN ESTE LLAMADO (se
+        quedó sin stock justo ahora).
+      - el detalle de lo que se cayó ({producto_id, nombre, cantidad,
+        observacion}), para poder mostrarlo tachado en el resumen del
+        checkout en vez de que desaparezca sin dejar rastro.
+    Se usa en /checkout al confirmar, para no completar un pedido a ciegas
+    con menos productos de los que la persona ve en pantalla."""
     return _resolver(session)
 
 
-def _resolver(session) -> tuple[Carrito, bool]:
+def _resolver(session) -> tuple[Carrito, bool, list[dict]]:
     items = _leer(session)
     if not items:
-        return Carrito(lineas=[]), False
+        return Carrito(lineas=[]), False, []
     prods = catalogo.obtener_varios([it["producto_id"] for it in items])
     lineas: list[LineaCarrito] = []
     limpio: list[dict] = []
-    faltantes: list[int] = []
+    eliminados: list[dict] = []
     for it in items:
         p = prods.get(it["producto_id"])
         if not p:
-            faltantes.append(it["producto_id"])  # se quedó sin stock / dejó de estar disponible
+            eliminados.append({
+                "producto_id": it["producto_id"],  # se quedó sin stock / dejó de estar disponible
+                "cantidad": it["cantidad"],
+                "observacion": it.get("observacion", ""),
+            })
             continue
         lineas.append(LineaCarrito(
             indice=len(lineas), producto=p,
@@ -136,13 +144,15 @@ def _resolver(session) -> tuple[Carrito, bool]:
         limpio.append(it)
     if len(limpio) != len(items):
         _guardar(session, limpio)
-    if faltantes:
+    if eliminados:
         # se avisa SIEMPRE que algo se cae (no solo desde /checkout): así el
         # aviso queda esperando en la sesión y se muestra la próxima vez que
         # la persona mire /carrito o /checkout, sin importar en qué otra
         # página (home, catálogo...) se detectó la falta de stock primero.
-        nombres = catalogo.nombres_por_id(faltantes)
-        vistos = [nombres.get(pid, "un producto") for pid in faltantes]
+        nombres = catalogo.nombres_por_id([e["producto_id"] for e in eliminados])
+        for e in eliminados:
+            e["nombre"] = nombres.get(e["producto_id"], "un producto")
+        vistos = [e["nombre"] for e in eliminados]
         verbo = "Se quitó" if len(vistos) == 1 else "Se quitaron"
         session["carrito_msg"] = f"{verbo} de tu pedido, se quedó sin stock: {', '.join(vistos)}."
-    return Carrito(lineas=lineas), bool(faltantes)
+    return Carrito(lineas=lineas), bool(eliminados), eliminados

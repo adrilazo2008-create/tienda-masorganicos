@@ -111,13 +111,31 @@
 
   <aside class="co-resumen">
     <h2>Tu pedido</h2>
-    {% for l in car.lineas %}
-      <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}</span><span class="num">{{ pesos(l.subtotal) }}</span></p>
-    {% endfor %}
+    <div class="co-items">
+      {% for l in car.lineas %}
+        <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}</span><span class="num">{{ pesos(l.subtotal) }}</span></p>
+      {% endfor %}
+      {% for e in eliminados %}
+        <p class="rr rr-sinstock"><span>0 · {{ e.nombre|truncate(34) }} — sin stock</span><span class="num">$0</span></p>
+      {% endfor %}
+    </div>
     <p class="rr tot"><span>Subtotal</span><span class="num" id="r-subtotal" data-v="{{ car.subtotal }}">{{ pesos(car.subtotal) }}</span></p>
     <p class="rr"><span>Envío</span><span class="num" id="r-envio">a calcular</span></p>
     <p class="rr tot"><span>Total estimado</span><span class="num" id="r-total">{{ pesos(car.subtotal) }}</span></p>
-    <button type="submit" class="btn-grande" id="btn-confirmar">Confirmar pedido</button>
+    {% if eliminados %}
+    <div class="stock-aviso">
+      {% if car.vacio %}
+      <p>⚠ {{ 'Este producto' if eliminados|length == 1 else 'Estos productos' }} se quedó sin stock justo ahora y era lo único que tenías en el pedido.</p>
+      <p>Volvé al carrito para elegir un reemplazo.</p>
+      {% else %}
+      <p>⚠ {{ 'Este producto' if eliminados|length == 1 else 'Estos productos' }} se quedó sin stock justo ahora (marcado arriba).</p>
+      <p>¿Volvés al carrito para reemplazarlo, o cerrás el pedido sin él?</p>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if not car.vacio %}
+    <button type="submit" class="btn-grande" id="btn-confirmar">{{ 'Confirmar pedido sin ese producto' if eliminados else 'Confirmar pedido' }}</button>
+    {% endif %}
     <a href="/carrito" class="btn-sec">Volver al carrito</a>
   </aside>
 </form>

@@ -280,6 +280,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .rr{display:flex;justify-content:space-between;margin:.2rem 0;font-size:.9rem}
 .rr.tot{font-weight:700;border-top:1px solid var(--linea);padding-top:.4rem}
 .rr.chico{font-size:.8rem;color:var(--gris)}
+.co-items{max-height:38vh;overflow-y:auto;padding-right:.3rem}
+.rr-sinstock{color:var(--rojo);text-decoration:line-through;opacity:.85}
+.stock-aviso{background:#fdecec;border:1px solid #e6b5b5;border-radius:var(--radio);
+  padding:.7rem .9rem;font-size:.88rem;color:var(--rojo)}
+.stock-aviso p{margin:.2rem 0}
 
 /* checkout */
 .checkout{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start}
@@ -393,3 +398,59 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
   .cl-quitar{grid-area:quitar}
   .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
+
+/* ============================ sitio institucional + blog ============================ */
+.cab-sitio .cab-in{justify-content:space-between}
+.btn-tienda{padding:.5rem 1.1rem;font-size:.9rem}
+.cab-acc a[aria-current="page"]{color:var(--verde-osc);font-weight:600}
+
+.sitio-hero{background:linear-gradient(180deg,#fff,var(--verde-claro));
+  border:1px solid var(--linea);border-radius:16px;padding:2rem 1.9rem 2.1rem;margin:.6rem 0 1.4rem}
+.sitio-hero h1{color:var(--verde-osc);margin:.2rem 0 .5rem}
+.sitio-hero-lead{font-size:1.1rem;max-width:60ch;margin:0 0 1.3rem;color:var(--tinta)}
+
+.sitio-titulo,.sitio-cierre{margin:1.2rem 0 1.6rem}
+.sitio-titulo h1,.sitio-cierre h2{color:var(--verde-osc);margin:0 0 .3rem}
+.sitio-titulo p{color:var(--gris);margin:0}
+.sitio-cierre{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:14px;
+  padding:1.4rem 1.5rem;text-align:center}
+.sitio-cierre p{margin:.2rem 0 1rem;color:var(--verde-osc)}
+.sitio-cierre .hero-cta{justify-content:center}
+
+.sitio-productores{list-style:none;padding:0;margin:1rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem}
+.sitio-productores li{background:#fff;border:1px solid var(--linea);border-radius:999px;
+  padding:.35rem .9rem;font-size:.85rem;color:var(--verde-osc)}
+
+/* blog: listado */
+.blog-lista{display:grid;gap:1.4rem;margin-top:1.4rem}
+.blog-item{display:grid;gap:1.2rem;background:#fff;
+  border:1px solid var(--linea);border-radius:14px;overflow:hidden}
+.blog-item.con-foto{grid-template-columns:220px 1fr}
+.blog-item-foto{display:block;background:var(--verde-claro)}
+.blog-item-foto img{width:100%;height:100%;object-fit:cover;min-height:150px}
+.blog-item-txt{padding:1.1rem 1.2rem 1.2rem}
+.blog-item-txt time,.blog-post header time{font-size:.8rem;color:var(--gris);text-transform:uppercase;letter-spacing:.03em}
+.blog-item-txt h2,.blog-item-txt h3{margin:.25rem 0 .4rem;font-size:1.15rem}
+.blog-item-txt h2 a,.blog-item-txt h3 a{color:var(--verde-osc)}
+.blog-item-txt p{margin:0 0 .6rem;color:var(--gris);font-size:.92rem}
+.blog-item-mas{font-size:.88rem;font-weight:600}
+.blog-item[hidden]{display:none}
+@media(max-width:640px){
+  .blog-item.con-foto{grid-template-columns:1fr}
+  .blog-item-foto img{min-height:180px;max-height:220px}
+}
+
+/* blog: nota */
+.blog-post{max-width:720px;margin:0 auto}
+.blog-post-volver{font-size:.88rem;margin:.4rem 0 1rem}
+.blog-post header h1{color:var(--verde-osc);margin:.3rem 0 .5rem}
+.blog-post-bajada{font-size:1.12rem;color:var(--gris);margin:0 0 1.2rem;line-height:1.5}
+.blog-post-portada{width:100%;border-radius:14px;border:1px solid var(--linea);margin:0 0 1.4rem}
+.blog-post-cuerpo{max-width:none}
+.blog-post-cuerpo h2{margin:1.7rem 0 .5rem}
+.blog-post-cuerpo h3{margin:1.3rem 0 .4rem;color:var(--verde-osc)}
+.blog-post-cuerpo img{border-radius:12px;border:1px solid var(--linea);margin:1rem 0}
+.blog-post-cuerpo a{text-decoration:underline}
+.blog-post-cta{max-width:720px;margin:2rem auto 0;background:var(--verde-claro);
+  border:1px solid #cfe3c2;border-radius:14px;padding:1.3rem 1.4rem;text-align:center}
+.blog-post-cta p{margin:0 0 .8rem;color:var(--verde-osc);font-weight:600}
