@@ -73,8 +73,8 @@ p{{margin:.5rem 0}}
 <div class="caja">
   <h1>Uy, algo falló de nuestro lado 😕</h1>
   <p>Tu pedido <b>no se guardó</b> y no se cobró nada.</p>
-  <p>Escribinos por WhatsApp contándonos qué querías pedir y lo cerramos así, sin vueltas.</p>
-  <a class="wa" href="{wa_url}" rel="noopener">Escribir por WhatsApp</a>
+  <p>Hacé clic para enviarlo por WhatsApp y lo cerramos así, sin vueltas.</p>
+  <a class="wa" href="{wa_url}" rel="noopener">Enviar</a>
   <p class="chico">Código para contarnos: {codigo}</p>
 </div>
 </body></html>"""
@@ -86,7 +86,7 @@ def _mensaje_whatsapp_error(request: Request, codigo: str) -> str:
     no tiene que volver a escribir todo de cero. Si algo falla acá (justo lo
     que rompió puede ser la base), se cae a un mensaje genérico sin trabar
     la pantalla de error."""
-    mensaje = f"Hola! Estaba haciendo un pedido y la página me tiró un error (código {codigo})."
+    mensaje = "Hola! Estaba haciendo un pedido y la página me tiró un error."
     try:
         car = carrito_mod.resolver(request.session)
         if car.lineas:
@@ -98,6 +98,7 @@ def _mensaje_whatsapp_error(request: Request, codigo: str) -> str:
             mensaje += f"\n\nEsto es lo que tenía en el carrito:\n{items}"
     except Exception:
         pass
+    mensaje += f"\n\nCódigo para contarnos: {codigo}"
     mensaje += "\n\n¿Me ayudan a cerrarlo?"
     return mensaje
 
