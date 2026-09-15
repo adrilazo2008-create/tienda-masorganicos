@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import time
 import traceback
+import urllib.parse
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional
@@ -73,10 +74,32 @@ p{{margin:.5rem 0}}
   <h1>Uy, algo falló de nuestro lado 😕</h1>
   <p>Tu pedido <b>no se guardó</b> y no se cobró nada.</p>
   <p>Escribinos por WhatsApp contándonos qué querías pedir y lo cerramos así, sin vueltas.</p>
-  <a class="wa" href="https://wa.me/5491155046740" rel="noopener">Escribir por WhatsApp</a>
+  <a class="wa" href="{wa_url}" rel="noopener">Escribir por WhatsApp</a>
   <p class="chico">Código para contarnos: {codigo}</p>
 </div>
 </body></html>"""
+
+
+def _mensaje_whatsapp_error(request: Request, codigo: str) -> str:
+    """Arma el texto del WhatsApp con lo que la persona tenía en el carrito,
+    para que un error en el momento de cerrar el pedido no se lleve la venta:
+    no tiene que volver a escribir todo de cero. Si algo falla acá (justo lo
+    que rompió puede ser la base), se cae a un mensaje genérico sin trabar
+    la pantalla de error."""
+    mensaje = f"Hola! Estaba haciendo un pedido y la página me tiró un error (código {codigo})."
+    try:
+        car = carrito_mod.resolver(request.session)
+        if car.lineas:
+            items = "\n".join(
+                f"- {fmt_cantidad(l.cantidad)} {l.producto.unidad} {l.producto.nombre}"
+                + (f' ("{l.observacion}")' if l.observacion else "")
+                for l in car.lineas
+            )
+            mensaje += f"\n\nEsto es lo que tenía en el carrito:\n{items}"
+    except Exception:
+        pass
+    mensaje += "\n\n¿Me ayudan a cerrarlo?"
+    return mensaje
 
 
 @app.exception_handler(Exception)
@@ -86,9 +109,11 @@ async def _error_500(request: Request, exc: Exception) -> HTMLResponse:
         "500 en %s %s (código %s)\n%s",
         request.method, request.url.path, codigo, traceback.format_exc(),
     )
+    mensaje = _mensaje_whatsapp_error(request, codigo)
+    wa_url = "https://wa.me/5491155046740?text=" + urllib.parse.quote(mensaje)
     # Página mínima y autónoma (sin templates ni consultas a la base): si lo que
     # rompió fue justamente la base de datos, esta pantalla igual tiene que andar.
-    return HTMLResponse(_PAGINA_ERROR_500.format(codigo=codigo), status_code=500)
+    return HTMLResponse(_PAGINA_ERROR_500.format(codigo=codigo, wa_url=wa_url), status_code=500)
 
 
 @app.middleware("http")
