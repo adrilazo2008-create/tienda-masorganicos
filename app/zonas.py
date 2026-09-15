@@ -20,6 +20,7 @@ class Zona:
     descuento: int = 0        # % de descuento del envío el día que repartimos la zona
     texto: str = ""           # "Realizamos envios los miercoles ... {0}" ({0}=horario, {1}=descuento)
     horario: str = ""         # "15hs a 19hs aprox"
+    activo: bool = True
 
     @property
     def precio_dia(self) -> Decimal:
@@ -120,6 +121,41 @@ def sucursales() -> list[Sucursal]:
                      int(r.altura or 0), (r.ciudad or "").strip())
             for r in cx.execute(text(sql))
         ]
+
+
+# --------------------------------------------------------------------------- admin
+
+def todas_las_zonas() -> list[Zona]:
+    """Como zonas(), pero incluye las inactivas (para poder reactivarlas desde
+    el panel de admin) y SIN caché (se edita y se quiere ver el cambio ya)."""
+    sql = """SELECT id_zona, titulo, precio, mim_compra, envio_gratis, descuento,
+                    texto, horario, activo
+             FROM zonas ORDER BY activo DESC, titulo"""
+    with engine_tienda.connect() as cx:
+        return [
+            Zona(int(r.id_zona), r.titulo.strip(), Decimal(str(r.precio)),
+                 Decimal(str(r.mim_compra)), Decimal(str(r.envio_gratis)),
+                 int(r.descuento or 0), (r.texto or "").strip(), (r.horario or "").strip(),
+                 bool(r.activo))
+            for r in cx.execute(text(sql))
+        ]
+
+
+def actualizar_zona(id_zona: int, *, precio: Decimal, descuento: int,
+                    mim_compra: Decimal, envio_gratis: Decimal, activo: bool) -> None:
+    """Guarda los valores editables de una zona desde el panel de admin.
+    Invalida el caché de `zonas()` para que se vea al toque."""
+    from .catalogo import _cache
+    sql = text("""
+        UPDATE zonas
+        SET precio = :precio, descuento = :descuento, mim_compra = :mim,
+            envio_gratis = :gratis, activo = :activo
+        WHERE id_zona = :id
+    """)
+    with engine_tienda.begin() as cx:
+        cx.execute(sql, dict(precio=precio, descuento=descuento, mim=mim_compra,
+                              gratis=envio_gratis, activo=1 if activo else 0, id=id_zona))
+    _cache.pop("zonas", None)
 
 
 def costo_envio(z: Zona, subtotal: Decimal, modalidad: str = "coordinar") -> Decimal:

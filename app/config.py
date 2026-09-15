@@ -29,8 +29,18 @@ class Settings(BaseSettings):
     img_base_url: str = "/img"
     entorno: str = "development"
 
+    # Enlaces entre el sitio institucional y la tienda (vacío = mismo origen).
+    # En prod:  url_web=https://masorganicos.com.ar
+    #           url_tienda_publica=https://tienda.masorganicos.com.ar
+    url_web: str = ""
+    url_tienda_publica: str = ""
+
     # Si es False, el checkout NO escribe en grupos/transacciones (simula).
     permitir_escribir_pedidos: bool = False
+
+    # Contraseña compartida para entrar a /admin (panel de zonas, avisos, etc.).
+    # Cambiarla en el .env cuando quieras revocarle el acceso a alguien.
+    admin_password: str = "cambiar-esta-clave"
 
     def url_tienda(self) -> str:
         return (

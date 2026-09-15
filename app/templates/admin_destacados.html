@@ -1,0 +1,65 @@
+{% extends "admin_base.html" %}
+{% block title %}Destacados — Admin{% endblock %}
+{% block contenido %}
+<h1>Productos destacados</h1>
+<p class="chico">Los destacados aparecen primero en el catálogo y se usan para completar sugerencias en el carrito y la home.</p>
+
+<form method="get" action="/admin/destacados" class="verif-form">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto por nombre…">
+  <button type="submit" class="btn-grande">Buscar</button>
+</form>
+
+<h2>Actualmente destacados ({{ actuales|length }})</h2>
+{% if actuales %}
+<table class="tabla-pedidos">
+  <thead><tr><th>Producto</th><th>Rubro</th><th></th></tr></thead>
+  <tbody>
+    {% for p in actuales %}
+    <tr>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.rubro }}</td>
+      <td>
+        <form method="post" action="/admin/destacados/{{ p.id }}">
+          <input type="hidden" name="valor" value="0">
+          <input type="hidden" name="q" value="{{ q }}">
+          <button type="submit" class="btn-mini">Quitar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="chico">No hay ningún producto destacado ahora mismo.</p>
+{% endif %}
+
+{% if q %}
+<h2 style="margin-top:1.6rem">Resultados para "{{ q }}"</h2>
+{% if resultados %}
+<table class="tabla-pedidos">
+  <thead><tr><th>Producto</th><th>Rubro</th><th></th></tr></thead>
+  <tbody>
+    {% for p in resultados %}
+    <tr>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.rubro }}</td>
+      <td>
+        {% if p.destacado %}
+        <span class="tag">Ya destacado</span>
+        {% else %}
+        <form method="post" action="/admin/destacados/{{ p.id }}">
+          <input type="hidden" name="valor" value="1">
+          <input type="hidden" name="q" value="{{ q }}">
+          <button type="submit" class="btn-mini">Destacar</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="chico">No encontramos productos con ese nombre.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

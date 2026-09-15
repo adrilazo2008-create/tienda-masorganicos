@@ -335,3 +335,14 @@ def rubro_nombre(rubro_id: int) -> Optional[str]:
         if r["id"] == rubro_id:
             return r["nombre"]
     return None
+
+
+# --------------------------------------------------------------------------- admin
+
+def set_destacado(producto_id: int, valor: bool) -> None:
+    """Marca/desmarca un producto como destacado en el ERP. Invalida los
+    cachés del catálogo para que se vea al toque en la tienda y en el admin."""
+    with engine_erp.begin() as cx:
+        cx.execute(text("UPDATE mprimas SET destacado = :v WHERE id = :id"),
+                   {"v": 1 if valor else 0, "id": producto_id})
+    _cache.clear()

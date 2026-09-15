@@ -1,0 +1,38 @@
+{% extends "admin_base.html" %}
+{% block title %}Avisos — Admin{% endblock %}
+{% block contenido %}
+<h1>Avisos</h1>
+
+<section class="bloque">
+  <h2>Barra superior (se ve en todo el sitio)</h2>
+  <form method="post" action="/admin/anuncio" class="co-box">
+    <label>Texto
+      <textarea name="texto" rows="2" maxlength="300">{{ barra.texto }}</textarea>
+    </label>
+    <div class="grid2">
+      <label>Link (opcional) <input name="link" value="{{ barra.link }}" placeholder="/envios"></label>
+      <label>Texto del link <input name="link_texto" value="{{ barra.link_texto }}" placeholder="Ver zonas y días"></label>
+    </div>
+    <label class="radio"><input type="checkbox" name="activo" {{ 'checked' if barra.activo }}> Mostrar la barra</label>
+    <button type="submit" class="btn-grande" style="margin-top:.6rem">Guardar</button>
+  </form>
+</section>
+
+<section class="bloque">
+  <h2>Otros avisos de la home</h2>
+  {% for a in avisos %}
+  <form method="post" action="/admin/avisos/{{ a.id }}" class="co-box">
+    <label>Texto <textarea name="texto" rows="2">{{ a.texto }}</textarea></label>
+    <label class="radio"><input type="checkbox" name="activo" {{ 'checked' if a.activo }}> Activo</label>
+    <button type="submit" class="btn-mini" style="margin-top:.5rem">Guardar</button>
+  </form>
+  {% else %}
+  <p class="chico">No hay avisos cargados todavía.</p>
+  {% endfor %}
+
+  <form method="post" action="/admin/avisos/nuevo" class="co-box">
+    <label>Nuevo aviso <textarea name="texto" rows="2" placeholder="Texto del aviso nuevo"></textarea></label>
+    <button type="submit" class="btn-grande" style="margin-top:.6rem">Agregar</button>
+  </form>
+</section>
+{% endblock %}

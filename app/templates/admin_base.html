@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}Admin — Más Orgánicos{% endblock %}</title>
+<link rel="icon" href="/static/img/favicon.ico" sizes="any">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/estilo.css">
+<style>
+  .admin-cab .cab-in{flex-wrap:wrap}
+  .admin-cab .logo span{font-size:1.05rem}
+  .admin-cab nav{display:flex;gap:1rem;flex-wrap:wrap;font-size:.88rem}
+  .admin-tabla input[type=number]{width:100%;min-width:90px}
+  .admin-tabla td,.admin-tabla th{white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="cab admin-cab">
+  <div class="cab-in">
+    <a href="/admin" class="logo" translate="no"><span>⚙️ Admin · Más Orgánicos</span></a>
+    {% if logueado %}
+    <nav>
+      <a href="/admin/zonas">Zonas y envíos</a>
+      <a href="/admin/avisos">Avisos</a>
+      <a href="/admin/destacados">Destacados</a>
+      <a href="/admin/carrusel">Carrusel</a>
+      <a href="/admin/pixel">Meta Pixel</a>
+      <a href="/admin/salir">Salir</a>
+    </nav>
+    {% endif %}
+  </div>
+</header>
+<main class="cont" id="contenido">
+  {% if mensaje %}<p class="ok-box">✓ {{ mensaje }}</p>{% endif %}
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>

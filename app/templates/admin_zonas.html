@@ -1,0 +1,41 @@
+{% extends "admin_base.html" %}
+{% block title %}Zonas y envíos — Admin{% endblock %}
+{% block contenido %}
+<h1>Zonas y envíos</h1>
+<p class="chico">
+  "A coordinar" (día y horario a convenir) <b>siempre cobra el precio completo</b>.
+  "El día de reparto de la zona" cobra el precio con el % de descuento, y sale
+  <b>gratis</b> si el pedido supera el monto de "envío gratis desde". Una zona
+  desmarcada como Activa no se puede elegir en el checkout.
+</p>
+
+<form method="post" action="/admin/zonas">
+<div class="tabla-scroll">
+<table class="tabla-zonas admin-tabla">
+<thead>
+  <tr>
+    <th>Zona</th>
+    <th>Precio (a coordinar)</th>
+    <th>Descuento día (%)</th>
+    <th>Compra mínima</th>
+    <th>Envío gratis desde</th>
+    <th>Activa</th>
+  </tr>
+</thead>
+<tbody>
+  {% for z in zonas %}
+  <tr>
+    <td>{{ z.titulo }}</td>
+    <td><input type="number" step="0.01" min="0" name="precio_{{ z.id }}" value="{{ z.precio }}" required></td>
+    <td><input type="number" step="1" min="0" max="100" name="descuento_{{ z.id }}" value="{{ z.descuento }}" required></td>
+    <td><input type="number" step="0.01" min="0" name="mim_compra_{{ z.id }}" value="{{ z.minimo_compra }}" required></td>
+    <td><input type="number" step="0.01" min="0" name="envio_gratis_{{ z.id }}" value="{{ z.envio_gratis }}" required></td>
+    <td style="text-align:center"><input type="checkbox" name="activo_{{ z.id }}" {{ 'checked' if z.activo }}></td>
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+</div>
+<button type="submit" class="btn-grande" style="margin-top:1.2rem">Guardar cambios</button>
+</form>
+{% endblock %}

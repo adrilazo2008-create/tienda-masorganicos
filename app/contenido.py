@@ -130,3 +130,84 @@ def suscribir_newsletter(email: str) -> bool:
         return True
     except Exception:
         return False
+
+
+# --------------------------------------------------------------------------- admin
+
+def barra_anuncio_admin() -> dict:
+    """La fila BARRA_ANUNCIO tal cual está (activa o no), para editarla en el
+    panel de admin. A diferencia de `anuncio()`, no cae al fallback de
+    home.json ni filtra por activo."""
+    with engine_tienda.connect() as cx:
+        row = cx.execute(text(
+            "SELECT id, texto, linkMapa, activo FROM genericos "
+            "WHERE titulo = 'BARRA_ANUNCIO' ORDER BY id LIMIT 1"
+        )).first()
+    if not row:
+        return {"id": 0, "texto": "", "link": "", "link_texto": "", "activo": False}
+    link, link_texto = (row.linkMapa or "").strip(), ""
+    if "|" in link:
+        link, link_texto = (p.strip() for p in link.split("|", 1))
+    return {"id": row.id, "texto": row.texto or "", "link": link,
+            "link_texto": link_texto, "activo": bool(row.activo)}
+
+
+def guardar_barra_anuncio(texto: str, link: str, link_texto: str, activo: bool) -> None:
+    """Crea o actualiza la fila BARRA_ANUNCIO de `genericos`."""
+    texto = (texto or "").strip()
+    link_val = f"{link.strip()} | {link_texto.strip()}" if link_texto.strip() else link.strip()
+    actual = barra_anuncio_admin()
+    with engine_tienda.begin() as cx:
+        if actual["id"]:
+            cx.execute(text(
+                "UPDATE genericos SET texto=:t, linkMapa=:l, activo=:a WHERE id=:id"
+            ), dict(t=texto, l=link_val, a=1 if activo else 0, id=actual["id"]))
+        else:
+            cx.execute(text(
+                "INSERT INTO genericos (titulo, texto, linkMapa, imagen, video, activo) "
+                "VALUES ('BARRA_ANUNCIO', :t, :l, '', '', :a)"
+            ), dict(t=texto, l=link_val, a=1 if activo else 0))
+
+
+def avisos_admin() -> list[dict]:
+    """Todos los avisos de `genericos` (activos o no), menos la barra de
+    anuncio, para el panel de admin."""
+    with engine_tienda.connect() as cx:
+        rows = cx.execute(text(
+            "SELECT id, texto, activo FROM genericos "
+            "WHERE titulo <> 'BARRA_ANUNCIO' ORDER BY id"
+        )).all()
+    return [{"id": r.id, "texto": r.texto or "", "activo": bool(r.activo)} for r in rows]
+
+
+def guardar_aviso(id_aviso: int, texto: str, activo: bool) -> None:
+    with engine_tienda.begin() as cx:
+        cx.execute(text("UPDATE genericos SET texto=:t, activo=:a WHERE id=:id AND titulo <> 'BARRA_ANUNCIO'"),
+                   dict(t=(texto or "").strip(), a=1 if activo else 0, id=id_aviso))
+
+
+def crear_aviso(texto: str) -> None:
+    texto = (texto or "").strip()
+    if not texto:
+        return
+    with engine_tienda.begin() as cx:
+        cx.execute(text(
+            "INSERT INTO genericos (titulo, texto, linkMapa, imagen, video, activo) "
+            "VALUES ('', :t, '', '', '', 1)"
+        ), {"t": texto})
+
+
+def guardar_carrusel_home(slides: list[dict]) -> None:
+    """Reemplaza app/data/carrusel_home.json entero. `slides` = [{img, alt, link}]."""
+    (_DATA / "carrusel_home.json").write_text(
+        json.dumps(slides, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def guardar_meta_pixel_id(valor: str) -> None:
+    ruta = _DATA / "integraciones.json"
+    try:
+        data = json.loads(ruta.read_text(encoding="utf-8"))
+    except OSError:
+        data = {}
+    data["meta_pixel_id"] = (valor or "").strip()
+    ruta.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -1,0 +1,53 @@
+{% extends "admin_base.html" %}
+{% block title %}Carrusel de la home — Admin{% endblock %}
+{% block contenido %}
+<h1>Carrusel de la home</h1>
+<p class="chico">
+  El archivo de la imagen ya tiene que estar subido al servidor (por FTP), en la
+  carpeta de carrousel. Acá solo se elige cuáles se muestran, en qué orden y a
+  dónde llevan al hacer clic.
+</p>
+
+<form method="post" action="/admin/carrusel">
+  {% for s in slides %}
+  <fieldset class="co-box">
+    <legend>Imagen {{ loop.index }} — {{ s.img }}</legend>
+    <div class="grid2">
+      <label>Archivo <input name="img_{{ loop.index0 }}" value="{{ s.img }}" required></label>
+      <label>Texto alternativo <input name="alt_{{ loop.index0 }}" value="{{ s.alt }}"></label>
+    </div>
+    <label>Al hacer clic
+      <select name="modo_{{ loop.index0 }}">
+        <option value="catalogo" {{ 'selected' if s.link is not defined }}>Va al catálogo (por defecto)</option>
+        <option value="ninguno" {{ 'selected' if s.link is defined and not s.link }}>No es clickeable</option>
+        <option value="custom" {{ 'selected' if s.link is defined and s.link }}>Link a otra página</option>
+      </select>
+    </label>
+    <label>Link (solo si elegiste "Link a otra página")
+      <input name="link_{{ loop.index0 }}" value="{{ s.link if (s.link is defined and s.link) else '' }}" placeholder="/envios">
+    </label>
+    <label class="radio"><input type="checkbox" name="borrar_{{ loop.index0 }}"> Quitar esta imagen del carrusel</label>
+  </fieldset>
+  {% endfor %}
+
+  <fieldset class="co-box">
+    <legend>Agregar imagen nueva</legend>
+    <div class="grid2">
+      <label>Archivo <input name="img_nueva" placeholder="05.jpg"></label>
+      <label>Texto alternativo <input name="alt_nueva"></label>
+    </div>
+    <label>Al hacer clic
+      <select name="modo_nueva">
+        <option value="catalogo">Va al catálogo (por defecto)</option>
+        <option value="ninguno">No es clickeable</option>
+        <option value="custom">Link a otra página</option>
+      </select>
+    </label>
+    <label>Link (solo si elegiste "Link a otra página")
+      <input name="link_nueva" placeholder="/envios">
+    </label>
+  </fieldset>
+
+  <button type="submit" class="btn-grande">Guardar</button>
+</form>
+{% endblock %}

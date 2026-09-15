@@ -18,7 +18,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, pedidos, zonas
+from . import catalogo, clientes, contenido, descuentos, pedidos, rutas_admin, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import pesos
@@ -106,6 +106,7 @@ async def _cache_headers(request: Request, call_next):
         resp.headers["Cache-Control"] = "no-store, must-revalidate"
     return resp
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+app.include_router(rutas_admin.router)
 
 # Fotos: en local desde _migracion/fotos ; en prod IMG_BASE_URL es una URL absoluta.
 _fotos_local = BASE_DIR.parent / "_migracion" / "fotos"
