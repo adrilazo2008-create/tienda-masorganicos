@@ -178,19 +178,46 @@ def pedido_reciente_igual(cliente_id: int, items: list[LineaPedido], minutos: in
     return None
 
 
+def _ocultar_anteriores_del_cliente(cliente_id: int, grupo_nuevo_id: int, minutos: int = 10) -> int:
+    """Si este cliente tiene OTROS pedidos recién creados (mismos `minutos`),
+    se asume que este pedido nuevo los reemplaza — agregó, sacó o cambió
+    algo y volvió a cerrar — y se ocultan los anteriores (status=2,
+    activo=0), para que a la tienda le llegue SOLO el definitivo sin que
+    haya que compararlos a mano. No se borra nada: quedan igual en la base,
+    solo salen de la cola del sistema de escritorio."""
+    with engine_tienda.begin() as cx:
+        r = cx.execute(text("""
+            UPDATE grupos
+            SET status = 2, activo = 0
+            WHERE cliente = :cliente_id
+              AND id <> :nuevo
+              AND created_at >= DATE_SUB(NOW(), INTERVAL :minutos MINUTE)
+              AND activo = 1
+        """), {"cliente_id": cliente_id, "nuevo": grupo_nuevo_id, "minutos": minutos})
+        return r.rowcount
+
+
 def crear(p: PedidoNuevo) -> int:
     """Inserta el pedido y devuelve el nº de grupo. Transacción atómica.
 
-    Antes de grabar, chequea que no sea un duplicado de algo que este mismo
-    cliente ya mandó hace unos minutos (ver `pedido_reciente_igual`) — si lo
-    es, devuelve el id del pedido existente SIN insertar uno nuevo."""
+    Antes de grabar, chequea que no sea un duplicado EXACTO de algo que este
+    mismo cliente ya mandó hace unos minutos (`pedido_reciente_igual`) — si
+    lo es, devuelve el id del pedido existente SIN insertar uno nuevo.
+
+    Si no es exacto pero igual hay un pedido MÁS VIEJO reciente del mismo
+    cliente (cambió de idea, sacó o agregó algo y volvió a confirmar), este
+    pedido nuevo se toma como el definitivo y el anterior se oculta solo
+    (`_ocultar_anteriores_del_cliente`) — así no queda en la tienda la
+    versión vieja del pedido para revisar a mano."""
     if not p.items:
         raise ValueError("El pedido no tiene items.")
     dup = pedido_reciente_igual(p.cliente_id, p.items)
     if dup:
         return dup
     with engine_tienda.begin() as cx:
-        return _insertar(cx, p)
+        grupo_id = _insertar(cx, p)
+    _ocultar_anteriores_del_cliente(p.cliente_id, grupo_id)
+    return grupo_id
 
 
 # ---------------------------------------------------------------- lectura / historial
