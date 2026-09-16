@@ -142,10 +142,53 @@ def _insertar(cx: Connection, p: PedidoNuevo) -> int:
     return grupo_id
 
 
+def _firma(items: list[LineaPedido]) -> list[tuple[int, float]]:
+    return sorted((li.producto_id, round(float(li.cantidad), 2)) for li in items)
+
+
+def pedido_reciente_igual(cliente_id: int, items: list[LineaPedido], minutos: int = 5) -> Optional[int]:
+    """Si este cliente YA tiene un pedido creado en los últimos `minutos` con
+    exactamente los mismos productos y cantidades, devuelve su id.
+
+    Es la red de seguridad final contra pedidos duplicados: el token de
+    sesión (ver checkout_confirmar) solo detecta el reenvío EXACTO de la
+    misma carga de /checkout (doble clic). Si la persona recarga la página,
+    vuelve atrás o abre el checkout de nuevo y confirma con el mismo
+    carrito, eso genera un token distinto y el token no lo agarra — pero
+    esto sí, porque compara contra lo que quedó grabado en la base."""
+    if not items:
+        return None
+    firma = _firma(items)
+    with engine_tienda.connect() as cx:
+        candidatos = cx.execute(text("""
+            SELECT id FROM grupos
+            WHERE cliente = :cliente_id
+              AND created_at >= DATE_SUB(NOW(), INTERVAL :minutos MINUTE)
+              AND activo = 1
+            ORDER BY id DESC
+            LIMIT 5
+        """), {"cliente_id": cliente_id, "minutos": minutos}).all()
+        for row in candidatos:
+            filas = cx.execute(text(
+                "SELECT producto_id, cantidad FROM transacciones WHERE grupo = :g"
+            ), {"g": row.id}).all()
+            firma_existente = sorted((int(f.producto_id), round(float(f.cantidad), 2)) for f in filas)
+            if firma_existente == firma:
+                return int(row.id)
+    return None
+
+
 def crear(p: PedidoNuevo) -> int:
-    """Inserta el pedido y devuelve el nº de grupo. Transacción atómica."""
+    """Inserta el pedido y devuelve el nº de grupo. Transacción atómica.
+
+    Antes de grabar, chequea que no sea un duplicado de algo que este mismo
+    cliente ya mandó hace unos minutos (ver `pedido_reciente_igual`) — si lo
+    es, devuelve el id del pedido existente SIN insertar uno nuevo."""
     if not p.items:
         raise ValueError("El pedido no tiene items.")
+    dup = pedido_reciente_igual(p.cliente_id, p.items)
+    if dup:
+        return dup
     with engine_tienda.begin() as cx:
         return _insertar(cx, p)
 
