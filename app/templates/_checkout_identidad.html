@@ -15,14 +15,14 @@
   <label>Dirección de entrega
     <select id="dir-guardada-sel">
       {% for d in direcciones_cliente %}
-      <option value="{{ loop.index0 }}">{{ d.direccion }} {{ d.altura }}, {{ d.localidad }}{% if d.principal %} (principal){% endif %}</option>
+      <option value="{{ loop.index0 }}">{{ d.direccion }} {{ d.altura }}{% if d.barrio %}, {{ d.barrio }}{% endif %}{% if d.lote %}, Lote {{ d.lote }}{% endif %}, {{ d.localidad }}{% if d.principal %} (principal){% endif %}</option>
       {% endfor %}
       <option value="-1">Otra dirección…</option>
     </select>
   </label>
   <p class="chico">Elegí una de tus direcciones o escribí una nueva abajo.</p>
   {% elif direccion_ppal %}
-  <p class="chico" id="dir-guardada">📍 Usamos tu dirección guardada: {{ direccion_ppal.direccion }} {{ direccion_ppal.altura }}, {{ direccion_ppal.localidad }}. Podés cambiarla abajo.</p>
+  <p class="chico" id="dir-guardada">📍 Usamos tu dirección guardada: {{ direccion_ppal.direccion }} {{ direccion_ppal.altura }}{% if direccion_ppal.barrio %}, {{ direccion_ppal.barrio }}{% endif %}{% if direccion_ppal.lote %}, Lote {{ direccion_ppal.lote }}{% endif %}, {{ direccion_ppal.localidad }}. Podés cambiarla abajo.</p>
   {% endif %}
   {% if direcciones_cliente %}
   <script>
@@ -36,12 +36,16 @@
         if (f.direccion) f.direccion.value = '';
         if (f.altura) f.altura.value = '';
         if (f.localidad) f.localidad.value = '';
+        if (f.barrio) f.barrio.value = '';
+        if (f.lote) f.lote.value = '';
         if (f.info_adicional) f.info_adicional.value = '';
         if (f.id_zona) f.id_zona.value = '0';
       } else {
         if (f.direccion)      f.direccion.value = d.direccion || '';
         if (f.altura)         f.altura.value = d.altura || '';
         if (f.localidad)      f.localidad.value = d.localidad || '';
+        if (f.barrio)         f.barrio.value = d.barrio || '';
+        if (f.lote)           f.lote.value = d.lote || '';
         if (f.info_adicional) f.info_adicional.value = d.info || '';
         if (f.id_zona) f.id_zona.value = d.id_zona ? String(d.id_zona) : '0';
       }

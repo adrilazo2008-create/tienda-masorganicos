@@ -90,6 +90,7 @@ class Cliente:
     telefono: int
     email: str
     tiene_pin: bool
+    cliente_codigo: Optional[int] = None
 
     @property
     def nombre_completo(self) -> str:
@@ -99,7 +100,8 @@ class Cliente:
 def _fila(r) -> Cliente:
     return Cliente(int(r.id), (r.nombre or "").strip(), (r.apellido or "").strip(),
                    int(r.telefono or 0), (r.email or "").strip(),
-                   bool(r.password and str(r.password).startswith("$2")))
+                   bool(r.password and str(r.password).startswith("$2")),
+                   int(r.cliente_codigo) if getattr(r, "cliente_codigo", None) else None)
 
 
 def buscar_por_telefono(telefono: str) -> Optional[Cliente]:
@@ -109,7 +111,7 @@ def buscar_por_telefono(telefono: str) -> Optional[Cliente]:
     variante = _variante_11_15(tel)
     tels = [tel, variante] if variante else [tel]
     sql = text(
-        "SELECT id,nombre,apellido,telefono,email,password FROM users "
+        "SELECT id,nombre,apellido,telefono,email,password,cliente_codigo FROM users "
         "WHERE telefono IN :ts AND activo = 1 ORDER BY id DESC LIMIT 1"
     ).bindparams(bindparam("ts", expanding=True))
     with engine_tienda.connect() as cx:
@@ -173,14 +175,14 @@ def buscar_por_email(email: str) -> Optional[Cliente]:
     email = (email or "").strip().lower()
     if not email:
         return None
-    sql = "SELECT id,nombre,apellido,telefono,email,password FROM users WHERE LOWER(email) = :e AND activo = 1 LIMIT 1"
+    sql = "SELECT id,nombre,apellido,telefono,email,password,cliente_codigo FROM users WHERE LOWER(email) = :e AND activo = 1 LIMIT 1"
     with engine_tienda.connect() as cx:
         r = cx.execute(text(sql), {"e": email}).first()
     return _fila(r) if r else None
 
 
 def obtener(cliente_id: int) -> Optional[Cliente]:
-    sql = "SELECT id,nombre,apellido,telefono,email,password FROM users WHERE id = :id LIMIT 1"
+    sql = "SELECT id,nombre,apellido,telefono,email,password,cliente_codigo FROM users WHERE id = :id LIMIT 1"
     with engine_tienda.connect() as cx:
         r = cx.execute(text(sql), {"id": cliente_id}).first()
     return _fila(r) if r else None
@@ -250,28 +252,125 @@ def actualizar(cliente_id: int, *, nombre: Optional[str] = None, apellido: Optio
 
 def guardar_direccion(cliente_id: int, direccion: str, altura: int, localidad: str,
                       id_zona: int, info_adicional: str = "", codigo_postal: int = 0,
-                      principal: bool = True) -> int:
+                      principal: bool = True, barrio: str = "", lote: str = "") -> int:
     if principal:
         with engine_tienda.begin() as cx:
             cx.execute(text("UPDATE direccion SET principal = 0 WHERE id_cliente = :c"),
                        {"c": cliente_id})
     sql = text("""
         INSERT INTO direccion (id_cliente, direccion, altura, codigoPostal, id_zona,
-                               localidad, infoAdicional, principal, activo)
-        VALUES (:c, :dir, :alt, :cp, :zona, :loc, :info, :ppal, 1)
+                               localidad, infoAdicional, principal, activo, barrio, lote)
+        VALUES (:c, :dir, :alt, :cp, :zona, :loc, :info, :ppal, 1, :barrio, :lote)
     """)
     with engine_tienda.begin() as cx:
         res = cx.execute(sql, dict(c=cliente_id, dir=direccion.strip(), alt=int(altura or 0),
                                    cp=int(codigo_postal or 0), zona=id_zona,
                                    loc=localidad.strip(), info=info_adicional.strip(),
-                                   ppal=1 if principal else 0))
+                                   ppal=1 if principal else 0,
+                                   barrio=barrio.strip() or None, lote=lote.strip() or None))
         return int(res.lastrowid)
 
 
 def direcciones(cliente_id: int) -> list[dict]:
-    sql = """SELECT id_direccion, direccion, altura, localidad, id_zona, infoAdicional, principal
+    sql = """SELECT id_direccion, direccion, altura, localidad, id_zona, infoAdicional, principal, barrio, lote
              FROM direccion WHERE id_cliente = :c AND activo = 1 ORDER BY principal DESC, id_direccion DESC"""
     with engine_tienda.connect() as cx:
         return [dict(id=int(r.id_direccion), direccion=r.direccion, altura=r.altura,
                      localidad=r.localidad, id_zona=r.id_zona, info=r.infoAdicional,
-                     principal=bool(r.principal)) for r in cx.execute(text(sql), {"c": cliente_id})]
+                     principal=bool(r.principal), barrio=r.barrio, lote=r.lote)
+                for r in cx.execute(text(sql), {"c": cliente_id})]
+
+
+# --------------------------------------------------------------------------- ERP (clientes)
+
+def _concatenar_direccion_erp(direccion: str, altura, barrio: str, lote: str) -> str:
+    import re as _re
+    calle = (direccion or "").strip()
+    barrio = (barrio or "").strip()
+    altura_s = str(altura).strip() if altura else ""
+    if altura_s and altura_s != "0" and not _re.search(rf"\b{_re.escape(altura_s)}\b\s*$", calle):
+        calle = f"{calle} {altura_s}".strip()
+    partes = [p for p in (calle, barrio) if p]
+    if lote:
+        partes.append(f"Lote {lote}")
+    return ", ".join(partes)
+
+
+def _buscar_codigo_erp(telefono: int, email: str) -> Optional[int]:
+    """Busca en `clientes` (ERP) por telefono/email normalizados. Devuelve el
+    Codigo SOLO si hay exactamente un candidato (ver matchear_clientes.py:
+    con 2+ candidatos no se auto-vincula, queda para revision manual)."""
+    candidatos: set[int] = set()
+    tel = str(telefono) if telefono else ""
+    variante = _variante_11_15(telefono) if telefono else None
+    tels = [t for t in (tel, str(variante) if variante else None) if t]
+    with engine_erp.connect() as cx:
+        if tels:
+            rows = cx.execute(text(
+                "SELECT Codigo FROM clientes WHERE Telefonos IN :ts OR Celular IN :ts"
+            ).bindparams(bindparam("ts", expanding=True)), {"ts": tels})
+            candidatos |= {r.Codigo for r in rows}
+        if email:
+            rows = cx.execute(text(
+                "SELECT Codigo FROM clientes WHERE LOWER(EMail) = :e"
+            ), {"e": email.strip().lower()})
+            candidatos |= {r.Codigo for r in rows}
+    return next(iter(candidatos)) if len(candidatos) == 1 else None
+
+
+def _crear_cliente_erp(nombre: str, apellido: str, telefono: int, email: str) -> int:
+    """Da de alta un cliente nuevo en `clientes` (ERP) con los datos de la
+    tienda. Solo completa nombre/telefono/email/direccion: el resto de los
+    campos contables quedan en los valores por defecto seguros (no se
+    inventa condicion de IVA, lista de precio, etc.)."""
+    razon_social = f"{nombre} {apellido}".strip() or "Cliente tienda web"
+    with engine_erp.begin() as cx:
+        siguiente = cx.execute(text("SELECT COALESCE(MAX(Codigo), 0) + 1 FROM clientes")).scalar()
+        cx.execute(text("""
+            INSERT INTO clientes
+                (Codigo, RazonSocial, Telefonos, Celular, EMail, Activo,
+                 Provincia, Pais, Zona, Tiva, TipoCliente, Categoria, Rubro,
+                 CondicionVenta, ListaPrecio, FechaCreacion, ComoLlego)
+            VALUES
+                (:cod, :razon, :tel, :tel, :mail, 1,
+                 0, 0, 0, 0, 0, 120000004, 0,
+                 0, 0, NOW(), 'Tienda web')
+        """), dict(cod=siguiente, razon=razon_social, tel=str(telefono) if telefono else None,
+                    mail=email or None))
+    return int(siguiente)
+
+
+def sincronizar_erp(cli: Cliente, direccion: str, altura, localidad: str,
+                    barrio: str, lote: str, info_adicional: str) -> None:
+    """Al confirmar un pedido: si el cliente todavia no tiene `cliente_codigo`,
+    intenta vincularlo (o darlo de alta) en el ERP; despues, si hay direccion
+    de envio, la vuelca en `clientes` (Direccion+Localidad+Contacto) para que
+    el sistema de escritorio siempre tenga la mas reciente.
+
+    Nunca debe romper el checkout: cualquier error queda solo logueado."""
+    try:
+        codigo = cli.cliente_codigo
+        if not codigo:
+            codigo = _buscar_codigo_erp(cli.telefono, cli.email)
+            if not codigo:
+                codigo = _crear_cliente_erp(cli.nombre, cli.apellido, cli.telefono, cli.email)
+            with engine_tienda.begin() as cx:
+                cx.execute(text("UPDATE users SET cliente_codigo=:cod WHERE id=:id"),
+                           {"cod": codigo, "id": cli.id})
+
+        if not (direccion or "").strip() and not (barrio or "").strip():
+            return  # retiro en sucursal, o sin direccion cargada: nada que sincronizar
+
+        nueva_direccion = _concatenar_direccion_erp(direccion, altura, barrio, lote)
+        with engine_erp.begin() as cx:
+            cx.execute(text("""
+                UPDATE clientes SET
+                    Direccion = :dir,
+                    Localidad = COALESCE(NULLIF(:loc, ''), Localidad),
+                    Contacto  = COALESCE(NULLIF(:info, ''), Contacto)
+                WHERE Codigo = :cod
+            """), dict(dir=nueva_direccion, loc=(localidad or "").strip(),
+                       info=(info_adicional or "").strip(), cod=codigo))
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("No se pudo sincronizar el cliente %s con el ERP", cli.id)

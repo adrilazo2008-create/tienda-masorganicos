@@ -253,6 +253,7 @@ def ver_privacidad(request: Request):
     return render(request, "privacidad.html")
 
 
+
 @app.get("/envios", response_class=HTMLResponse)
 def ver_envios(request: Request):
     return render(request, "envios.html", zonas=zonas.zonas(), sucursales=zonas.sucursales())
@@ -378,6 +379,7 @@ def checkout_confirmar(
     id_zona: int = Form(0), id_sucursal: int = Form(0),
     modalidad_envio: str = Form("coordinar"),
     direccion: str = Form(""), altura: str = Form(""), localidad: str = Form(""),
+    barrio: str = Form(""), lote: str = Form(""),
     info_adicional: str = Form(""),
     pago: str = Form("efectivo"),
     codigo_descuento: str = Form(""), observacion: str = Form(""),
@@ -449,7 +451,11 @@ def checkout_confirmar(
                      else "Envío a coordinar día/horario")
         if graba:
             id_dir = clientes.guardar_direccion(cli.id, direccion, int(altura or 0),
-                                                localidad, z.id, info_adicional)
+                                                localidad, z.id, info_adicional,
+                                                barrio=barrio, lote=lote)
+
+    if graba:
+        clientes.sincronizar_erp(cli, direccion, altura, localidad, barrio, lote, info_adicional)
 
     d = descuentos.validar(codigo_descuento)
     cod = d.codigo if d else ""
