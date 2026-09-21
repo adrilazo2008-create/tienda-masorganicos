@@ -373,4 +373,7 @@ def sincronizar_erp(cli: Cliente, direccion: str, altura, localidad: str,
                        info=(info_adicional or "").strip(), cod=codigo))
     except Exception:
         import logging
-        logging.getLogger(__name__).exception("No se pudo sincronizar el cliente %s con el ERP", cli.id)
+        # mismo logger/archivo que usa main.py para los errores 500 (logs/errores.log,
+        # bajable por FTP) -- asi una falla silenciosa de esto no queda invisible.
+        logging.getLogger("tienda.errores").exception(
+            "No se pudo sincronizar el cliente %s con el ERP", cli.id)
