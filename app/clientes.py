@@ -297,9 +297,14 @@ def _concatenar_direccion_erp(direccion: str, altura, barrio: str, lote: str) ->
 
 
 def _buscar_codigo_erp(telefono: int, email: str) -> Optional[int]:
-    """Busca en `clientes` (ERP) por telefono/email normalizados. Devuelve el
-    Codigo SOLO si hay exactamente un candidato (ver matchear_clientes.py:
-    con 2+ candidatos no se auto-vincula, queda para revision manual)."""
+    """Busca en `clientes` (ERP) por telefono/email normalizados. Devuelve
+    (Codigo, ambiguo). `ambiguo=True` cuando hay 2+ candidatos: el llamador
+    NO debe crear un cliente nuevo en ese caso (ver matchear_clientes.py) —
+    si tratara "ambiguo" igual que "no encontrado" terminaria dandole a esa
+    persona un cliente ERP nuevo cada vez que compra, aunque ya exista el
+    real entre los candidatos (bug real, visto con Julia Solari: 10
+    candidatos por el mismo email, todos con Telefonos vacio salvo el
+    original -> sin este chequeo, cada pedido le creaba un duplicado mas)."""
     candidatos: set[int] = set()
     tel = str(telefono) if telefono else ""
     variante = _variante_11_15(telefono) if telefono else None
@@ -315,7 +320,9 @@ def _buscar_codigo_erp(telefono: int, email: str) -> Optional[int]:
                 "SELECT Codigo FROM clientes WHERE LOWER(EMail) = :e"
             ), {"e": email.strip().lower()})
             candidatos |= {r.Codigo for r in rows}
-    return next(iter(candidatos)) if len(candidatos) == 1 else None
+    if len(candidatos) == 1:
+        return next(iter(candidatos)), False
+    return None, len(candidatos) > 1
 
 
 def _crear_cliente_erp(nombre: str, apellido: str, telefono: int, email: str) -> int:
@@ -351,7 +358,9 @@ def sincronizar_erp(cli: Cliente, direccion: str, altura, localidad: str,
     try:
         codigo = cli.cliente_codigo
         if not codigo:
-            codigo = _buscar_codigo_erp(cli.telefono, cli.email)
+            codigo, ambiguo = _buscar_codigo_erp(cli.telefono, cli.email)
+            if ambiguo:
+                return  # 2+ clientes posibles: no autolincular ni crear, queda para revision manual
             if not codigo:
                 codigo = _crear_cliente_erp(cli.nombre, cli.apellido, cli.telefono, cli.email)
             with engine_tienda.begin() as cx:
