@@ -26,7 +26,7 @@
       </div>
       <input class="obs" name="observacion" aria-label="Observación (opcional)"
              placeholder="{{ p.sugerencia_obs }}" maxlength="191" autocomplete="off">
-      <button type="submit" class="btn-add">Agregar</button>
+      <button type="submit" class="btn-add {{ 'btn-add-agotado' if p.agotado }}">{{ 'Reservar' if p.agotado else 'Agregar' }}</button>
     </form>
   </div>
 </article>

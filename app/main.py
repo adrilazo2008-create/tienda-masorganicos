@@ -20,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, pedidos, rutas_admin, zonas
+from . import catalogo, clientes, contenido, descuentos, pedidos, reservas, rutas_admin, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import pesos
@@ -478,6 +478,16 @@ def checkout_confirmar(
     numero = None
     if graba:
         numero = pedidos.crear(p)
+        for l in car.lineas:
+            if l.producto.agotado:
+                try:
+                    reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
+                                    cliente_codigo=cli.cliente_codigo, nombre=cli.nombre_completo,
+                                    telefono=cli.telefono, cantidad=l.cantidad,
+                                    pedido_grupo_id=numero)
+                except Exception:
+                    logger_errores.exception("No se pudo crear la reserva del producto %s (pedido %s)",
+                                              l.producto.id, numero)
         carrito_mod.vaciar(request.session)
         request.session["cliente_id"] = cli.id
 

@@ -44,9 +44,13 @@
       <label for="obs-{{ p.id }}">Observación (opcional)</label>
       <input id="obs-{{ p.id }}" class="obs" name="observacion" autocomplete="off"
              placeholder="{{ p.sugerencia_obs }}" maxlength="191">
-      <button type="submit" class="btn-grande">Agregar al carrito</button>
+      <button type="submit" class="btn-grande {{ 'btn-reserva' if p.agotado }}">{{ 'Reservar este producto' if p.agotado else 'Agregar al carrito' }}</button>
     </form>
+    {% if p.agotado %}
+    <p class="prod-nota">Lo agregás igual al carrito: al confirmar el pedido, esto queda como reserva y te avisamos cuando tengamos stock.</p>
+    {% else %}
     <p class="prod-nota">El precio y la disponibilidad se confirman al preparar tu pedido.</p>
+    {% endif %}
   </div>
 </div>
 
