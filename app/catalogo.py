@@ -131,8 +131,15 @@ class Producto:
         return self.unidad in ("KG", "LT")
 
     @property
+    def agotado(self) -> bool:
+        """Sin stock (0 o negativo). Para Verduras/Frutas/Granja el producto
+        sigue mostrándose igual (no se saca del catálogo), pero hay que
+        avisarlo mejor que con "pocas unidades"."""
+        return self.stock <= 0
+
+    @property
     def poco_stock(self) -> bool:
-        return self.stock < STOCK_ALERTA
+        return not self.agotado and self.stock < STOCK_ALERTA
 
     @property
     def sugerencia_obs(self) -> str:

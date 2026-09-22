@@ -23,7 +23,8 @@
       </span>
       {% endif %}
     </div>
-    {% if p.poco_stock %}<p class="alerta-stock" role="status">Pocas unidades — sujeto a confirmación al preparar el pedido</p>{% endif %}
+    {% if p.agotado %}<p class="alerta-stock alerta-agotado" role="status">Agotado — sujeto a confirmación al preparar el pedido</p>
+    {% elif p.poco_stock %}<p class="alerta-stock" role="status">Pocas unidades — sujeto a confirmación al preparar el pedido</p>{% endif %}
   </div>
   <div class="prod-info">
     <h1>{{ p.nombre }}</h1>
