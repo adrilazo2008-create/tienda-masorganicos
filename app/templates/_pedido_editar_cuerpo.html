@@ -1,0 +1,53 @@
+{% if error %}<p class="stock-aviso"><span>⚠ {{ error }}</span></p>{% endif %}
+
+{% if not p.editable %}
+<p class="alerta-stock">Ya empezamos a preparar este pedido — para cualquier cambio, escribinos por WhatsApp.</p>
+{% else %}
+<div class="carrito">
+  <div class="carrito-lineas">
+    {% for l in p.lineas %}
+    {% set prod = prods.get(l.producto_id) %}
+    <div class="cl">
+      <img src="{{ img_producto(prod.codigo) if prod else '' }}" alt="" width="64" height="64"
+           loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
+      <div class="cl-info">
+        {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>Producto #{{ l.producto_id }}</span>{% endif %}
+        <span class="cl-unit">{{ pesos(l.precio) }}{% if prod %} x {{ prod.unidad }}{% endif %}</span>
+        {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
+      </div>
+      <form hx-post="/cuenta/pedido/{{ p.id }}/editar/cantidad" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML" class="cl-cant">
+        <input type="hidden" name="transaccion_id" value="{{ l.id }}">
+        <div class="cant" role="group" aria-label="Cantidad">
+          <button type="button" onclick="stepCantHTMX(this,-1)" aria-label="Quitar uno">−</button>
+          <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal" autocomplete="off"
+                 data-step="{{ '0.25' if (prod and prod.fraccionable) else '1' }}"
+                 data-min="{{ '0.25' if (prod and prod.fraccionable) else '1' }}"
+                 onchange="this.form.requestSubmit()">
+          <button type="button" onclick="stepCantHTMX(this,1)" aria-label="Agregar uno">+</button>
+        </div>
+      </form>
+      <span class="cl-sub num">{{ pesos(l.cantidad * l.precio) }}</span>
+      <form hx-post="/cuenta/pedido/{{ p.id }}/editar/quitar" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML" class="cl-quitar">
+        <input type="hidden" name="transaccion_id" value="{{ l.id }}">
+        <button type="submit" aria-label="Quitar">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <aside class="carrito-resumen">
+    <h2>Resumen</h2>
+    <p class="rr"><span>Subtotal</span><span class="num">{{ pesos(subtotal) }}</span></p>
+    {% if not p.retira %}<p class="rr"><span>Envío</span><span class="num">{{ pesos(p.precio_envio) }}</span></p>{% endif %}
+    <p class="rr tot"><span>Total</span><span class="num">{{ pesos(total) }}</span></p>
+  </aside>
+</div>
+
+<div class="pedido-agregar">
+  <h2>Agregar un producto</h2>
+  <input type="search" name="q" placeholder="Buscar producto…" autocomplete="off"
+         hx-get="/cuenta/pedido/{{ p.id }}/editar/buscar" hx-trigger="input changed delay:300ms"
+         hx-target="#pedido-editar-buscar" hx-swap="innerHTML">
+  <div id="pedido-editar-buscar"></div>
+</div>
+{% endif %}

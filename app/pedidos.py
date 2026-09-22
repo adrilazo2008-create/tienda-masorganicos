@@ -85,6 +85,7 @@ class PedidoNuevo:
     precio_envio: Decimal = Decimal("0.00")
     codigo_descuento: str = ""
     observacion: str = ""
+    modalidad_envio: str = ""             # 'dia' | 'coordinar' | '' (retira) -- para recalcular envio si se edita
 
     @property
     def retira(self) -> int:
@@ -103,11 +104,11 @@ def _insertar(cx: Connection, p: PedidoNuevo) -> int:
         INSERT INTO grupos
             (cliente, efectivo, retira, id_sucursal, id_dirEnvio, id_zonaEnvio,
              precioEnvio, codigoDescuento, status, created_at, updated_at,
-             factura, aceptobolsas, observacion, observacion2, activo)
+             factura, aceptobolsas, observacion, observacion2, activo, modalidad_envio)
         VALUES
             (:cliente, :efectivo, :retira, :suc, :dir, :zona,
              :envio, :cod, :status, :now, NULL,
-             0, 0, :obs, '', 1)
+             0, 0, :obs, '', 1, :modalidad)
     """), dict(
         cliente=p.cliente_id,
         efectivo=1 if p.efectivo else 0,
@@ -120,6 +121,7 @@ def _insertar(cx: Connection, p: PedidoNuevo) -> int:
         status=STATUS_NUEVO,
         now=now,
         obs=(p.observacion or "")[:500],
+        modalidad=(p.modalidad_envio or None),
     ))
     grupo_id = int(g.lastrowid)
 
@@ -282,16 +284,137 @@ def detalle(pedido_id: int, cliente_id: Optional[int] = None) -> Optional[dict]:
         if not g or (cliente_id is not None and int(g.cliente) != cliente_id):
             return None
         lineas = cx.execute(text(
-            "SELECT producto_id, cantidad, precio, observacion FROM transacciones "
-            "WHERE grupo = :id ORDER BY id"), {"id": pedido_id}).all()
+            "SELECT id, producto_id, cantidad, precio, observacion FROM transacciones "
+            "WHERE grupo = :id AND activo = 1 ORDER BY id"), {"id": pedido_id}).all()
     return {
         "id": int(g.id),
         "fecha": g.created_at,
         "estado": _ESTADOS.get(int(g.status), "Recibido"),
+        "status": int(g.status),
+        "activo": bool(g.activo),
+        "editable": int(g.status) == STATUS_NUEVO and bool(g.activo),
+        "retira": bool(g.retira),
+        "id_zona_envio": int(g.id_zonaEnvio or 0),
+        "modalidad_envio": g.modalidad_envio or "",
         "precio_envio": Decimal(str(g.precioEnvio or 0)),
         "codigo_descuento": g.codigoDescuento or "",
         "observacion": g.observacion or "",
-        "lineas": [dict(producto_id=int(l.producto_id), cantidad=Decimal(str(l.cantidad)),
+        "lineas": [dict(id=int(l.id), producto_id=int(l.producto_id), cantidad=Decimal(str(l.cantidad)),
                         precio=Decimal(str(l.precio)), observacion=l.observacion or "")
                    for l in lineas],
     }
+
+
+# ---------------------------------------------------------------- edición del cliente (mientras status=0)
+
+class PedidoNoEditable(Exception):
+    """El pedido ya se empezó a preparar (o no es de este cliente): no se puede tocar más."""
+
+
+class ProductoNoDisponible(Exception):
+    """El producto ya no existe en el catálogo vendible."""
+
+
+class PedidoQuedariaVacio(Exception):
+    """No se deja sacar el último producto de un pedido (para cancelarlo del todo, que escriba)."""
+
+
+def puede_editar(pedido_id: int, cliente_id: int) -> bool:
+    d = detalle(pedido_id, cliente_id)
+    return bool(d and d["editable"])
+
+
+def _bloquear_editable(cx: Connection, pedido_id: int, cliente_id: int):
+    """Bloquea la fila de `grupos` (FOR UPDATE) y confirma que se puede editar,
+    todo dentro de la misma transaccion en la que se va a aplicar el cambio --
+    para no pisarse con el momento justo en que se pasa a 'En preparación'."""
+    g = cx.execute(text(
+        "SELECT status, activo, cliente FROM grupos WHERE id = :id FOR UPDATE"
+    ), {"id": pedido_id}).first()
+    if not g or int(g.cliente) != cliente_id or int(g.status) != STATUS_NUEVO or not g.activo:
+        raise PedidoNoEditable()
+
+
+def _recalcular_envio(cx: Connection, pedido_id: int) -> None:
+    from . import zonas  # import diferido: zonas no depende de pedidos
+
+    g = cx.execute(text(
+        "SELECT retira, id_zonaEnvio, modalidad_envio FROM grupos WHERE id = :id"
+    ), {"id": pedido_id}).first()
+    if not g or g.retira:
+        return
+    z = zonas.zona(int(g.id_zonaEnvio or 0))
+    if not z:
+        return
+    subtotal = cx.execute(text(
+        "SELECT COALESCE(SUM(cantidad * precio), 0) FROM transacciones WHERE grupo = :id AND activo = 1"
+    ), {"id": pedido_id}).scalar()
+    nuevo_envio = zonas.costo_envio(z, Decimal(str(subtotal)), g.modalidad_envio or "coordinar")
+    cx.execute(text("UPDATE grupos SET precioEnvio = :envio, updated_at = :now WHERE id = :id"),
+               {"envio": nuevo_envio, "now": datetime.now(), "id": pedido_id})
+
+
+def _producto_para_agregar(producto_id: int):
+    """Trae el producto del catálogo YA filtrado por stock (misma regla que la
+    tienda). Si no aparece, no se puede agregar (agotado en un rubro con
+    control de stock, o directamente no existe)."""
+    from . import catalogo  # import diferido: catalogo importa pedidos (stock_reservado)
+
+    p = catalogo.obtener(producto_id)
+    if not p:
+        raise ProductoNoDisponible()
+    return p
+
+
+def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: Decimal,
+                  observacion: str = "") -> None:
+    p = _producto_para_agregar(producto_id)
+    now = datetime.now()
+    with engine_tienda.begin() as cx:
+        _bloquear_editable(cx, pedido_id, cliente_id)
+        cx.execute(text("""
+            INSERT INTO transacciones
+                (grupo, producto_id, cantidad, precio, id_unidadMedidaProducto,
+                 observacion, created_at, updated_at, porcentaje, activo)
+            VALUES
+                (:grupo, :pid, :cant, :precio, :um, :obs, :now, NULL, 0, 1)
+        """), dict(grupo=pedido_id, pid=str(p.id), cant=Decimal(cantidad), precio=p.precio,
+                    um=p.unidad_id, obs=(observacion or "")[:191], now=now))
+        _recalcular_envio(cx, pedido_id)
+
+    if p.agotado:
+        from . import clientes, reservas
+        try:
+            cli = clientes.obtener(cliente_id)
+            reservas.crear(producto_id=p.id, producto_nombre=p.nombre,
+                            cliente_codigo=cli.cliente_codigo if cli else None,
+                            nombre=cli.nombre_completo if cli else "", telefono=cli.telefono if cli else None,
+                            cantidad=Decimal(cantidad), pedido_grupo_id=pedido_id)
+        except Exception:
+            import logging
+            logging.getLogger("tienda.errores").exception(
+                "No se pudo crear la reserva al editar el pedido %s (producto %s)", pedido_id, p.id)
+
+
+def quitar_item(pedido_id: int, cliente_id: int, transaccion_id: int) -> None:
+    with engine_tienda.begin() as cx:
+        _bloquear_editable(cx, pedido_id, cliente_id)
+        n_activas = cx.execute(text(
+            "SELECT COUNT(*) FROM transacciones WHERE grupo = :g AND activo = 1"
+        ), {"g": pedido_id}).scalar()
+        if n_activas <= 1:
+            raise PedidoQuedariaVacio()
+        cx.execute(text(
+            "UPDATE transacciones SET activo = 0, updated_at = :now WHERE id = :id AND grupo = :g"
+        ), {"now": datetime.now(), "id": transaccion_id, "g": pedido_id})
+        _recalcular_envio(cx, pedido_id)
+
+
+def cambiar_cantidad(pedido_id: int, cliente_id: int, transaccion_id: int, cantidad: Decimal) -> None:
+    with engine_tienda.begin() as cx:
+        _bloquear_editable(cx, pedido_id, cliente_id)
+        cx.execute(text(
+            "UPDATE transacciones SET cantidad = :cant, updated_at = :now "
+            "WHERE id = :id AND grupo = :g AND activo = 1"
+        ), {"cant": Decimal(cantidad), "now": datetime.now(), "id": transaccion_id, "g": pedido_id})
+        _recalcular_envio(cx, pedido_id)

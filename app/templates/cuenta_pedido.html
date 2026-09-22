@@ -37,8 +37,12 @@
   </div>
 
   <p class="chico">Los precios y el stock se confirman al preparar el pedido. Coordinamos todo por WhatsApp.</p>
+  {% if p.editable %}
+  <a href="/cuenta/pedido/{{ p.id }}/editar" class="btn-grande">Editar pedido</a>
+  <p class="chico">Podés modificarlo mientras no lo empecemos a preparar.</p>
+  {% endif %}
   <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir" class="repetir-pedido">
-    <button type="submit" class="btn-grande">Repetir este pedido</button>
+    <button type="submit" class="btn-sec">Repetir este pedido</button>
   </form>
   <a href="/cuenta" class="btn-sec">Volver a mis pedidos</a>
 </div>

@@ -1,0 +1,16 @@
+{% if resultados %}
+<ul class="buscar-resultados">
+  {% for r in resultados %}
+  <li>
+    <span>{{ r.nombre }} — {{ pesos(r.precio) }} x {{ r.unidad }}{% if r.agotado %} · <b>agotado, queda como reserva</b>{% endif %}</span>
+    <form hx-post="/cuenta/pedido/{{ pedido_id }}/editar/agregar" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML">
+      <input type="hidden" name="producto_id" value="{{ r.id }}">
+      <input type="hidden" name="cantidad" value="1">
+      <button type="submit" class="btn-sec">Agregar</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% elif q %}
+<p class="chico">No encontramos productos con ese nombre.</p>
+{% endif %}

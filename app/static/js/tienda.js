@@ -24,6 +24,14 @@ function stepCarrito(btn, dir){
   if (btn.form) btn.form.submit();
 }
 
+// + / - en un form con hx-post (ej. editar pedido): igual que stepCarrito pero
+// con requestSubmit(), que sí dispara el evento "submit" que htmx intercepta
+// (form.submit() nativo no lo dispara y termina navegando la página entera).
+function stepCantHTMX(btn, dir){
+  stepCant(btn, dir);
+  if (btn.form) btn.form.requestSubmit();
+}
+
 // checkout: mostrar/ocultar bloques y recalcular total
 function toggleEntrega(){
   var envio = document.querySelector('input[name=entrega][value=envio]').checked;

@@ -254,6 +254,52 @@ def ver_privacidad(request: Request):
 
 
 
+# --------------------------------------------------------------------------- sitio + blog
+
+@app.get("/nosotros", response_class=HTMLResponse)
+def sitio_nosotros(request: Request):
+    return render(request, "sitio_nosotros.html", pagina="nosotros",
+                  productores=contenido.productores(),
+                  home_cfg=contenido.home_config())
+
+
+@app.get("/blog", response_class=HTMLResponse)
+def sitio_blog(request: Request):
+    return render(request, "blog_index.html", pagina="blog", posts=sitio.posts())
+
+
+@app.get("/blog/{slug}", response_class=HTMLResponse)
+def sitio_blog_post(request: Request, slug: str):
+    nota = sitio.post(slug)
+    if not nota:
+        return RedirectResponse("/blog", status_code=303)
+    otras = [n for n in sitio.posts() if n["slug"] != slug][:3]
+    return render(request, "blog_post.html", pagina="blog", nota=nota, otras=otras)
+
+
+# --------------------------------------------------------------------------- sitio + blog
+
+@app.get("/nosotros", response_class=HTMLResponse)
+def sitio_nosotros(request: Request):
+    return render(request, "sitio_nosotros.html", pagina="nosotros",
+                  productores=contenido.productores(),
+                  home_cfg=contenido.home_config())
+
+
+@app.get("/blog", response_class=HTMLResponse)
+def sitio_blog(request: Request):
+    return render(request, "blog_index.html", pagina="blog", posts=sitio.posts())
+
+
+@app.get("/blog/{slug}", response_class=HTMLResponse)
+def sitio_blog_post(request: Request, slug: str):
+    nota = sitio.post(slug)
+    if not nota:
+        return RedirectResponse("/blog", status_code=303)
+    otras = [n for n in sitio.posts() if n["slug"] != slug][:3]
+    return render(request, "blog_post.html", pagina="blog", nota=nota, otras=otras)
+
+
 @app.get("/envios", response_class=HTMLResponse)
 def ver_envios(request: Request):
     return render(request, "envios.html", zonas=zonas.zonas(), sucursales=zonas.sucursales())
@@ -439,14 +485,15 @@ def checkout_confirmar(
                                email=email, tiene_pin=False)
 
     id_dir, id_zona_envio, precio_envio = 0, 0, Decimal("0.00")
-    obs_envio = ""
+    obs_envio, modalidad_envio_guardada = "", ""
     if entrega == "retira":
         id_sucursal = id_sucursal or 1
     else:
         id_sucursal = 0
         id_zona_envio = z.id
         elige_dia = modalidad_envio == "dia"
-        precio_envio = zonas.costo_envio(z, car.subtotal, "dia" if elige_dia else "coordinar")
+        modalidad_envio_guardada = "dia" if elige_dia else "coordinar"
+        precio_envio = zonas.costo_envio(z, car.subtotal, modalidad_envio_guardada)
         obs_envio = ("Envío el día de reparto de la zona" if elige_dia
                      else "Envío a coordinar día/horario")
         if graba:
@@ -473,6 +520,7 @@ def checkout_confirmar(
         efectivo=(pago == "efectivo"),
         id_sucursal=id_sucursal, id_direccion_envio=id_dir, id_zona_envio=id_zona_envio,
         precio_envio=precio_envio, codigo_descuento=cod, observacion=obs_final,
+        modalidad_envio=modalidad_envio_guardada,
     )
 
     numero = None
@@ -552,6 +600,86 @@ def cuenta_pedido(request: Request, pedido_id: int):
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
     return render(request, "cuenta_pedido.html", p=d, prods=prods,
                   subtotal=subtotal, total=subtotal + d["precio_envio"])
+
+
+def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, error: str = ""):
+    d = pedidos.detalle(pedido_id, cliente_id)
+    if not d:
+        return RedirectResponse("/cuenta", status_code=303)
+    prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
+    return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods,
+                  subtotal=subtotal, total=subtotal + d["precio_envio"], error=error)
+
+
+@app.get("/cuenta/pedido/{pedido_id}/editar", response_class=HTMLResponse)
+def cuenta_pedido_editar(request: Request, pedido_id: int):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    d = pedidos.detalle(pedido_id, c.id)
+    if not d:
+        return RedirectResponse("/cuenta", status_code=303)
+    if not d["editable"]:
+        return RedirectResponse(f"/cuenta/pedido/{pedido_id}", status_code=303)
+    prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
+    return render(request, "cuenta_pedido_editar.html", p=d, prods=prods,
+                  subtotal=subtotal, total=subtotal + d["precio_envio"], error="")
+
+
+@app.get("/cuenta/pedido/{pedido_id}/editar/buscar", response_class=HTMLResponse)
+def cuenta_pedido_editar_buscar(request: Request, pedido_id: int, q: str = ""):
+    c = _cliente_actual(request)
+    if not c or not pedidos.puede_editar(pedido_id, c.id):
+        return HTMLResponse("")
+    resultados = catalogo.listar(busqueda=q, limite=8) if q.strip() else []
+    return render(request, "_pedido_editar_buscar.html", pedido_id=pedido_id, q=q, resultados=resultados)
+
+
+@app.post("/cuenta/pedido/{pedido_id}/editar/agregar", response_class=HTMLResponse)
+def cuenta_pedido_editar_agregar(request: Request, pedido_id: int, producto_id: int = Form(...),
+                                  cantidad: str = Form("1"), observacion: str = Form("")):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    error = ""
+    try:
+        pedidos.agregar_item(pedido_id, c.id, producto_id, carrito_mod._norm_cant(cantidad), observacion)
+    except pedidos.PedidoNoEditable:
+        error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
+    except pedidos.ProductoNoDisponible:
+        error = "Ese producto ya no está disponible."
+    return _render_pedido_editar(request, pedido_id, c.id, error)
+
+
+@app.post("/cuenta/pedido/{pedido_id}/editar/quitar", response_class=HTMLResponse)
+def cuenta_pedido_editar_quitar(request: Request, pedido_id: int, transaccion_id: int = Form(...)):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    error = ""
+    try:
+        pedidos.quitar_item(pedido_id, c.id, transaccion_id)
+    except pedidos.PedidoNoEditable:
+        error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
+    except pedidos.PedidoQuedariaVacio:
+        error = "No podés sacar el último producto — si querés cancelar el pedido, escribinos por WhatsApp."
+    return _render_pedido_editar(request, pedido_id, c.id, error)
+
+
+@app.post("/cuenta/pedido/{pedido_id}/editar/cantidad", response_class=HTMLResponse)
+def cuenta_pedido_editar_cantidad(request: Request, pedido_id: int, transaccion_id: int = Form(...),
+                                   cantidad: str = Form("1")):
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    error = ""
+    try:
+        pedidos.cambiar_cantidad(pedido_id, c.id, transaccion_id, carrito_mod._norm_cant(cantidad))
+    except pedidos.PedidoNoEditable:
+        error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
+    return _render_pedido_editar(request, pedido_id, c.id, error)
 
 
 @app.post("/cuenta/pedido/{pedido_id}/repetir")

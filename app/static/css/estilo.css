@@ -291,6 +291,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .stock-aviso{background:#fdecec;border:1px solid #e6b5b5;border-radius:var(--radio);
   padding:.7rem .9rem;font-size:.88rem;color:var(--rojo)}
 .stock-aviso p{margin:.2rem 0}
+.pedido-agregar{margin-top:1.2rem}
+.pedido-agregar input[type=search]{width:100%;max-width:420px}
+.buscar-resultados{list-style:none;margin:.6rem 0 0;padding:0;max-width:420px}
+.buscar-resultados li{display:flex;justify-content:space-between;align-items:center;gap:.6rem;
+  padding:.5rem 0;border-bottom:1px solid var(--linea);font-size:.9rem}
 
 /* checkout */
 .checkout{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start}
