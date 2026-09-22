@@ -486,7 +486,8 @@ def checkout_confirmar(
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
                                     cliente_codigo=cli.cliente_codigo, nombre=cli.nombre_completo,
                                     telefono=cli.telefono, cantidad=l.cantidad,
-                                    pedido_grupo_id=numero)
+                                    pedido_grupo_id=numero,
+                                    tipo_entrega=("retiro" if p.retira else "envio"))
                 except Exception:
                     logger_errores.exception("No se pudo crear la reserva del producto %s (pedido %s)",
                                               l.producto.id, numero)

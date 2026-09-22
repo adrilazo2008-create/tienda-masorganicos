@@ -355,6 +355,13 @@ def _recalcular_envio(cx: Connection, pedido_id: int) -> None:
                {"envio": nuevo_envio, "now": datetime.now(), "id": pedido_id})
 
 
+def _tipo_entrega(pedido_id: int) -> str:
+    """Para etiquetar una reserva creada a partir de este pedido -- ver reservas.py."""
+    with engine_tienda.connect() as cx:
+        g = cx.execute(text("SELECT retira FROM grupos WHERE id = :id"), {"id": pedido_id}).first()
+    return "retiro" if (g and g.retira) else "envio"
+
+
 def _producto_para_agregar(producto_id: int):
     """Trae el producto del catálogo YA filtrado por stock (misma regla que la
     tienda). Si no aparece, no se puede agregar (agotado en un rubro con
@@ -390,7 +397,8 @@ def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: De
             reservas.crear(producto_id=p.id, producto_nombre=p.nombre,
                             cliente_codigo=cli.cliente_codigo if cli else None,
                             nombre=cli.nombre_completo if cli else "", telefono=cli.telefono if cli else None,
-                            cantidad=Decimal(cantidad), pedido_grupo_id=pedido_id)
+                            cantidad=Decimal(cantidad), pedido_grupo_id=pedido_id,
+                            tipo_entrega=_tipo_entrega(pedido_id))
         except Exception:
             import logging
             logging.getLogger("tienda.errores").exception(
