@@ -11,7 +11,7 @@
   {% if pedidos_cli %}
   <div class="tabla-scroll">
   <table class="tabla-pedidos">
-    <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col"><span class="sr-only">Repetir</span></th></tr></thead>
+    <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
     <tbody>
     {% for p in pedidos_cli %}
       <tr>
@@ -20,7 +20,10 @@
         <td>{{ p.estado }}</td>
         <td class="num">{{ p.cantidad_items }}</td>
         <td class="num">{{ pesos(p.total) }}</td>
-        <td><form method="post" action="/cuenta/pedido/{{ p.id }}/repetir"><button type="submit" class="btn-mini">Repetir</button></form></td>
+        <td class="acciones-pedido">
+          {% if p.editable %}<a href="/cuenta/pedido/{{ p.id }}/editar" class="btn-mini">Editar</a>{% endif %}
+          <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir"><button type="submit" class="btn-mini">Repetir</button></form>
+        </td>
       </tr>
     {% endfor %}
     </tbody>

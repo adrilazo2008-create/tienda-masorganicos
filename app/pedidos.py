@@ -231,6 +231,7 @@ class PedidoResumen:
     estado: str
     total: Decimal
     cantidad_items: int
+    editable: bool = False
 
 
 _ESTADOS = {0: "Recibido", 1: "En preparación", 2: "Facturado"}
@@ -242,7 +243,7 @@ def historial(cliente_id: int, limite: int = 30) -> list[PedidoResumen]:
                COALESCE(SUM(t.cantidad * t.precio), 0) + g.precioEnvio AS total,
                COUNT(t.id) AS n
         FROM grupos g
-        LEFT JOIN transacciones t ON t.grupo = g.id
+        LEFT JOIN transacciones t ON t.grupo = g.id AND t.activo = 1
         WHERE g.cliente = :c AND g.activo = 1
         GROUP BY g.id, g.created_at, g.status, g.precioEnvio
         ORDER BY g.id DESC
@@ -251,7 +252,7 @@ def historial(cliente_id: int, limite: int = 30) -> list[PedidoResumen]:
     with engine_tienda.connect() as cx:
         return [
             PedidoResumen(int(r.id), r.created_at, _ESTADOS.get(int(r.status), "Recibido"),
-                          Decimal(str(r.total or 0)), int(r.n))
+                          Decimal(str(r.total or 0)), int(r.n), editable=(int(r.status) == STATUS_NUEVO))
             for r in cx.execute(text(sql), {"c": cliente_id, "lim": limite})
         ]
 

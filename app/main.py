@@ -254,52 +254,6 @@ def ver_privacidad(request: Request):
 
 
 
-# --------------------------------------------------------------------------- sitio + blog
-
-@app.get("/nosotros", response_class=HTMLResponse)
-def sitio_nosotros(request: Request):
-    return render(request, "sitio_nosotros.html", pagina="nosotros",
-                  productores=contenido.productores(),
-                  home_cfg=contenido.home_config())
-
-
-@app.get("/blog", response_class=HTMLResponse)
-def sitio_blog(request: Request):
-    return render(request, "blog_index.html", pagina="blog", posts=sitio.posts())
-
-
-@app.get("/blog/{slug}", response_class=HTMLResponse)
-def sitio_blog_post(request: Request, slug: str):
-    nota = sitio.post(slug)
-    if not nota:
-        return RedirectResponse("/blog", status_code=303)
-    otras = [n for n in sitio.posts() if n["slug"] != slug][:3]
-    return render(request, "blog_post.html", pagina="blog", nota=nota, otras=otras)
-
-
-# --------------------------------------------------------------------------- sitio + blog
-
-@app.get("/nosotros", response_class=HTMLResponse)
-def sitio_nosotros(request: Request):
-    return render(request, "sitio_nosotros.html", pagina="nosotros",
-                  productores=contenido.productores(),
-                  home_cfg=contenido.home_config())
-
-
-@app.get("/blog", response_class=HTMLResponse)
-def sitio_blog(request: Request):
-    return render(request, "blog_index.html", pagina="blog", posts=sitio.posts())
-
-
-@app.get("/blog/{slug}", response_class=HTMLResponse)
-def sitio_blog_post(request: Request, slug: str):
-    nota = sitio.post(slug)
-    if not nota:
-        return RedirectResponse("/blog", status_code=303)
-    otras = [n for n in sitio.posts() if n["slug"] != slug][:3]
-    return render(request, "blog_post.html", pagina="blog", nota=nota, otras=otras)
-
-
 @app.get("/envios", response_class=HTMLResponse)
 def ver_envios(request: Request):
     return render(request, "envios.html", zonas=zonas.zonas(), sucursales=zonas.sucursales())
