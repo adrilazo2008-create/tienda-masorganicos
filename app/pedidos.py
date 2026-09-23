@@ -200,7 +200,7 @@ def _ocultar_anteriores_del_cliente(cliente_id: int, grupo_nuevo_id: int, minuto
 
 
 def crear(p: PedidoNuevo) -> int:
-    """Inserta el pedido y devuelve el nº de grupo. Transacción atómica.
+    """Inserta el pedido y devuelve el nº de grupo.
 
     Antes de grabar, chequea que no sea un duplicado EXACTO de algo que este
     mismo cliente ya mandó hace unos minutos (`pedido_reciente_igual`) — si
@@ -210,16 +210,35 @@ def crear(p: PedidoNuevo) -> int:
     cliente (cambió de idea, sacó o agregó algo y volvió a confirmar), este
     pedido nuevo se toma como el definitivo y el anterior se oculta solo
     (`_ocultar_anteriores_del_cliente`) — así no queda en la tienda la
-    versión vieja del pedido para revisar a mano."""
+    versión vieja del pedido para revisar a mano.
+
+    El chequeo de duplicado y el insert conviven en un GET_LOCK por cliente:
+    sin esto, dos confirmaciones casi simultáneas del mismo cliente (doble
+    tap, o el navegador reintentando un POST que ya había llegado al
+    servidor) pueden pasar las dos el chequeo de "no hay duplicado" ANTES de
+    que cualquiera de las dos llegue a insertar — cada una ve la tabla sin el
+    pedido de la otra todavía — y las dos terminan grabando un pedido real
+    cada una. Eso fue justamente lo que le pasó a Daiana Cwik y Joy Serfaty
+    el 2026-09-22: cada confirmación SE GRABABA bien en la base, pero el
+    cliente no veía la confirmación (posible timeout / reintento del
+    navegador) y volvía a intentar, generando pedidos de verdad repetidos."""
     if not p.items:
         raise ValueError("El pedido no tiene items.")
-    dup = pedido_reciente_igual(p.cliente_id, p.items)
-    if dup:
-        return dup
-    with engine_tienda.begin() as cx:
-        grupo_id = _insertar(cx, p)
-    _ocultar_anteriores_del_cliente(p.cliente_id, grupo_id)
-    return grupo_id
+    lock_name = f"checkout_cliente_{p.cliente_id}"
+    with engine_tienda.connect() as cx:
+        cx.execute(text("SELECT GET_LOCK(:n, 10)"), {"n": lock_name})
+        cx.commit()  # GET_LOCK es de sesión, no de transacción: el commit no lo libera
+        try:
+            dup = pedido_reciente_igual(p.cliente_id, p.items)
+            if dup:
+                return dup
+            with cx.begin():
+                grupo_id = _insertar(cx, p)
+            _ocultar_anteriores_del_cliente(p.cliente_id, grupo_id)
+            return grupo_id
+        finally:
+            cx.execute(text("SELECT RELEASE_LOCK(:n)"), {"n": lock_name})
+            cx.commit()
 
 
 # ---------------------------------------------------------------- lectura / historial
@@ -277,6 +296,63 @@ def habituales(cliente_id: int, limite: int = 20) -> list[int]:
             except (TypeError, ValueError):
                 continue
     return out
+
+
+def resumen_confirmacion(numero: int) -> Optional[dict]:
+    """Arma los datos de /checkout/ok leyendo de la base, en vez de guardar el
+    pedido entero en la sesión (cookie firmada). Un carrito grande (30+
+    items, como le pasó a Daiana Cwik) hace que esa cookie supere el límite
+    de ~4KB que aceptan los navegadores, que la descartan en silencio: el
+    cliente vuelve a quedar con la sesión vieja (carrito lleno) y sin ver la
+    confirmación, y por eso reintenta el pedido de nuevo. Guardando solo el
+    número de pedido en sesión y reconstruyendo esto acá, la cookie queda
+    chica pase lo que pase el tamaño del carrito."""
+    from . import catalogo, clientes, zonas  # imports diferidos: evitan import circular
+
+    with engine_tienda.connect() as cx:
+        g = cx.execute(text("SELECT * FROM grupos WHERE id = :id"), {"id": numero}).first()
+        if not g:
+            return None
+        lineas = cx.execute(text(
+            "SELECT producto_id, cantidad, precio FROM transacciones "
+            "WHERE grupo = :id AND activo = 1"), {"id": numero}).all()
+
+    cli = clientes.obtener(int(g.cliente))
+    prods = catalogo.obtener_varios([int(l.producto_id) for l in lineas])
+    items = [{
+        "cant": float(l.cantidad),
+        "nombre": prods[int(l.producto_id)].nombre if int(l.producto_id) in prods else f"Producto {l.producto_id}",
+        "unidad": prods[int(l.producto_id)].unidad if int(l.producto_id) in prods else "",
+        "precio": float(l.precio),
+    } for l in lineas]
+    subtotal = sum((Decimal(str(l.cantidad)) * Decimal(str(l.precio)) for l in lineas), Decimal("0"))
+    envio = Decimal(str(g.precioEnvio or 0))
+
+    suc_nombre = ""
+    if g.id_sucursal:
+        suc_nombre = next((s.descripcion for s in zonas.sucursales() if s.id == g.id_sucursal), "")
+
+    envio_modalidad = {
+        "dia": "Envío el día de reparto de la zona",
+        "coordinar": "Envío a coordinar día/horario",
+    }.get(g.modalidad_envio or "", "")
+
+    return {
+        "numero": numero,
+        "simulado": False,
+        "cliente": cli.nombre_completo if cli else "",
+        "telefono": cli.telefono if cli else "",
+        "email": cli.email if cli else "",
+        "retira": bool(g.id_sucursal),
+        "sucursal": suc_nombre,
+        "envio": float(envio),
+        "envio_modalidad": envio_modalidad,
+        "efectivo": bool(g.efectivo),
+        "descuento": g.codigoDescuento or "",
+        "items": items,
+        "subtotal": float(subtotal),
+        "total": float(subtotal + envio),
+    }
 
 
 def detalle(pedido_id: int, cliente_id: Optional[int] = None) -> Optional[dict]:
@@ -376,7 +452,11 @@ def _producto_para_agregar(producto_id: int):
 
 def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: Decimal,
                   observacion: str = "") -> None:
+    from . import catalogo
+
     p = _producto_para_agregar(producto_id)
+    es_reserva = p.agotado and p.rubro_id == catalogo.RUBRO_GRANJA
+    obs = catalogo.marcar_reserva_en_obs(observacion, es_reserva)
     now = datetime.now()
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)
@@ -387,10 +467,10 @@ def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: De
             VALUES
                 (:grupo, :pid, :cant, :precio, :um, :obs, :now, NULL, 0, 1)
         """), dict(grupo=pedido_id, pid=str(p.id), cant=Decimal(cantidad), precio=p.precio,
-                    um=p.unidad_id, obs=(observacion or "")[:191], now=now))
+                    um=p.unidad_id, obs=obs[:191], now=now))
         _recalcular_envio(cx, pedido_id)
 
-    if p.agotado:
+    if es_reserva:
         from . import clientes, reservas
         try:
             cli = clientes.obtener(cliente_id)

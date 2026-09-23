@@ -50,6 +50,26 @@ DEPOSITO_CENTRAL = 50000004
 # ver pedidos.stock_reservado) el producto directamente se saca de la tienda.
 RUBROS_SIN_CONTROL_STOCK = {1, 2, 3}  # Verduras, Frutas, Granja y Tambo
 
+# De los rubros sin control de stock, solo Granja y Tambo tiene reposición
+# real por proveedor (leche de cabra, etc.) que Adriana consolida a mano —
+# por eso solo estos productos generan fila en `reservas`. Verduras/Frutas
+# muestran el mismo cartel "Agotado" y botón "Reservar", pero no se anotan
+# (ahí el stock en 0 es la normalidad de todos los días, no algo a encargar).
+RUBRO_GRANJA = 3
+
+# Texto que se antepone a la observación del ítem del pedido cuando se pide
+# como reserva (agotado + Granja), para que se vea de un vistazo en el
+# detalle del pedido / lo que baja el VB6 — sin esto no había forma de
+# distinguir a simple vista un ítem reservado de uno normal.
+TEXTO_RESERVA = "RESERVA (sin stock, encargar a proveedor)"
+
+
+def marcar_reserva_en_obs(observacion: str, es_reserva: bool) -> str:
+    obs = (observacion or "").strip()
+    if not es_reserva:
+        return obs
+    return f"{TEXTO_RESERVA}. {obs}" if obs else TEXTO_RESERVA
+
 # Orden de los rubros en el menú (Codigo del parámetro 33).
 # Reagrupamiento hecho en el ERP (sept 2026): Limpieza(Varios)→Belleza,
 # Bebidas→Almacén, Suplementos Dietarios→Belleza (rubro 10 renombrado

@@ -389,7 +389,10 @@ def checkout_confirmar(
     # lag): no duplicar el pedido, mostrar la confirmación que ya se generó.
     ya_hecho = request.session.get("checkout_token_hecho")
     if token and ya_hecho and ya_hecho.get("token") == token:
-        request.session["pedido_ok"] = ya_hecho["pedido_ok"]
+        if ya_hecho.get("numero"):
+            request.session["pedido_ok_numero"] = ya_hecho["numero"]
+        else:
+            request.session["pedido_ok"] = ya_hecho["pedido_ok"]
         return RedirectResponse("/checkout/ok", status_code=303)
 
     car, hubo_cambios, eliminados = carrito_mod.resolver_y_avisar(request.session)
@@ -470,7 +473,9 @@ def checkout_confirmar(
         items=[pedidos.LineaPedido(
             producto_id=l.producto.id, cantidad=l.cantidad,
             precio_unitario=l.producto.precio, unidad_id=l.producto.unidad_id,
-            observacion=l.observacion) for l in car.lineas],
+            observacion=catalogo.marcar_reserva_en_obs(
+                l.observacion, l.producto.agotado and l.producto.rubro_id == catalogo.RUBRO_GRANJA))
+            for l in car.lineas],
         efectivo=(pago == "efectivo"),
         id_sucursal=id_sucursal, id_direccion_envio=id_dir, id_zona_envio=id_zona_envio,
         precio_envio=precio_envio, codigo_descuento=cod, observacion=obs_final,
@@ -481,7 +486,7 @@ def checkout_confirmar(
     if graba:
         numero = pedidos.crear(p)
         for l in car.lineas:
-            if l.producto.agotado:
+            if l.producto.agotado and l.producto.rubro_id == catalogo.RUBRO_GRANJA:
                 try:
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
                                     cliente_codigo=cli.cliente_codigo, nombre=cli.nombre_completo,
@@ -494,37 +499,52 @@ def checkout_confirmar(
         carrito_mod.vaciar(request.session)
         request.session["cliente_id"] = cli.id
 
-    suc_nombre = ""
-    if id_sucursal:
-        suc_nombre = next((s.descripcion for s in zonas.sucursales() if s.id == id_sucursal), "")
-
-    request.session["pedido_ok"] = {
-        "numero": numero,
-        "simulado": not graba,
-        "cliente": cli.nombre_completo,
-        "telefono": cli.telefono,
-        "email": cli.email,
-        "retira": bool(id_sucursal),
-        "sucursal": suc_nombre,
-        "envio": float(precio_envio),
-        "envio_modalidad": obs_envio,
-        "efectivo": pago == "efectivo",
-        "descuento": cod,
-        "items": [{"cant": float(l.cantidad), "nombre": l.producto.nombre,
-                   "unidad": l.producto.unidad, "precio": float(l.producto.precio)}
-                  for l in car.lineas],
-        "subtotal": float(p.subtotal()),
-        "total": float(p.total()),
-    }
-    if token:
-        request.session["checkout_token_hecho"] = {
-            "token": token, "pedido_ok": request.session["pedido_ok"],
+    if graba:
+        # Solo el número: guardar el pedido entero (items, precios, cliente)
+        # en la sesión hace que la cookie crezca con el tamaño del carrito, y
+        # un carrito grande (30+ items) la pasa del límite de ~4KB que
+        # aceptan los navegadores — el navegador la descarta en silencio, el
+        # cliente pierde la confirmación Y el carrito vaciado (vuelve a ver
+        # todo lleno) y termina reintentando el pedido. checkout_ok lo
+        # reconstruye leyendo de la base (ver pedidos.resumen_confirmacion).
+        request.session["pedido_ok_numero"] = numero
+        if token:
+            request.session["checkout_token_hecho"] = {"token": token, "numero": numero}
+    else:
+        suc_nombre = ""
+        if id_sucursal:
+            suc_nombre = next((s.descripcion for s in zonas.sucursales() if s.id == id_sucursal), "")
+        request.session["pedido_ok"] = {
+            "numero": numero,
+            "simulado": True,
+            "cliente": cli.nombre_completo,
+            "telefono": cli.telefono,
+            "email": cli.email,
+            "retira": bool(id_sucursal),
+            "sucursal": suc_nombre,
+            "envio": float(precio_envio),
+            "envio_modalidad": obs_envio,
+            "efectivo": pago == "efectivo",
+            "descuento": cod,
+            "items": [{"cant": float(l.cantidad), "nombre": l.producto.nombre,
+                       "unidad": l.producto.unidad, "precio": float(l.producto.precio)}
+                      for l in car.lineas],
+            "subtotal": float(p.subtotal()),
+            "total": float(p.total()),
         }
+        if token:
+            request.session["checkout_token_hecho"] = {"token": token, "pedido_ok": request.session["pedido_ok"]}
     return RedirectResponse("/checkout/ok", status_code=303)
 
 
 @app.get("/checkout/ok", response_class=HTMLResponse)
 def checkout_ok(request: Request):
+    numero = request.session.pop("pedido_ok_numero", None)
+    if numero:
+        ok = pedidos.resumen_confirmacion(numero)
+        if not ok:
+            return RedirectResponse("/", status_code=303)
+        return render(request, "checkout_ok.html", ok=ok)
     ok = request.session.pop("pedido_ok", None)
     if not ok:
         return RedirectResponse("/", status_code=303)
