@@ -1,5 +1,10 @@
 """Helpers de presentación."""
+import re
 from decimal import Decimal
+
+from markupsafe import Markup, escape
+
+_URL_RE = re.compile(r"(https?://[^\s<]+)")
 
 
 def pesos(valor) -> str:
@@ -21,3 +26,19 @@ def cantidad(valor) -> str:
     if d == d.to_integral_value():
         return str(int(d))
     return f"{d.normalize()}".replace(".", ",")
+
+
+def linkify(texto: str) -> Markup:
+    """Convierte las URLs sueltas de un texto (ej. en la descripción de un
+    producto: "más info en https://...") en links clickeables, sin tocar el
+    resto del texto. Escapa todo primero para no abrir paso a HTML/XSS desde
+    un campo que se carga desde el ERP."""
+    partes = []
+    ultimo = 0
+    for m in _URL_RE.finditer(texto or ""):
+        url = m.group(1).rstrip(".,;:)")
+        partes.append(escape(texto[ultimo:m.start()]))
+        partes.append(Markup('<a href="{0}" target="_blank" rel="noopener noreferrer">{0}</a>').format(url))
+        ultimo = m.start() + len(url)
+    partes.append(escape(texto[ultimo:] if texto else ""))
+    return Markup("").join(partes)

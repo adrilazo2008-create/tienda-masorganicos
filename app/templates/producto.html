@@ -29,7 +29,7 @@
   <div class="prod-info">
     <h1>{{ p.nombre }}</h1>
     <p class="prod-precio"><span class="num">{{ pesos(p.precio) }}</span> <small>x {{ p.unidad }}</small></p>
-    {% if p.detalle %}<p class="prod-det">{{ p.detalle }}</p>{% endif %}
+    {% if p.detalle %}<p class="prod-det">{{ p.detalle|linkify }}</p>{% endif %}
 
     <form class="prod-add" hx-post="/carrito/agregar" hx-target="#toasts" hx-swap="afterbegin">
       <input type="hidden" name="producto_id" value="{{ p.id }}">

@@ -23,7 +23,7 @@ from . import carrito as carrito_mod
 from . import catalogo, clientes, contenido, descuentos, pedidos, reservas, rutas_admin, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
-from .formato import pesos
+from .formato import linkify, pesos
 
 BASE_DIR = Path(__file__).resolve().parent
 S = get_settings()
@@ -143,6 +143,7 @@ if S.img_base_url.startswith("/") and _fotos_local.exists():
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 templates.env.globals["pesos"] = pesos
 templates.env.globals["fmt_cantidad"] = fmt_cantidad
+templates.env.filters["linkify"] = linkify
 templates.env.globals["IMG_BASE"] = S.img_base_url
 templates.env.globals["V"] = ASSET_VER
 templates.env.globals["img_producto"] = (
