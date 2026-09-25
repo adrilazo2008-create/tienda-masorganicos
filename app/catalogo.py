@@ -52,10 +52,12 @@ RUBROS_SIN_CONTROL_STOCK = {1, 2, 3}  # Verduras, Frutas, Granja y Tambo
 
 # De los rubros sin control de stock, solo Granja y Tambo tiene reposición
 # real por proveedor (leche de cabra, etc.) que Adriana consolida a mano —
-# por eso solo estos productos generan fila en `reservas`. Verduras/Frutas
-# muestran el mismo cartel "Agotado" y botón "Reservar", pero no se anotan
-# (ahí el stock en 0 es la normalidad de todos los días, no algo a encargar).
+# por eso solo estos productos generan fila en `reservas` y muestran cartel
+# "Agotado" / botón "Reservar". Verduras/Frutas (2026-09-24, a pedido
+# explícito de Adriana) no muestran ningún aviso de stock: ahí el stock en 0
+# es la normalidad de todos los días, no algo a encargar ni a destacar.
 RUBRO_GRANJA = 3
+RUBROS_SIN_AVISO_STOCK = {1, 2}  # Verduras, Frutas: sin cartel Agotado/Pocas unidades ni botón Reservar
 
 # Texto que se antepone a la observación del ítem del pedido cuando se pide
 # como reserva (agotado + Granja), para que se vea de un vistazo en el
@@ -152,13 +154,18 @@ class Producto:
 
     @property
     def agotado(self) -> bool:
-        """Sin stock (0 o negativo). Para Verduras/Frutas/Granja el producto
-        sigue mostrándose igual (no se saca del catálogo), pero hay que
-        avisarlo mejor que con "pocas unidades"."""
+        """Sin stock (0 o negativo). Para Granja el producto sigue
+        mostrándose igual (no se saca del catálogo) pero hay que avisarlo
+        mejor que con "pocas unidades". Verduras/Frutas nunca avisan: ahí el
+        stock en 0 es la normalidad de todos los días (RUBROS_SIN_AVISO_STOCK)."""
+        if self.rubro_id in RUBROS_SIN_AVISO_STOCK:
+            return False
         return self.stock <= 0
 
     @property
     def poco_stock(self) -> bool:
+        if self.rubro_id in RUBROS_SIN_AVISO_STOCK:
+            return False
         return not self.agotado and self.stock < STOCK_ALERTA
 
     @property
