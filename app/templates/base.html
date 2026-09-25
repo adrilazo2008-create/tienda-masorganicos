@@ -21,6 +21,22 @@ window.cargarPixel = function(){
 try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } catch(e){}
 </script>
 {% endif %}
+{% if clarity_id %}
+<script>
+/* Microsoft Clarity: heatmaps y grabaciones de sesión, para ver por dónde se
+   traban los clientes nuevos. Solo se carga si acepta cookies (igual que Meta). */
+window.cargarClarity = function(){
+  if (window.clarity && window.clarity.loaded) return;
+  (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "{{ clarity_id }}");
+  window.clarity.loaded = true;
+};
+try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarClarity(); } catch(e){}
+</script>
+{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {% if IMG_BASE.startswith('http') %}<link rel="preconnect" href="{{ IMG_BASE.split('/assets')[0] }}">{% endif %}
@@ -122,11 +138,12 @@ try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } c
 
 <div id="toasts" role="status" aria-live="polite"></div>
 
-{% if meta_pixel %}
+{% if meta_pixel or clarity_id %}
 <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookies" aria-live="polite" hidden>
   <p>
     Usamos cookies propias para que funcione tu carrito y tu sesión, y cookies de
-    <b>Meta</b> para medir nuestras campañas. Podés aceptarlas o rechazarlas.
+    <b>Meta</b> y <b>Microsoft Clarity</b> para medir nuestras campañas y mejorar la
+    tienda. Podés aceptarlas o rechazarlas.
     <a href="/privacidad">Más información</a>.
   </p>
   <div class="cookie-acc">
@@ -139,6 +156,7 @@ try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } c
     try { localStorage.setItem('mo-cookies', v); } catch(e){}
     var b = document.getElementById('cookie-banner'); if (b) b.hidden = true;
     if (v === 'si' && window.cargarPixel) window.cargarPixel();
+    if (v === 'si' && window.cargarClarity) window.cargarClarity();
   }
   (function(){
     var elegido = '';

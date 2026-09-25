@@ -1,4 +1,5 @@
 {
-  "_ayuda": "meta_pixel_id: el ID numérico del Pixel de Meta (Administrador de eventos de Meta Business). Vacío = desactivado. Eventos que dispara la tienda: PageView (todas las páginas), ViewContent (ficha de producto), AddToCart, InitiateCheckout (checkout), Purchase (pedido confirmado, con valor y moneda ARS).",
-  "meta_pixel_id": "1101405808098438"
+  "_ayuda": "meta_pixel_id: el ID numérico del Pixel de Meta (Administrador de eventos de Meta Business). Vacío = desactivado. Eventos que dispara la tienda: PageView (todas las páginas), ViewContent (ficha de producto), AddToCart, InitiateCheckout (checkout), Purchase (pedido confirmado, con valor y moneda ARS). clarity_id: el project ID de Microsoft Clarity (clarity.microsoft.com/projects) — heatmaps y grabaciones de sesión para ver por dónde se traban los clientes nuevos. Vacío = desactivado.",
+  "meta_pixel_id": "1101405808098438",
+  "clarity_id": "ynmqxyg5i5"
 }

@@ -29,6 +29,15 @@ def meta_pixel_id() -> str:
         return ""
 
 
+def clarity_id() -> str:
+    """Project ID de Microsoft Clarity (app/data/integraciones.json). Vacío = desactivado."""
+    try:
+        data = json.loads((_DATA / "integraciones.json").read_text(encoding="utf-8"))
+        return str(data.get("clarity_id") or "").strip()
+    except OSError:
+        return ""
+
+
 _TAGS = re.compile(r"<[^>]+>")
 
 
