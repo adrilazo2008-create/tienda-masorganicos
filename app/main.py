@@ -47,6 +47,18 @@ app = FastAPI(title="Tienda MasOrgánicos")
 # navegador, no vuelve a ver el login (2026-09-26, pedido de Adriana).
 app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 365 * 2)
 
+
+@app.middleware("http")
+async def forzar_https(request: Request, call_next):
+    """El catálogo se veía tanto por http:// como por https:// (Clarity,
+    sept. 2026: 22 sesiones en http vs 70 en https para la misma URL) — al no
+    compartirse cookies entre los dos, se rompía el carrito/sesión y el
+    tracking de Meta para una parte del tráfico. No hay .htaccess versionado
+    acá (Passenger/cPanel), así que el redirect se fuerza en la app."""
+    if S.entorno == "production" and request.url.scheme == "http":
+        return RedirectResponse(str(request.url.replace(scheme="https")), status_code=301)
+    return await call_next(request)
+
 # --------------------------------------------------------------------------- errores
 # Log de errores 500 a un archivo dentro de la app (se puede bajar por FTP/File
 # Manager). Antes, un error sin manejar tiraba la página en blanco de Passenger
