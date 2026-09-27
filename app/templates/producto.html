@@ -61,6 +61,13 @@
 </section>
 {% endif %}
 
+{% if recientes %}
+<section class="bloque">
+  <h2>Vistos recientemente</h2>
+  <div class="grid">{% for p in recientes %}{% include "_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+
 <script src="/static/js/tienda.js?v={{ V }}"></script>
 {% if meta_pixel %}<script>if(window.fbq)fbq('track','ViewContent',{content_name:{{ p.nombre|tojson }},content_ids:[{{ p.id }}],value:{{ p.precio }},currency:'ARS'});</script>{% endif %}
 {% endblock %}

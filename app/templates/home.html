@@ -71,8 +71,17 @@
 </section>
 {% endif %}
 
+{% if recientes %}
 <section class="bloque">
-  <div class="bloque-cab"><h2>{{ 'Descubrí' if habituales else 'Productos destacados' }}</h2><a href="/catalogo">Ver todo →</a></div>
+  <div class="bloque-cab"><h2>Vistos recientemente</h2></div>
+  <div class="grid">
+    {% for p in recientes %}{% include "_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="bloque">
+  <div class="bloque-cab"><h2>{{ 'Descubrí' if (habituales or recientes) else 'Productos destacados' }}</h2><a href="/catalogo">Ver todo →</a></div>
   <div class="grid">
     {% for p in destacados %}{% include "_card.html" %}{% endfor %}
   </div>

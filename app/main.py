@@ -20,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, pedidos, reservas, rutas_admin, zonas
+from . import catalogo, clientes, contenido, descuentos, navegacion, pedidos, reservas, rutas_admin, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -40,7 +40,12 @@ def _asset_ver() -> str:
 ASSET_VER = _asset_ver()
 
 app = FastAPI(title="Tienda MasOrgánicos")
-app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 30)
+# La tienda no guarda datos sensibles ni de pago (solo lo que el cliente ya
+# nos dio: nombre, teléfono, dirección) — no tiene sentido hacerlo re-loguear
+# seguido. Sesión larga (2 años) para minimizar la fricción de un cliente que
+# repite compra; a efectos prácticos, mientras no borre las cookies del
+# navegador, no vuelve a ver el login (2026-09-26, pedido de Adriana).
+app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 365 * 2)
 
 # --------------------------------------------------------------------------- errores
 # Log de errores 500 a un archivo dentro de la app (se puede bajar por FTP/File
@@ -178,6 +183,16 @@ def _habituales(cli, limite: int, excluir=()) -> list:
     return [p for p in base if p.id not in excluir][:limite]
 
 
+def _recientes(request: Request, excluir: int | None = None, limite: int = 8) -> list:
+    """Productos que este visitante (anónimo o logueado) miró hace poco,
+    listos para <_card.html>. No requiere login: se identifica por la cookie
+    de sesión (visitante_id), igual que el carrito."""
+    vid = navegacion.visitante_id(request.session)
+    ids = navegacion.recientes_ids(vid, excluir=excluir, limite=limite * 2)
+    d = catalogo.obtener_varios(ids)
+    return [d[i] for i in ids if i in d][:limite]
+
+
 def ctx(request: Request, **extra):
     car = carrito_mod.resolver(request.session)
     base = dict(
@@ -204,6 +219,7 @@ def home(request: Request):
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
                   habituales=_habituales(_cliente_actual(request), 8),
+                  recientes=_recientes(request, limite=8),
                   slides=contenido.carrusel_home(),
                   home_cfg=contenido.home_config(),
                   avisos=contenido.avisos())
@@ -242,7 +258,14 @@ def ver_producto(request: Request, producto_id: int):
         return RedirectResponse("/catalogo", status_code=303)
     relacionados = [x for x in catalogo.listar(categoria_id=p.categoria_id, limite=8)
                     if x.id != p.id][:6]
-    return render(request, "producto.html", p=p, relacionados=relacionados)
+    cli = _cliente_actual(request)
+    try:
+        navegacion.registrar_vista(navegacion.visitante_id(request.session), p.id,
+                                    cliente_id=cli.id if cli else None)
+    except Exception:
+        logging.getLogger("tienda.errores").exception("No se pudo registrar la vista de %s", p.id)
+    return render(request, "producto.html", p=p, relacionados=relacionados,
+                  recientes=_recientes(request, excluir=p.id, limite=8))
 
 
 @app.get("/faq", response_class=HTMLResponse)
