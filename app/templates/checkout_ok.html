@@ -43,6 +43,6 @@
   <a href="/catalogo" class="btn-grande">Seguir comprando</a>
 </div>
 {% if meta_pixel and not ok.simulado %}
-<script>if(window.fbq)fbq('track','Purchase',{value:{{ ok.total }},currency:'ARS',num_items:{{ ok['items']|length }}});</script>
+<script>if(window.fbq)fbq('track','Purchase',{value:{{ ok.total }},currency:'ARS',num_items:{{ ok['items']|length }}},{eventID:{{ ('purchase-' ~ ok.numero)|tojson }}});</script>
 {% endif %}
 {% endblock %}

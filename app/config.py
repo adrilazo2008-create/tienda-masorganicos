@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     # Cambiarla en el .env cuando quieras revocarle el acceso a alguien.
     admin_password: str = "cambiar-esta-clave"
 
+    # Token de acceso de la Conversions API de Meta (Events Manager -> Pixel
+    # PaginaWeb MO -> Configuración -> Conversions API -> Generar token de
+    # acceso). Vacío = CAPI desactivada (solo queda el Pixel del navegador).
+    meta_capi_token: str = ""
+
     def url_tienda(self) -> str:
         return (
             f"mysql+pymysql://{self.db_tienda_user}:{self.db_tienda_password}"

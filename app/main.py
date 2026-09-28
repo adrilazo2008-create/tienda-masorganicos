@@ -20,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, navegacion, pedidos, reservas, rutas_admin, zonas
+from . import catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -382,12 +382,20 @@ def checkout(request: Request):
         return RedirectResponse("/catalogo", status_code=303)
     cli = _cliente_actual(request)
     dirs = clientes.direcciones(cli.id) if cli else []
+    token = secrets.token_urlsafe(12)
+    # mismo event_id que el fbq('track','InitiateCheckout', ..., {eventID: token})
+    # del navegador (checkout.html) -> Meta deduplica el evento del Pixel con
+    # el de la Conversions API en vez de contarlo dos veces.
+    meta_capi.enviar_evento(
+        "InitiateCheckout", token, request,
+        custom_data={"value": float(car.subtotal), "currency": "ARS", "num_items": len(car.lineas)},
+        cliente=cli)
     return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                   sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                   aviso_stock=request.session.pop("carrito_msg", None),
-                  eliminados=eliminados, token=secrets.token_urlsafe(12))
+                  eliminados=eliminados, token=token)
 
 
 @app.post("/checkout/identificar", response_class=HTMLResponse)
@@ -522,6 +530,13 @@ def checkout_confirmar(
     numero = None
     if graba:
         numero = pedidos.crear(p)
+        # mismo event_id que el fbq('track','Purchase', ..., {eventID: '...'})
+        # del navegador (checkout_ok.html) -> Meta deduplica el evento del
+        # Pixel con el de la Conversions API en vez de contarlo dos veces.
+        meta_capi.enviar_evento(
+            "Purchase", f"purchase-{numero}", request,
+            custom_data={"value": float(p.total()), "currency": "ARS", "num_items": len(car.lineas)},
+            cliente=cli)
         for l in car.lineas:
             if l.producto.agotado and l.producto.rubro_id == catalogo.RUBRO_GRANJA:
                 try:
