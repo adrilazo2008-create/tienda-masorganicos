@@ -326,6 +326,15 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cz-row button:disabled{opacity:.6}
 #cz-msg{margin:.4rem 0 0}
 
+/* checkout: verificación de zona para clientes nuevos — discreta, colapsada
+   por defecto (un texto chico, no un cartel verde grande como .busca-zona) */
+.verificar-zona{margin:0 0 .6rem}
+.verificar-zona > summary{cursor:pointer;font-size:.85rem;color:var(--verde-osc);font-weight:600;list-style:none}
+.verificar-zona > summary::-webkit-details-marker{display:none}
+.verificar-zona > summary::before{content:'▸ ';font-size:.8em}
+.verificar-zona[open] > summary::before{content:'▾ '}
+.verificar-zona .busca-zona{margin:.5rem 0 0}
+
 .ok-final{max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:1.5rem;text-align:center}
 .ok-num{color:var(--gris);margin:.2rem 0 1rem}
 .ok-wsp{background:var(--verde-claro);border:1px solid #cfe3c2;border-radius:var(--radio);padding:.9rem 1rem;text-align:left;font-size:.95rem;margin:0 0 1rem}

@@ -48,15 +48,6 @@
       <label class="radio"><input type="radio" name="entrega" value="retira" onchange="toggleEntrega()"> Retiro en sucursal</label>
 
       <div id="bloque-envio">
-        <div class="busca-zona">
-          <label for="cz-dir">Buscá tu dirección y detectamos la zona</label>
-          <div class="cz-row">
-            <input id="cz-dir" type="text" autocomplete="off" enterkeyhint="search"
-                   placeholder="Calle y altura, localidad">
-            <button type="button" id="cz-btn">Detectar</button>
-          </div>
-          <p class="chico" id="cz-msg" aria-live="polite"></p>
-        </div>
         <label>Zona
           <select name="id_zona" id="sel-zona" onchange="recalcularEnvio()">
             <option value="0">Elegí tu zona…</option>
@@ -136,6 +127,19 @@
       <p>¿Volvés al carrito para reemplazarlo, o cerrás el pedido sin él?</p>
       {% endif %}
     </div>
+    {% endif %}
+    {% if not cliente_checkout %}
+    <details class="verificar-zona">
+      <summary>¿Llegamos a tu zona? Verificar dirección</summary>
+      <div class="busca-zona">
+        <div class="cz-row">
+          <input id="cz-dir" type="text" autocomplete="off" enterkeyhint="search"
+                 placeholder="Calle y altura, localidad">
+          <button type="button" id="cz-btn">Detectar</button>
+        </div>
+        <p class="chico" id="cz-msg" aria-live="polite"></p>
+      </div>
+    </details>
     {% endif %}
     {% if not car.vacio %}
     <button type="submit" class="btn-grande" id="btn-confirmar">{{ 'Confirmar pedido sin ese producto' if eliminados else 'Confirmar pedido' }}</button>
