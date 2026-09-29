@@ -468,7 +468,7 @@ def checkout_confirmar(
         if not z:
             return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                           sucursales=zonas.sucursales(), error="Elegí una zona de envío.",
-                          permitir_escribir=graba)
+                          permitir_escribir=graba, token=secrets.token_urlsafe(12))
 
     # cliente
     cli = clientes.buscar_por_telefono(telefono) or (
