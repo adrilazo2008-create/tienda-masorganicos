@@ -216,6 +216,25 @@ ese mismo template en `checkout_confirmar()`, no solo la ruta feliz.
 
 ---
 
+## 2026-09-29 — Observación editable en cada línea del carrito
+
+Adriana notó el caso más claro donde molestaba: al "Repetir pedido" desde
+"Mi cuenta", las notas del pedido anterior se copian al carrito nuevo (a
+propósito, para no perder ese dato) pero quedaban fijas — se mostraban como
+texto de solo lectura (`<span class="cl-obs">`), sin forma de corregirlas o
+borrarlas sin sacar la línea entera y volver a buscar el producto de cero.
+
+**Fix:** cada línea del carrito tiene ahora su propio `<input>` de
+observación (`_carrito_cuerpo.html`), en un `<form>` aparte del de
+cantidad pero contra el mismo endpoint (`/carrito/actualizar`) — así
+cambiar una no pisa a la otra. `carrito.actualizar()` distingue
+`observacion=None` (no tocar, es el caso de las flechas +/- de cantidad)
+de un string explícito (cambiarla, incluso a `""` para borrarla).
+Verificado en producción: el valor persiste después de recargar la página
+desde cero.
+
+---
+
 ## Convención adoptada (2026-09-28): esta bitácora
 
 Adriana armó la skill `bitacora-proyecto-code` desde Cowork (vive del lado
