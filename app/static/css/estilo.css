@@ -275,7 +275,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cl-info{display:flex;flex-direction:column;min-width:0}
 .cl-info a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cl-unit{font-size:.8rem;color:var(--gris)}
-.cl-obs{font-size:.8rem;font-style:italic;color:var(--gris)}
+.cl-obs-form{margin-top:.2rem}
+.cl-obs-input{width:100%;max-width:220px;font-size:.8rem;font-style:italic;color:var(--gris);
+  border:1px solid transparent;border-radius:6px;padding:.2rem .4rem;margin:0 -.4rem;font-family:inherit;
+  background:transparent}
+.cl-obs-input:hover,.cl-obs-input:focus{border-color:var(--linea);background:#fff;color:var(--tinta)}
+.cl-obs-input::placeholder{font-style:italic}
 .cl-cant{display:flex;align-items:center;gap:.35rem}
 .cl-cant .cant input{width:44px;text-align:center;border:0;border-radius:0;padding:.3rem 0;font:inherit}
 .cl-cant .cant button{width:30px;height:32px}

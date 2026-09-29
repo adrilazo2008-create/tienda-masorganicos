@@ -362,8 +362,9 @@ def ver_carrito(request: Request):
 
 
 @app.post("/carrito/actualizar")
-def carrito_actualizar(request: Request, indice: int = Form(...), cantidad: str = Form(...)):
-    carrito_mod.actualizar(request.session, indice, cantidad)
+def carrito_actualizar(request: Request, indice: int = Form(...), cantidad: str = Form(...),
+                        observacion: Optional[str] = Form(None)):
+    carrito_mod.actualizar(request.session, indice, cantidad, observacion)
     return RedirectResponse("/carrito", status_code=303)
 
 

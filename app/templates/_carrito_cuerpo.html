@@ -21,7 +21,14 @@
       <div class="cl-info">
         <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
         <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
-        {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
+        <form method="post" action="/carrito/actualizar" class="cl-obs-form">
+          <input type="hidden" name="indice" value="{{ l.indice }}">
+          <input type="hidden" name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}">
+          <input name="observacion" value="{{ l.observacion }}" class="cl-obs-input" maxlength="191"
+                 placeholder="Observación (opcional)" autocomplete="off"
+                 aria-label="Observación de {{ l.producto.nombre }}"
+                 onchange="this.form.submit()">
+        </form>
       </div>
       <form method="post" action="/carrito/actualizar" class="cl-cant">
         <input type="hidden" name="indice" value="{{ l.indice }}">

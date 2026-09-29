@@ -57,10 +57,14 @@ def agregar(session, producto_id: int, cantidad, observacion: str = "") -> None:
     _guardar(session, items)
 
 
-def actualizar(session, indice: int, cantidad) -> None:
+def actualizar(session, indice: int, cantidad, observacion: str | None = None) -> None:
+    """`observacion=None` (el caso de +/- de cantidad) deja la nota como
+    estaba; para borrarla o cambiarla se manda un string (puede ser "")."""
     items = _leer(session)
     if 0 <= indice < len(items):
         items[indice]["cantidad"] = str(_norm_cant(cantidad))
+        if observacion is not None:
+            items[indice]["observacion"] = observacion.strip()[:191]
         _guardar(session, items)
 
 
