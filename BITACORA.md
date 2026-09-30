@@ -256,7 +256,14 @@ puntuales; quedan aplicados y confirmados en el preview:
   2. Armar el segundo deploy Git en cPanel apuntando al document root de
      `masorganicos.com.ar`, con su propio `.env`: `LANDING_HOME=true`,
      `URL_WEB=https://masorganicos.com.ar`,
-     `URL_TIENDA=https://tienda.masorganicos.com.ar` (más todo lo demás
+     `URL_TIENDA_PUBLICA=https://tienda.masorganicos.com.ar` — **ojo con el
+     nombre**, el campo en `config.py` es `url_tienda_publica`, no
+     `url_tienda` (pydantic-settings arma el nombre de la variable de
+     entorno a partir del nombre exacto del campo) — si se pone
+     `URL_TIENDA` a secas queda silenciosamente vacío (`extra="ignore"`
+     no tira error) y los links "Ir a la tienda" del sitio institucional
+     quedan relativos en vez de apuntar al subdominio. Verificado con un
+     test rápido de `pydantic_settings.BaseSettings` (más todo lo demás
      que ya tiene el `.env` del deploy de la tienda — DB, WhatsApp, etc.).
   3. Reseñas reales (Bloque 5) y foto del interior/huevos siguen
      pendientes, sin fecha (no bloquean el deploy).
