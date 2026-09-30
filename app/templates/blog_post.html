@@ -1,0 +1,50 @@
+{% extends "sitio_base.html" %}
+{% block title %}{{ nota.titulo }} — Más Orgánicos{% endblock %}
+{% block descripcion %}{{ nota.resumen or nota.titulo }}{% endblock %}
+{% block head_extra %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ nota.titulo }}">
+<meta property="og:description" content="{{ nota.resumen or nota.titulo }}">
+{% if nota.portada %}<meta property="og:image" content="{{ IMG_BASE }}/blog/{{ nota.portada }}">{% endif %}
+{% endblock %}
+{% block contenido %}
+
+<article class="blog-post">
+  <p class="blog-post-volver"><a href="{{ URL_WEB }}/blog">← Todas las notas</a></p>
+  <header>
+    <time datetime="{{ nota.fecha_iso }}">{{ nota.fecha_larga }}</time>
+    <h1>{{ nota.titulo }}</h1>
+    {% if nota.resumen %}<p class="blog-post-bajada">{{ nota.resumen }}</p>{% endif %}
+  </header>
+  {% if nota.portada %}
+  <img class="blog-post-portada" src="{{ IMG_BASE }}/blog/{{ nota.portada }}" alt=""
+       loading="lazy" decoding="async" onerror="this.hidden=true">
+  {% endif %}
+  <div class="prosa blog-post-cuerpo">
+    {{ nota.html | safe }}
+  </div>
+</article>
+
+<aside class="blog-post-cta">
+  <p>¿Te dieron ganas de cocinar algo rico?</p>
+  <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver la tienda</a>
+</aside>
+
+{% if otras %}
+<section class="bloque">
+  <h2>Más notas</h2>
+  <div class="blog-lista">
+    {% for n in otras %}
+    <article class="blog-item">
+      <div class="blog-item-txt">
+        <time datetime="{{ n.fecha_iso }}">{{ n.fecha_larga }}</time>
+        <h3><a href="{{ URL_WEB }}/blog/{{ n.slug }}">{{ n.titulo }}</a></h3>
+        {% if n.resumen %}<p>{{ n.resumen }}</p>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

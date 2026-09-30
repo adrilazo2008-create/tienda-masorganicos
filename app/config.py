@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     url_web: str = ""
     url_tienda_publica: str = ""
 
+    # True en el despliegue de masorganicos.com.ar (landing institucional):
+    # la "/" muestra la landing en vez del home de catálogo de la tienda.
+    landing_home: bool = False
+
     # Si es False, el checkout NO escribe en grupos/transacciones (simula).
     permitir_escribir_pedidos: bool = False
 

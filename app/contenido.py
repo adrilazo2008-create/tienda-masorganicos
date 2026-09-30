@@ -95,6 +95,16 @@ def productores() -> list[dict]:
         return []
 
 
+def testimonios() -> list[dict]:
+    """Reseñas reales para la landing ({texto, nombre, zona}).
+    Se edita en app/data/testimonios.json — vacío hasta juntar reseñas reales
+    (nunca completar con texto inventado)."""
+    try:
+        return json.loads((_DATA / "testimonios.json").read_text(encoding="utf-8"))
+    except OSError:
+        return []
+
+
 def carrousel() -> list[dict]:
     sql = """SELECT nombreImg, titulo, subtitulo, link, tituloLink
              FROM carrousel WHERE activo = 1 ORDER BY id_imgCarousel"""

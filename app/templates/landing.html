@@ -1,0 +1,266 @@
+{% extends "sitio_base.html" %}
+{% block title %}Más Orgánicos — Frutas y verduras agroecológicas, del productor a tu casa{% endblock %}
+{% block descripcion %}Frutas y verduras agroecológicas, almacén saludable y productos de granja. Envíos a Zona Norte, GBA y CABA, o retiro en el local de Pacheco.{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="/static/css/landing.css?v={{ V }}">
+{% endblock %}
+{% block contenido %}
+
+<section class="sitio-hero hero-landing">
+  <div class="hero-landing-texto">
+    <p class="hero-eyebrow">Orgánico y agroecológico · Zona Norte, GBA y CABA</p>
+    <h1>¿Hace cuánto que no comés un tomate con sabor a tomate?</h1>
+    <p class="sitio-hero-lead">
+      Frutas y verduras agroecológicas. Tu semana, resuelta en una sola entrega.
+      Más almacén saludable, huevos y tambo, siempre de productores que cuidan la tierra.
+    </p>
+    <div class="hero-cta">
+      <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a>
+      <a href="#zona-cobertura" class="btn-sec">¿Llegamos a tu zona?</a>
+    </div>
+  </div>
+  <img src="{{ IMG_BASE }}/landing/verduras-luz.jpg?v={{ V }}"
+       alt="Verduras y frutas frescas a contraluz, con tomates, lechuga y zanahorias"
+       loading="eager" decoding="async" class="hero-landing-img"
+       onerror="this.hidden=true">
+</section>
+
+<p class="trust-band"><b>Desde 2019</b>, acompañamos a más de <b>5.000 familias</b> a comer mejor.</p>
+
+<section class="bloque">
+  <h2>Sabemos lo que se siente</h2>
+  <p>Querer comer mejor no debería ser una carrera de obstáculos. Esto es lo que solemos escuchar:</p>
+  <div class="dolores-grid">
+    <article class="dolor-card">
+      <p class="dolor-frase">"No tengo tiempo de recorrer verdulería, dietética y almacén."</p>
+      <p class="dolor-resp">Armamos un solo pedido semanal con todo lo que necesitás — llega a tu casa, vos seguís con tu semana.</p>
+    </article>
+    <article class="dolor-card">
+      <p class="dolor-frase">"Compro 'orgánico' pero no sé bien de dónde viene."</p>
+      <p class="dolor-resp">Sabemos el nombre de cada productor. Si querés preguntar, te contamos exactamente de dónde sale lo que comés.</p>
+    </article>
+    <article class="dolor-card">
+      <p class="dolor-frase">"Termino comprando de más, o de menos, y se me echa a perder algo."</p>
+      <p class="dolor-resp">Pedís lo que realmente consumís, semana a semana — sin sobras ni faltantes.</p>
+    </article>
+  </div>
+  <div class="hero-cta"><a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Armá tu primer pedido</a></div>
+</section>
+
+<section class="bloque prosa">
+  <h2>Detrás de cada pedido</h2>
+  <img src="{{ IMG_BASE }}/landing/hero-canasta.jpg?v={{ V }}"
+       alt="Canasta con frutas y verduras de estación recién cosechadas"
+       loading="lazy" decoding="async" class="landing-img"
+       onerror="this.hidden=true">
+  <p>
+    Empezamos, buscando comer mejor para nuestra propia familia
+    — en un momento en que un diagnóstico de salud nos hizo cuestionar todo lo que
+    nos habían enseñado a poner en el plato. Investigamos, conocimos productores
+    agroecológicos, y de a poco otras personas nos empezaron a pedir dónde comprar.
+    Repartíamos bolsones desde casa, con nuestras propias heladeras y el auto los
+    fines de semana — hasta que nos animamos a abrir el primer local.
+  </p>
+  <p>
+    Hoy elegimos cada productor mirando su trazabilidad real: quién lo asesora,
+    cómo cultiva, quién lo aprueba dentro de las redes de comercialización. Y cada
+    persona que se suma al equipo comparte la misma convicción — para nosotras,
+    esto es más que un trabajo.
+  </p>
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a>
+    <a href="{{ URL_WEB }}/nosotros" class="btn-sec">Conocé toda la historia</a>
+  </div>
+</section>
+
+<section class="bloque como-funciona" id="como-funciona">
+  <h2>Elegí cómo comprar</h2>
+  <p>Podés armar tu pedido online y que te llegue a casa, o pasar por el local en Pacheco y elegir en persona, con asesoramiento.</p>
+
+  <h3 class="como-subtitulo">Con entrega a domicilio</h3>
+  <ol class="cf-pasos">
+    <li>
+      <span class="cf-num">1</span>
+      <h3>Armás tu pedido</h3>
+      <p>Elegís en la tienda online frutas, verduras y almacén. Hay una compra mínima según tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">2</span>
+      <h3>Coordinamos por WhatsApp</h3>
+      <p>Te escribimos para confirmar disponibilidad, día y horario de entrega de tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">3</span>
+      <h3>Pagás al recibir</h3>
+      <p>Efectivo, transferencia, débito, crédito, Cuenta DNI o Mercado Pago.</p>
+    </li>
+  </ol>
+
+  <h3 class="como-subtitulo">En el local de Pacheco</h3>
+  <div class="local-card">
+    <img src="{{ IMG_BASE }}/landing/local-pacheco.jpg?v={{ V }}"
+         alt="Entrada del local de Más Orgánicos en Pacheco" loading="lazy" decoding="async"
+         onerror="this.hidden=true">
+    <div>
+      <p>Formato autoservicio, con asesoramiento presencial si querés preguntar antes de elegir.</p>
+      <p>
+        <b>Cabildo 676, General Pacheco</b><br>
+        Lunes a viernes: 9 a 13 hs y 16 a 19:30 hs<br>
+        Sábados: 9 a 13:30 hs
+      </p>
+      <p>
+        <a href="https://wa.me/5491123958723" target="_blank" rel="noopener" class="local-whatsapp">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.4-.1-.1-.6-1.4-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.1s.9 2.5 1.1 2.6c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/>
+            <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/>
+          </svg>
+          11 2395-8723 — escribinos por WhatsApp
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Armar mi pedido online</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=Cabildo+676,+General+Pacheco"
+       target="_blank" rel="noopener" class="btn-sec">Cómo llegar</a>
+    <a href="https://wa.me/5491123958723" target="_blank" rel="noopener" class="btn-sec">Escribinos por WhatsApp</a>
+  </div>
+</section>
+
+{% if testimonios %}
+<section class="bloque">
+  <h2>Lo que dicen las familias que ya piden con nosotros</h2>
+  <p>No hace falta que lo digamos nosotras.</p>
+  <div class="testi-grid">
+    {% for t in testimonios %}
+    <article class="testi-card">
+      <p class="testi-estrellas" aria-hidden="true">★★★★★</p>
+      <p class="testi-texto">“{{ t.texto }}”</p>
+      <p class="testi-autor">— {{ t.nombre }}, {{ t.zona }}</p>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="hero-cta"><a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a></div>
+</section>
+{% endif %}
+
+<section class="bloque" id="zona-cobertura">
+  <h2>¿Llegamos a tu zona?</h2>
+  <p>
+    Repartimos en Zona Norte, gran parte de GBA y CABA — cada zona tiene su día
+    fijo, con envío más económico ese día. Si tu zona no tiene reparto regular,
+    a veces coordinamos un punto de encuentro.
+  </p>
+
+  <form id="form-zona" class="verif-form" autocomplete="off">
+    <input id="dir-zona" name="dir" type="text" enterkeyhint="search"
+           placeholder="Calle y altura, localidad — ej: Av. Cazón 1200, Tigre" aria-label="Tu dirección">
+    <button type="submit" class="btn-grande">Verificar</button>
+  </form>
+  <p id="zona-resultado" class="verif-res" role="status" aria-live="polite" hidden></p>
+  <div id="mapa-zonas" class="mapa-zonas" aria-label="Mapa de zonas de reparto"
+       data-geojson="/envios/zonas.geojson"></div>
+
+  <details class="verificar-zona">
+    <summary>¿No encontrás tu dirección? Ver el detalle de zonas y días</summary>
+    <ul class="zonas-detalle">
+      {% for z in zonas %}<li><b>{{ z.titulo }}</b> — {{ z.mensaje }}</li>{% endfor %}
+    </ul>
+  </details>
+
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a>
+    <a href="https://wa.me/{{ WHATSAPP }}" target="_blank" rel="noopener" class="btn-sec">Escribinos por WhatsApp</a>
+  </div>
+</section>
+
+<section class="bloque faq" id="preguntas">
+  <h2>Antes de pedir</h2>
+  <details>
+    <summary>¿Los productos son orgánicos o agroecológicos de verdad?</summary>
+    <div>
+      <p>
+        Sí, todo lo que vendemos es orgánico o agroecológico. Trabajamos con
+        pollos pastoriles, lácteos de tambo y verduras y frutas de productores
+        que elegimos uno por uno — <a href="#productores">conocé a los
+        productores con los que trabajamos</a>. Si querés saber el origen de un
+        producto puntual, preguntanos por WhatsApp.
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>¿Qué trae cada bolsón?</summary>
+    <div>
+      <p>
+        Varía según lo que esté de estación — el de 7kg, por ejemplo, suele
+        traer 8 variedades distintas: cosas como papa, zapallo kabutiá, lechuga
+        o tomate, según la semana.
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>¿Qué formas de pago tienen?</summary>
+    <div>
+      <p>
+        Efectivo, transferencia, débito, crédito (con 10% de recargo), Cuenta
+        DNI y Mercado Pago. Para Mercado Pago te escribimos por WhatsApp con el
+        importe final una vez que armamos tu pedido.
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>¿Y si algo llega en mal estado?</summary>
+    <div>
+      <p>
+        Respaldamos los productos. Si algo no está bien, mandanos una foto
+        dentro de las 24 horas y coordinamos la reposición en tu próximo
+        pedido, o el reembolso.
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>¿Hacen envíos a mi zona?</summary>
+    <div>
+      <p>
+        Repartimos en gran parte de Zona Norte, GBA y CABA, con un día fijo por
+        barrio. <a href="#zona-cobertura">Mirá el detalle acá ↑</a>.
+      </p>
+    </div>
+  </details>
+  <div class="hero-cta"><a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a></div>
+</section>
+
+{% if productores %}
+<section class="bloque productores-banner" id="productores">
+  <h2>A quiénes elegimos</h2>
+  <p>
+    No sumamos un productor solo porque dice "orgánico". Miramos su historial,
+    quién los asesora, cómo cultivan y quién los aprueba dentro de las redes de
+    comercialización. Estos son algunos con los que trabajamos hoy:
+  </p>
+  <img src="{{ IMG_BASE }}/landing/productores.jpg?v={{ V }}"
+       alt="Logos de los productores y comercializadoras con los que trabaja Más Orgánicos"
+       loading="lazy" decoding="async" onerror="this.closest('section').querySelector('img').hidden=true">
+  <div class="hero-cta"><a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a></div>
+</section>
+{% endif %}
+
+<section class="bloque sitio-cierre">
+  <h2>Cuando quieras empezar, ahí vamos a estar</h2>
+  <p>
+    Frutas y verduras con sabor real, una semana resuelta en una sola entrega, y
+    gente detrás que elige cada producto con el mismo criterio con el que elige
+    lo que come su propia familia. Así te acompañamos desde 2019.
+  </p>
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Armá tu primer pedido</a>
+    <a href="https://wa.me/{{ WHATSAPP }}" target="_blank" rel="noopener" class="btn-sec">Escribinos por WhatsApp</a>
+  </div>
+</section>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<script defer src="/static/js/verificador-zona.js?v={{ V }}"></script>
+
+{% endblock %}

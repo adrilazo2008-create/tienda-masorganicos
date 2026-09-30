@@ -1,0 +1,40 @@
+/* Landing institucional (masorganicos.com.ar) — estilos que no están en estilo.css */
+
+.hero-landing{display:flex;align-items:center;gap:2rem}
+.hero-landing-texto{flex:1 1 380px;min-width:0}
+.hero-landing-img{flex:1 1 360px;width:100%;max-width:440px;aspect-ratio:4/3;object-fit:cover;
+  border-radius:16px;box-shadow:0 10px 30px -12px rgba(31,84,35,.35)}
+
+.como-subtitulo{color:var(--verde-osc);margin:1.6rem 0 .8rem;font-size:1.1rem}
+
+.dolores-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:1.2rem 0}
+.dolor-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:1.2rem 1.3rem}
+.dolor-frase{font-style:italic;color:var(--gris);margin:0 0 .6rem}
+.dolor-resp{margin:0;color:var(--tinta);line-height:1.5}
+
+.landing-img{width:100%;max-width:720px;border-radius:14px;margin:0 0 1.2rem;display:block}
+
+.local-card{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:stretch;background:#fff;
+  border:1px solid var(--linea);border-radius:14px;overflow:hidden;margin:0 0 .5rem}
+.local-card img{width:100%;max-width:320px;object-fit:cover;flex:1 1 280px;min-height:200px}
+.local-card > div{padding:1.2rem 1.3rem;flex:2 1 320px}
+.local-card p{margin:0 0 .6rem}
+.local-card p:last-child{margin-bottom:0}
+.local-whatsapp{display:inline-flex;align-items:center;gap:.4rem;color:#25963f;font-weight:600}
+.local-whatsapp:hover{text-decoration:underline}
+
+.testi-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:1.2rem 0}
+.testi-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:1.2rem 1.3rem}
+.testi-estrellas{color:var(--acento);margin:0 0 .5rem;letter-spacing:.1em}
+.testi-texto{margin:0 0 .7rem;color:var(--tinta);line-height:1.5}
+.testi-autor{margin:0;color:var(--gris);font-size:.9rem;font-weight:600}
+
+.zonas-detalle{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.4rem}
+.zonas-detalle li{padding:.5rem .7rem;background:var(--verde-claro);border-radius:8px;font-size:.92rem}
+
+@media(max-width:640px){
+  .local-card{flex-direction:column}
+  .local-card img{max-width:none;min-height:160px}
+  .hero-landing{flex-direction:column}
+  .hero-landing-img{max-width:none;order:-1}
+}

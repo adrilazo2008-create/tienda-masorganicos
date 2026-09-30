@@ -20,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, zonas
+from . import catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -32,7 +32,7 @@ S = get_settings()
 def _asset_ver() -> str:
     try:
         mt = max((BASE_DIR / "static" / p).stat().st_mtime
-                 for p in ("css/estilo.css", "js/tienda.js", "js/verificador-zona.js"))
+                 for p in ("css/estilo.css", "css/landing.css", "js/tienda.js", "js/verificador-zona.js"))
         return str(int(mt))
     except OSError:
         return "1"
@@ -171,6 +171,11 @@ templates.env.globals["img_etiqueta"] = (
     lambda archivo: f"{S.img_base_url}/etiquetas/{archivo}"
 )
 templates.env.globals["WHATSAPP"] = "5491155046740"
+# Enlaces entre el sitio institucional y la tienda. Vacío = mismo origen (local).
+# En producción se setean por .env: URL_WEB=https://masorganicos.com.ar y
+# URL_TIENDA=https://tienda.masorganicos.com.ar
+templates.env.globals["URL_WEB"] = S.url_web
+templates.env.globals["URL_TIENDA"] = S.url_tienda_publica
 
 
 def _cliente_actual(request: Request):
@@ -228,6 +233,12 @@ def render(request: Request, plantilla: str, **extra):
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
+    if S.landing_home:
+        return render(request, "landing.html", pagina="landing",
+                       zonas=zonas.zonas(),
+                       productores=contenido.productores(),
+                       testimonios=contenido.testimonios(),
+                       home_cfg=contenido.home_config())
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
                   habituales=_habituales(_cliente_actual(request), 8),
@@ -289,6 +300,29 @@ def ver_faq(request: Request):
 def ver_privacidad(request: Request):
     return render(request, "privacidad.html")
 
+
+
+# --------------------------------------------------------------------------- sitio + blog
+
+@app.get("/nosotros", response_class=HTMLResponse)
+def sitio_nosotros(request: Request):
+    return render(request, "sitio_nosotros.html", pagina="nosotros",
+                  productores=contenido.productores(),
+                  home_cfg=contenido.home_config())
+
+
+@app.get("/blog", response_class=HTMLResponse)
+def sitio_blog(request: Request):
+    return render(request, "blog_index.html", pagina="blog", posts=sitio.posts())
+
+
+@app.get("/blog/{slug}", response_class=HTMLResponse)
+def sitio_blog_post(request: Request, slug: str):
+    nota = sitio.post(slug)
+    if not nota:
+        return RedirectResponse("/blog", status_code=303)
+    otras = [n for n in sitio.posts() if n["slug"] != slug][:3]
+    return render(request, "blog_post.html", pagina="blog", nota=nota, otras=otras)
 
 
 @app.get("/envios", response_class=HTMLResponse)

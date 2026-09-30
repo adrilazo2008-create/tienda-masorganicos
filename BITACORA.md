@@ -186,6 +186,83 @@ sep-2026) → Testimonios → Zona de cobertura → FAQ → Productores → Cier
 
 ---
 
+## 2026-09-30 — Landing: preview local, ajustes de imagen/texto y primer commit
+
+Sesión de revisión de la landing corriendo en local (`LANDING_HOME=true`,
+`uvicorn --app-dir` sobre este repo desde `C:\MO-IA\Landing`, ver
+`Landing/.claude/launch.json`). Adriana miró el resultado y pidió ajustes
+puntuales; quedan aplicados y confirmados en el preview:
+
+- **Hero (Bloque 1) rediseñado a dos columnas** — antes era solo texto
+  sobre fondo degradado. Ahora tiene la foto de verduras a contraluz
+  (`verduras-luz.jpg`, con tomates en primer plano) al lado del título,
+  para que lo primero que se vea sea más atractivo. Esa foto estaba antes
+  en el Bloque 3 ("Detrás de cada pedido"); ahí se puso en su lugar
+  `hero-canasta.jpg` (una canasta de cosecha que ya estaba guardada sin
+  usar). Layout nuevo: clases `.hero-landing`/`.hero-landing-texto`/
+  `.hero-landing-img` en `landing.css`, se apila en mobile (`≤640px`).
+- **Foto del local (Bloque 3) reemplazada dos veces:**
+  1. La original mostraba una botella de yogurt de un proveedor (**La
+     Recría**, marca visible) — se sacó porque no tiene sentido mostrar
+     marca de un proveedor puntual (pueden cambiar, ver ya documentado
+     más abajo en el FAQ del bloque 7).
+  2. Reemplazo final: foto que mandó Adriana de la entrada del local
+     (cartel "Alimentos Reales" + neón "+Orgánicos", con las flores de
+     afuera) — es la que queda.
+  - Se agregó también, dentro de la misma tarjeta, un link directo de
+    WhatsApp con ícono al **11 2395-8723** (el celu del local), además
+    del botón "Escribinos por WhatsApp" que ya estaba más abajo en el
+    bloque — clase nueva `.local-whatsapp` en `landing.css`.
+- **Texto del origen (Bloque 3, historia)** — a pedido de Adriana, se
+  sacó la mención a "mi hermana Clau" de la primera frase ("Empezamos
+  con mi hermana Clau, buscando comer mejor..." → "Empezamos, buscando
+  comer mejor..."); el resto del párrafo (mención al equipo, "Clau como
+  pionera") sigue más abajo sin tocar.
+- **Botón "Ir a la tienda" del pie** — antes era un link de texto plano
+  en el footer; ahora es un botón verde (misma clase `.btn-grande`) para
+  que tenga la misma jerarquía visual que el resto de los CTA.
+- **Bug de CSS encontrado y corregido:** el botón "Ir a la tienda" del
+  encabezado (`.btn-tienda.btn-grande`) se veía con letra casi negra en
+  vez de blanca — la regla `.cab-acc a` (clase+elemento, más específica)
+  le ganaba a `.btn-grande` (una sola clase) sin importar el orden en el
+  archivo. Se agregó `.cab-acc a.btn-tienda{color:#fff}` en `estilo.css`
+  para forzarlo. Este bug es anterior a esta sesión (ya estaba en el nav
+  institucional existente), recién se notó ahora al mirar la landing con
+  atención.
+- **Bug de caché encontrado y corregido:** `_asset_ver()` en `main.py`
+  (el `?v=...` que se le pega a CSS/JS para romper caché del navegador)
+  sólo miraba `estilo.css`/`tienda.js`/`verificador-zona.js` — no
+  `landing.css`, así que un cambio de estilo en la landing no rompía el
+  caché y quedaba invisible hasta reiniciar el server. Se agregó
+  `landing.css` a esa lista. Además, las `<img>` de la landing no tenían
+  ningún parámetro de versión — un cambio de foto (mismo nombre de
+  archivo) quedaba cacheado indefinidamente en el navegador aunque el
+  archivo en el server ya fuera otro. Se les agregó `?v={{ V }}` a las 4
+  imágenes de `landing.html` para que sigan el mismo mecanismo.
+- **Primer commit de la landing** — hasta ahora todo esto (`sitio.py`,
+  `landing.html` y el resto de las plantillas institucionales) vivía sin
+  commitear, según la vieja convención de "sitio institucional pausado,
+  sacarlo antes de cada commit". Esa convención queda **obsoleta a partir
+  de este commit**: la landing es justamente lo que se va a desplegar en
+  `masorganicos.com.ar`, así que `sitio.py`, los globals
+  `URL_WEB`/`URL_TIENDA` y las rutas `/nosotros` `/blog` `/blog/{slug}`
+  quedan en el repo de forma permanente, no hay que volver a sacarlos.
+- **Pendiente para Adriana antes de que esto se vea en producción:**
+  1. Las 4 fotos de la landing (`_migracion/fotos/landing/*.jpg`) están
+     gitignoradas (igual que el resto de `_migracion/`) — no viajan con
+     el commit. Hay que subirlas a mano al mismo host de imágenes que ya
+     usan `/productores` y `/producto` (`IMG_BASE_URL` de producción),
+     dentro de una carpeta `landing/`.
+  2. Armar el segundo deploy Git en cPanel apuntando al document root de
+     `masorganicos.com.ar`, con su propio `.env`: `LANDING_HOME=true`,
+     `URL_WEB=https://masorganicos.com.ar`,
+     `URL_TIENDA=https://tienda.masorganicos.com.ar` (más todo lo demás
+     que ya tiene el `.env` del deploy de la tienda — DB, WhatsApp, etc.).
+  3. Reseñas reales (Bloque 5) y foto del interior/huevos siguen
+     pendientes, sin fecha (no bloquean el deploy).
+
+---
+
 ## 2026-09-29 — Hotfix: 500 en checkout al no elegir zona (regresión de Meta CAPI)
 
 Una clienta escribió por WhatsApp con el carrito completo y un "código para

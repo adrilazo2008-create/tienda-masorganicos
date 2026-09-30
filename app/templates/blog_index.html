@@ -1,0 +1,34 @@
+{% extends "sitio_base.html" %}
+{% block title %}Blog — Más Orgánicos{% endblock %}
+{% block descripcion %}Notas de Más Orgánicos: qué hay de temporada, recetas simples, cómo elegimos a los productores y novedades de la tienda.{% endblock %}
+{% block contenido %}
+
+<header class="sitio-titulo">
+  <h1>Blog</h1>
+  <p>Qué hay de temporada, recetas simples y cómo trabajamos.</p>
+</header>
+
+{% if posts %}
+<div class="blog-lista">
+  {% for n in posts %}
+  <article class="blog-item {{ 'con-foto' if n.portada }}">
+    {% if n.portada %}
+    <a href="{{ URL_WEB }}/blog/{{ n.slug }}" class="blog-item-foto">
+      <img src="{{ IMG_BASE }}/blog/{{ n.portada }}" alt="" loading="lazy" decoding="async"
+           onerror="this.closest('.blog-item-foto').hidden=true">
+    </a>
+    {% endif %}
+    <div class="blog-item-txt">
+      <time datetime="{{ n.fecha_iso }}">{{ n.fecha_larga }}</time>
+      <h2><a href="{{ URL_WEB }}/blog/{{ n.slug }}">{{ n.titulo }}</a></h2>
+      {% if n.resumen %}<p>{{ n.resumen }}</p>{% endif %}
+      <a href="{{ URL_WEB }}/blog/{{ n.slug }}" class="blog-item-mas">Leer la nota →</a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="vacio">Todavía no publicamos notas. Volvé pronto.</p>
+{% endif %}
+
+{% endblock %}

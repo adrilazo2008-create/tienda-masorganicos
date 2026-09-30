@@ -1,0 +1,34 @@
+<footer class="pie">
+  <div class="pie-in">
+    <div>
+      <h4 translate="no">Más Orgánicos</h4>
+      <p>Almacén saludable y verdulería agroecológica. Envíos a Zona Norte, GBA y CABA.</p>
+      <p>WhatsApp: <a href="https://wa.me/5491155046740" rel="noopener">11&nbsp;5504&nbsp;6740</a></p>
+      <p>Correo: <a href="mailto:masorganicos@gmail.com">masorganicos@gmail.com</a></p>
+    </div>
+    <div>
+      <h4>Conocenos</h4>
+      <a href="{{ URL_WEB }}/nosotros">Quiénes somos</a>
+      <a href="{{ URL_WEB }}/blog">Blog</a>
+      <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande btn-tienda-pie">Ir a la tienda</a>
+    </div>
+    <div>
+      <h4>Ayuda</h4>
+      <a href="{{ URL_TIENDA }}/envios">Zonas y costos de envío</a>
+      <a href="{{ URL_TIENDA }}/faq">Preguntas frecuentes</a>
+      <a href="{{ URL_TIENDA }}/cuenta">Mis pedidos</a>
+      <a href="{{ URL_WEB }}/privacidad">Privacidad y cookies</a>
+    </div>
+    <div>
+      <h4>Novedades</h4>
+      <form hx-post="/newsletter" hx-target="#nl-res" hx-swap="innerHTML">
+        <label class="sr-only" for="nl-email">Tu email</label>
+        <input id="nl-email" type="email" name="email" autocomplete="email"
+               placeholder="tucorreo@ejemplo.com" required>
+        <button type="submit">Suscribirme</button>
+      </form>
+      <div id="nl-res" aria-live="polite"></div>
+    </div>
+  </div>
+  <p class="pie-legal">Los precios y el stock se confirman al preparar el pedido. No se cobra en el sitio: pagás al recibir (efectivo, transferencia, débito, crédito, Cuenta&nbsp;DNI o Mercado&nbsp;Pago).</p>
+</footer>

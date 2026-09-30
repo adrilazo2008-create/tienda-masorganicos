@@ -1,0 +1,87 @@
+{% extends "sitio_base.html" %}
+{% block title %}Quiénes somos — Más Orgánicos{% endblock %}
+{% block descripcion %}Somos Más Orgánicos: desde 2019 acercamos frutas y verduras agroecológicas y almacén saludable, del productor a tu casa, en Zona Norte, GBA y CABA.{% endblock %}
+{% block contenido %}
+
+<section class="sitio-hero">
+  <p class="hero-eyebrow">Agroecológico · Zona Norte, GBA y CABA</p>
+  <h1>Comida real, del productor a tu casa</h1>
+  <p class="sitio-hero-lead">
+    Más Orgánicos es una verdulería agroecológica y un almacén saludable.
+    Desde 2019 elegimos productores que cuidan la tierra y llevamos lo que
+    hacen hasta tu casa, con la frescura de la semana y sin agrotóxicos.
+  </p>
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver la tienda</a>
+    <a href="{{ URL_TIENDA }}/envios" class="btn-sec">¿Llegamos a tu zona?</a>
+  </div>
+</section>
+
+<p class="trust-band">
+  <b>Desde 2019</b> ayudando a más de <b>5.000 familias</b> a elegir lo que les
+  hace bien, con información y alimentos confiables.
+</p>
+
+<section class="bloque prosa">
+  <h2>Qué nos mueve</h2>
+  <p>
+    Creemos que comer bien no debería ser un lujo ni una complicación. Por eso
+    armamos un lugar donde encontrás en un solo pedido las frutas y verduras de
+    la semana y el almacén de todos los días —harinas, legumbres, aceites,
+    fermentos, panificados— con un criterio claro: que sea sano para vos y para
+    quien lo produce.
+  </p>
+  <p>
+    Trabajamos con productores y comercializadoras agroecológicas de la región.
+    No compramos por precio: compramos por cómo se cultiva, cómo se cría y cómo
+    se elabora.
+  </p>
+</section>
+
+<section class="bloque como-funciona">
+  <h2>Cómo funciona</h2>
+  <ol class="cf-pasos">
+    <li>
+      <span class="cf-num">1</span>
+      <h3>Armás tu pedido</h3>
+      <p>Elegís en la tienda online frutas, verduras y almacén. Hay una compra mínima según tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">2</span>
+      <h3>Coordinamos por WhatsApp</h3>
+      <p>Te escribimos para confirmar disponibilidad y el día y horario de entrega de tu zona.</p>
+    </li>
+    <li>
+      <span class="cf-num">3</span>
+      <h3>Pagás al recibir</h3>
+      <p>Efectivo, transferencia, débito, crédito, Cuenta DNI o Mercado Pago. No se cobra nada en el sitio.</p>
+    </li>
+  </ol>
+</section>
+
+{% if productores %}
+<section class="bloque">
+  <h2>{{ home_cfg.productores_titulo or 'Nuestros productores' }}</h2>
+  {% if home_cfg.productores_img %}
+  <p class="productores-banner">
+    <img src="{{ IMG_BASE }}/productores/{{ home_cfg.productores_img }}"
+         alt="Productores y comercializadoras con las que trabaja Más Orgánicos"
+         loading="lazy" decoding="async" onerror="this.closest('p').hidden=true">
+  </p>
+  {% endif %}
+  <ul class="sitio-productores">
+    {% for pr in productores %}<li>{{ pr.nombre }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="bloque sitio-cierre">
+  <h2>Empezá tu pedido</h2>
+  <p>Mirá qué hay esta semana y armá tu compra. Coordinamos el resto por WhatsApp.</p>
+  <div class="hero-cta">
+    <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ir a la tienda</a>
+    <a href="{{ URL_WEB }}/blog" class="btn-sec">Leer el blog</a>
+  </div>
+</section>
+
+{% endblock %}

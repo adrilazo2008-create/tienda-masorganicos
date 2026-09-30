@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>{% block title %}Más Orgánicos — Verdulería agroecológica y almacén saludable{% endblock %}</title>
+<meta name="description" content="{% block descripcion %}Más Orgánicos: frutas y verduras agroecológicas y almacén saludable, del productor a tu casa. Zona Norte, GBA y CABA. Desde 2019.{% endblock %}">
+{% block head_extra %}{% endblock %}
+{% include "_pixel_head.html" %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{% if IMG_BASE.startswith('http') %}<link rel="preconnect" href="{{ IMG_BASE.split('/assets')[0] }}">{% endif %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="/static/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/static/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/static/img/favicon-180.png">
+<link rel="stylesheet" href="/static/css/estilo.css?v={{ V }}">
+<script src="/static/js/htmx.min.js?v={{ V }}" defer></script>
+</head>
+<body>
+<a href="#contenido" class="skip">Saltar al contenido</a>
+{% if entorno != 'production' %}<div class="banda-dev">entorno de prueba</div>{% endif %}
+
+<header class="cab cab-sitio">
+  <div class="cab-in">
+    <a href="{{ URL_WEB }}/" class="logo" translate="no">
+      <img src="{{ IMG_BASE }}/logo/masorganicos.png" alt="" width="36" height="36" fetchpriority="high" decoding="async">
+      <span>Más Orgánicos</span>
+    </a>
+    <nav class="cab-acc" aria-label="Navegación principal">
+      <a href="{{ URL_WEB }}/nosotros" {{ 'aria-current=page' if pagina == 'nosotros' }}>Quiénes somos</a>
+      <a href="{{ URL_WEB }}/blog" {{ 'aria-current=page' if pagina == 'blog' }}>Blog</a>
+      <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande btn-tienda">Ir a la tienda</a>
+    </nav>
+  </div>
+</header>
+
+<main class="cont" id="contenido">
+  {% block contenido %}{% endblock %}
+</main>
+
+{% include "_pie.html" %}
+{% include "_cierre.html" %}
+</body>
+</html>
