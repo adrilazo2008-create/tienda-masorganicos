@@ -25,7 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
 
 from .db import engine_tienda
@@ -291,6 +291,35 @@ def habituales(cliente_id: int, limite: int = 20) -> list[int]:
     out: list[int] = []
     with engine_tienda.connect() as cx:
         for r in cx.execute(text(sql), {"c": cliente_id, "lim": limite}):
+            try:
+                out.append(int(r.pid))
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
+def comprados_junto_a(producto_ids: list[int], limite: int = 12) -> list[int]:
+    """Cross-sell real: producto_id que más veces aparecieron en el MISMO
+    pedido junto a alguno de `producto_ids`, los más frecuentes primero.
+    A diferencia de `habituales()` (lo que ESTE cliente ya compró), esto mira
+    TODOS los pedidos históricos — sirve igual para un visitante nuevo, sin
+    cuenta ni historial propio."""
+    if not producto_ids:
+        return []
+    sql = text("""
+        SELECT t2.producto_id AS pid, COUNT(DISTINCT t2.grupo) AS veces
+        FROM transacciones t1
+        JOIN transacciones t2 ON t2.grupo = t1.grupo AND t2.producto_id <> t1.producto_id
+        JOIN grupos g ON g.id = t1.grupo
+        WHERE t1.producto_id IN :ids AND t1.activo = 1 AND t2.activo = 1 AND g.activo = 1
+        GROUP BY t2.producto_id
+        ORDER BY veces DESC
+        LIMIT :lim
+    """).bindparams(bindparam("ids", expanding=True))
+    ids_txt = [str(p) for p in producto_ids]
+    out: list[int] = []
+    with engine_tienda.connect() as cx:
+        for r in cx.execute(sql, {"ids": ids_txt, "lim": limite}):
             try:
                 out.append(int(r.pid))
             except (TypeError, ValueError):
