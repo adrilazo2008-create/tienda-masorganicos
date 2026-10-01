@@ -200,6 +200,39 @@ def _habituales(cli, limite: int, excluir=()) -> list:
     return [p for p in base if p.id not in excluir][:limite]
 
 
+def _sugeridos_carrito(cli, en_carrito: set[int], limite: int = 6) -> list:
+    """Sugerencias para el carrito, en orden de prioridad:
+    1. Habituales del cliente (si está identificado).
+    2. Cross-sell: lo que más veces se compró junto a lo que ya tiene en el
+       carrito, mirando todo el historial de pedidos (sirve también para un
+       visitante nuevo, sin cuenta).
+    3. Destacados genéricos, solo para completar si faltan.
+    Nunca repite un producto que ya está en el carrito ni entre sí."""
+    sug = _habituales(cli, limite, excluir=en_carrito)
+    vistos = en_carrito | {p.id for p in sug}
+    if len(sug) < limite and en_carrito:
+        from .catalogo import _cacheado
+
+        def _resolver(pid: int):
+            return pedidos.comprados_junto_a([pid], 12)
+
+        # cacheado por producto individual (no por combinación de carrito):
+        # así el cache no crece sin límite con cada carrito distinto, y se
+        # reaprovecha entre carritos que comparten productos.
+        ids_cruzados: list[int] = []
+        for pid in en_carrito:
+            for otro in _cacheado(f"cross:{pid}", 180, lambda pid=pid: _resolver(pid)):
+                if otro not in ids_cruzados:
+                    ids_cruzados.append(otro)
+        d = catalogo.obtener_varios(ids_cruzados)
+        cruzados = [d[i] for i in ids_cruzados if i in d]
+        sug += [p for p in cruzados if p.id not in vistos][:limite - len(sug)]
+        vistos |= {p.id for p in sug}
+    if len(sug) < limite:
+        sug += [p for p in catalogo.destacados(12) if p.id not in vistos][:limite - len(sug)]
+    return sug[:limite]
+
+
 def _recientes(request: Request, excluir: int | None = None, limite: int = 8) -> list:
     """Productos que este visitante (anónimo o logueado) miró hace poco,
     listos para <_card.html>. No requiere login: se identifica por la cookie
@@ -245,7 +278,8 @@ def home(request: Request):
                   recientes=_recientes(request, limite=8),
                   slides=contenido.carrusel_home(),
                   home_cfg=contenido.home_config(),
-                  avisos=contenido.avisos())
+                  avisos=contenido.avisos(),
+                  receta=contenido.receta_semana())
 
 
 @app.get("/catalogo", response_class=HTMLResponse)
@@ -369,11 +403,8 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
         # recargar todo. Si el id no existe (catálogo, home, ficha de
         # producto), htmx simplemente ignora este fragmento de más.
         en_carrito = {l.producto.id for l in car.lineas}
-        sug = _habituales(_cliente_actual(request), 6, excluir=en_carrito)
-        if len(sug) < 6:
-            ya = en_carrito | {p.id for p in sug}
-            sug += [p for p in catalogo.destacados(12) if p.id not in ya][:6 - len(sug)]
-        extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug[:6])
+        sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
+        extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug)
         partes.append(templates.get_template("_carrito_cuerpo_oob.html").render(extra))
         return HTMLResponse("".join(partes))
     return RedirectResponse("/catalogo", status_code=303)
@@ -383,15 +414,12 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 def ver_carrito(request: Request):
     car, _, _ = carrito_mod.resolver_y_avisar(request.session)
     en_carrito = {l.producto.id for l in car.lineas}
-    # sugerencias: primero los habituales del cliente, después completamos con
-    # destacados (para que siempre haya "para descubrir", logueado o no).
-    sug = _habituales(_cliente_actual(request), 6, excluir=en_carrito)
-    if len(sug) < 6:
-        ya = en_carrito | {p.id for p in sug}
-        sug += [p for p in catalogo.destacados(12) if p.id not in ya][:6 - len(sug)]
+    # sugerencias: habituales del cliente -> cross-sell por lo que hay en el
+    # carrito -> destacados genéricos (ver _sugeridos_carrito).
+    sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
     return render(request, "carrito.html", car=car,
                   umbral_envio=zonas.umbral_envio_gratis(),
-                  sugeridos=sug[:6],
+                  sugeridos=sug,
                   carrito_msg=request.session.pop("carrito_msg", None))
 
 
