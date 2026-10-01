@@ -25,8 +25,6 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
-import markdown
-
 from .catalogo import _cacheado
 
 _BLOG = Path(__file__).resolve().parent / "blog"
@@ -41,6 +39,10 @@ def _fecha_larga(d: date) -> str:
 
 
 def _parsear(ruta: Path) -> dict | None:
+    import markdown  # import diferido: si falta el paquete en el servidor,
+    # que rompa solo /blog al pedirlo, no el arranque de toda la tienda
+    # (ver startup_error.log del 2026-10-01: ModuleNotFoundError en el
+    # import a nivel de módulo tumbó el sitio entero).
     txt = ruta.read_text(encoding="utf-8").lstrip()
     meta: dict[str, str] = {}
     cuerpo = txt
