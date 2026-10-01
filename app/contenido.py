@@ -222,51 +222,6 @@ def guardar_carrusel_home(slides: list[dict]) -> None:
         json.dumps(slides, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def receta_semana() -> dict:
-    """Receta de la semana para la tarjeta de la home ({activo, titulo,
-    tipo_link, pdf, url}). Editar desde /admin/receta — nunca a mano, el
-    campo `pdf` es el nombre del archivo subido en {IMG_BASE}/recetas/."""
-    try:
-        data = json.loads((_DATA / "receta_semana.json").read_text(encoding="utf-8"))
-    except OSError:
-        return {}
-    if not data.get("activo"):
-        return {}
-    if not (data.get("titulo") or "").strip():
-        return {}
-    tipo = data.get("tipo_link") or "pdf"
-    if tipo == "pdf" and not (data.get("pdf") or "").strip():
-        return {}
-    if tipo != "pdf" and not (data.get("url") or "").strip():
-        return {}
-    return data
-
-
-def receta_semana_admin() -> dict:
-    """Como `receta_semana()`, pero sin filtrar por activo/completo — para
-    mostrar el formulario en el panel tal cual está guardado."""
-    try:
-        return json.loads((_DATA / "receta_semana.json").read_text(encoding="utf-8"))
-    except OSError:
-        return {"activo": False, "titulo": "", "tipo_link": "pdf", "pdf": "", "url": ""}
-
-
-def guardar_receta_semana(titulo: str, tipo_link: str, url: str, activo: bool,
-                           pdf: str | None = None) -> None:
-    """Guarda app/data/receta_semana.json. `pdf` solo se pisa si se subió un
-    archivo nuevo (si viene None, se conserva el que ya estaba)."""
-    actual = receta_semana_admin()
-    data = {
-        "activo": bool(activo),
-        "titulo": (titulo or "").strip()[:120],
-        "tipo_link": tipo_link if tipo_link in ("pdf", "instagram", "blog") else "pdf",
-        "pdf": pdf if pdf is not None else actual.get("pdf", ""),
-        "url": (url or "").strip(),
-    }
-    (_DATA / "receta_semana.json").write_text(
-        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
 def guardar_meta_pixel_id(valor: str) -> None:
     ruta = _DATA / "integraciones.json"
     try:

@@ -35,24 +35,6 @@
   </div>
 </section>
 
-{% if receta %}
-<a href="{{ (IMG_BASE ~ '/recetas/' ~ receta.pdf) if receta.tipo_link == 'pdf' else receta.url }}"
-   class="receta-semana" target="_blank" rel="noopener">
-  <span class="rs-icono" aria-hidden="true">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-      <path d="M9 7h7"/><path d="M9 11h5"/>
-    </svg>
-    <span class="rs-punto"></span>
-  </span>
-  <span class="rs-txt">
-    <span class="rs-etq">Receta de la semana</span>
-    <span class="rs-titulo">{{ receta.titulo }}</span>
-  </span>
-  <span class="rs-accion">{{ 'Descargar PDF ⬇' if receta.tipo_link == 'pdf' else 'Ver en Instagram ↗' }}</span>
-</a>
-{% endif %}
 
 <p class="trust-band">
   <b>Desde 2019</b> ayudando a más de <b>5.000 familias</b> a elegir lo que les hace bien,

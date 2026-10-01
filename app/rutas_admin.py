@@ -243,33 +243,6 @@ async def admin_carrusel_guardar(request: Request):
     return RedirectResponse("/admin/carrusel", status_code=303)
 
 
-# --------------------------------------------------------------------------- receta de la semana
-
-@router.get("/receta", response_class=HTMLResponse)
-def admin_receta(request: Request):
-    if not _logueado(request):
-        return RedirectResponse("/admin/login", status_code=303)
-    return _render(request, "admin_receta.html", receta=contenido.receta_semana_admin())
-
-
-@router.post("/receta")
-async def admin_receta_guardar(request: Request, titulo: str = Form(""),
-                               tipo_link: str = Form("pdf"), url: str = Form(""),
-                               activo: str = Form(None)):
-    if not _logueado(request):
-        return RedirectResponse("/admin/login", status_code=303)
-    form = await request.form()
-    pdf = None
-    subida = form.get("archivo_pdf")
-    if subida is not None and getattr(subida, "filename", ""):
-        nombre = await _guardar_archivo(subida, _dir_imagenes("recetas"))
-        if nombre:
-            pdf = nombre
-    contenido.guardar_receta_semana(titulo, tipo_link, url, activo is not None, pdf=pdf)
-    request.session["admin_msg"] = "Receta de la semana actualizada."
-    return RedirectResponse("/admin/receta", status_code=303)
-
-
 # --------------------------------------------------------------------------- pixel
 
 @router.get("/pixel", response_class=HTMLResponse)
