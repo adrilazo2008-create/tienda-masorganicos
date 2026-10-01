@@ -399,3 +399,62 @@ entorno) para que **todos** sus proyectos con Claude Code mantengan un
 conversados, no diffs de código. Replicar este mismo criterio (archivo
 `BITACORA.md` en la raíz) en `conectar`, `dashboard`, `finanzas` y `stock`
 a medida que se trabaje en cada uno.
+
+---
+
+## 2026-10-01 — Incidente: la tienda entera cayó al deployar (no fue el cross-sell/receta)
+
+Al deployar el commit de cross-sell + receta de la semana, la tienda
+quedó totalmente caída (Passenger: "Web application could not be
+started") en `tienda.masorganicos.com.ar` — no solo la pantalla nueva,
+**todo el sitio**, incluido el catálogo. Diagnóstico completo, para que
+quede claro que no fue el feature nuevo:
+
+**Causa real:** el commit `25b5599` ("Landing institucional", de otra
+sesión/actividad, 2026-09-30) agregó `import markdown` a nivel de módulo
+en `app/sitio.py` (lo usa el blog para convertir `.md` a HTML) y sumó
+`markdown==3.7` a `requirements.txt`. Pero `.cpanel.yml` **no corre
+`pip install`** en el deploy (solo copia `app/`, `passenger_wsgi.py` y
+`requirements.txt`) — así que ese paquete nunca se instaló en el
+virtualenv de producción. Nadie lo notó porque nadie había vuelto a
+deployar desde el 29/09 (último commit probado: `090c757`) hasta hoy: mi
+deploy fue el primero en traer `25b5599`, y como `main.py` importa
+`sitio` incondicionalmente, el `ModuleNotFoundError` reventó el arranque
+de **toda** la app, no solo del blog.
+
+**Cómo se encontró:** `passenger_wsgi.py` ya tenía (de antes, commit
+`ad57bdb`) un `try/except` que escribe el traceback real en
+`$DEPLOYPATH/startup_error.log` cuando falla el arranque — muy útil
+porque Passenger normalmente solo muestra una pantalla genérica "algo
+salió mal" sin detalle. Se leyó ese archivo vía la API `UAPI
+Fileman::get_file_content` (`fetch` desde la consola del navegador ya
+logueado en cPanel) cuando la navegación manual por el File Manager
+resultó demasiado inestable para encontrar el archivo a tiempo.
+
+**Secuencia de la resolución (todo vía cPanel Git Version Control, Update
+from Remote + Deploy HEAD Commit):**
+1. Revert del commit de cross-sell/receta (`0c63020`) ante la duda inicial
+   — PERO el sitio siguió caído después de deployar el revert, lo que
+   probó que el feature nuevo no era la causa.
+2. Encontrado el `ModuleNotFoundError` real en `startup_error.log`.
+3. Hotfix (`517d785`): el `import markdown` se movió de nivel de módulo
+   a adentro de `sitio._parsear()` — así, si el paquete falta, solo
+   falla `/blog` al pedirse, no el arranque de toda la tienda. Se
+   re-aplicó el revert del revert (cross-sell + receta quedaron activos).
+4. Verificado en producción: home, `/carrito` y `/admin/receta` responden
+   bien.
+
+**Pendiente (para quien siga con la landing/blog):** falta correr
+`pip install -r requirements.txt` en el virtualenv de producción para
+que `/blog` funcione de verdad — hoy devolvería error 500 al pedirlo
+(no tumba más el resto del sitio, pero el blog en sí sigue sin poder
+convertir Markdown). El virtualenv vive bajo `~/virtualenv/...` en
+cPanel; instalar desde ahí (Setup Python App, si se registra la app ahí,
+o por SSH) antes de anunciar el blog como disponible.
+
+**Lección para el ecosistema:** cualquier commit que agregue una
+dependencia nueva a `requirements.txt` de `tienda` necesita, además del
+deploy de Git, un `pip install -r requirements.txt` manual en el
+virtualenv de producción — `.cpanel.yml` no lo hace solo. Vale la pena
+agregar ese paso al checklist antes de decir "ya está deployado" cada
+vez que se toque `requirements.txt`.
