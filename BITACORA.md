@@ -475,3 +475,39 @@ probar "Update from Remote" de nuevo (puede que ya funcione solo) y
 recién ahí "Deploy HEAD Commit"; si sigue sin avanzar, revisar con SSH
 si el working copy del repo en `/home3/iebbbhrt/repositories/tienda`
 tiene cambios locales sin commitear que bloqueen el fast-forward.
+
+---
+
+## 2026-10-01 — Deploy trabado resuelto + landing activada en producción
+
+Cierre de los dos pendientes de la sección anterior, mismo día.
+
+**Deploy trabado:** se resolvió solo, reintentando "Update from Remote" +
+"Deploy HEAD Commit" desde la pantalla de manage del repo (`Git Version
+Control → tienda → Pull or Deploy`) — como ya se sospechaba, bastaba con
+reintentar. `refs/heads/main` avanzó hasta `1e3ba07` y el deploy corrió el
+`pip install` nuevo del `.cpanel.yml` sin errores. Confirmado que
+`markdown` quedó instalado en el virtualenv de producción: `/blog` dejó
+de dar 500 y ahora lista las notas correctamente.
+
+**Landing activada en `tienda.masorganicos.com.ar` (que es donde apunta
+`masorganicos.com.ar` desde el incidente del 2026-09-30):** se agregó
+`LANDING_HOME=true` al `.env` de producción (no está en git — vive solo
+en el servidor, a propósito, como el resto de credenciales de ese
+archivo). Se usó el editor de código de cPanel File Manager (no una
+escritura ciega por API) para no arriesgar los secrets ya presentes en
+el archivo. Nota para la próxima vez: el toolbar de File Manager tiene
+"Editar" y "Permisos" muy pegados — conviene seleccionar el archivo y
+usar el buscador de elementos antes de clickear por coordenadas, porque
+un click mal calculado abre "Cambiar permisos" en vez del editor.
+
+Como Passenger solo lee `.env` al arrancar el proceso, hubo que forzar un
+reinicio tocando `tmp/restart.txt` (mismo mecanismo que usa el propio
+`.cpanel.yml` en cada deploy) — un primer intento de "guardar sin
+cambios" no alcanzó (el editor no sube el archivo si no detecta contenido
+distinto), hubo que efectivamente cambiar el contenido para que el mtime
+se actualizara.
+
+Verificado en producción: `/` muestra la landing con el botón "Ir a la
+tienda", `/catalogo` y el resto de la tienda siguen funcionando sin
+cambios (el toggle `LANDING_HOME` solo afecta la home).
