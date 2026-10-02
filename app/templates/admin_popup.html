@@ -1,0 +1,43 @@
+{% extends "admin_base.html" %}
+{% block title %}Popup de bienvenida — Admin{% endblock %}
+{% block contenido %}
+<h1>Popup de bienvenida</h1>
+<p class="chico">
+  Una imagen que aparece al entrar a la home y se cierra con la X. Si la apagás
+  (o no hay imagen cargada), no aparece nada.
+</p>
+
+<form method="post" action="/admin/popup" enctype="multipart/form-data" class="co-box">
+  <label class="radio"><input type="checkbox" name="activo" {{ 'checked' if popup.activo }}> Mostrar el popup al entrar a la home</label>
+
+  <p class="chico" style="margin-bottom:0">¿Dónde se muestra?</p>
+  <label class="radio"><input type="checkbox" name="en_landing" {{ 'checked' if popup.get('en_landing', True) }}> En la landing (masorganicos.com.ar)</label>
+  <label class="radio"><input type="checkbox" name="en_tienda" {{ 'checked' if popup.get('en_tienda', True) }}> En la home de la tienda</label>
+
+  <label>Imagen (JPG, PNG o WebP; mejor vertical o cuadrada y liviana)
+    <input type="file" name="archivo_imagen" accept="image/*">
+  </label>
+  {% if popup.imagen %}
+    <p class="chico">Imagen actual: {{ popup.imagen }}</p>
+    <img src="{{ IMG_BASE }}/popup/{{ popup.imagen }}" alt="" style="max-width:220px;border-radius:8px">
+  {% endif %}
+
+  <label>Descripción de la imagen (accesibilidad)
+    <input name="alt" value="{{ popup.alt }}" maxlength="160" placeholder="Promo de la semana">
+  </label>
+
+  <label>Link al tocar la imagen (opcional)
+    <input name="link" value="{{ popup.link }}" placeholder="/catalogo o https://...">
+  </label>
+
+  <label>¿Cada cuánto se muestra?
+    <select name="frecuencia">
+      <option value="sesion" {{ 'selected' if popup.frecuencia == 'sesion' }}>Una vez por visita (vuelve a salir si entra otro día)</option>
+      <option value="una_vez" {{ 'selected' if popup.frecuencia == 'una_vez' }}>Una sola vez por persona (hasta que guardes un popup nuevo)</option>
+      <option value="siempre" {{ 'selected' if popup.frecuencia == 'siempre' }}>Cada vez que entra a la home</option>
+    </select>
+  </label>
+
+  <button type="submit" class="btn-grande" style="margin-top:.6rem">Guardar</button>
+</form>
+{% endblock %}

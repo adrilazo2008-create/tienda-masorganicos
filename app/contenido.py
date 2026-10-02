@@ -267,6 +267,54 @@ def guardar_receta_semana(titulo: str, tipo_link: str, url: str, activo: bool,
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def popup_home(destino: str = "tienda") -> dict:
+    """Popup de bienvenida de la home ({activo, imagen, alt, link, frecuencia,
+    version}). Editar desde /admin/popup. Devuelve vacío si está apagado o
+    no hay imagen cargada, o no está habilitado para `destino` ("landing" o
+    "tienda") — nunca debe romper la home. `imagen` es el nombre del archivo
+    subido en {IMG_BASE}/popup/."""
+    try:
+        data = json.loads((_DATA / "popup_home.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not data.get("activo") or not (data.get("imagen") or "").strip():
+        return {}
+    if not data.get("en_landing" if destino == "landing" else "en_tienda", True):
+        return {}
+    return data
+
+
+def popup_home_admin() -> dict:
+    try:
+        return json.loads((_DATA / "popup_home.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"activo": False, "imagen": "", "alt": "", "link": "",
+                "frecuencia": "sesion", "version": "",
+                "en_landing": True, "en_tienda": True}
+
+
+def guardar_popup_home(alt: str, link: str, frecuencia: str, activo: bool,
+                       imagen: str | None = None, en_landing: bool = True,
+                       en_tienda: bool = True) -> None:
+    """Guarda app/data/popup_home.json. `imagen` solo se pisa si se subió una
+    nueva. `version` cambia en cada guardado, así "una sola vez por persona"
+    vuelve a mostrarse cuando se publica un popup nuevo."""
+    from datetime import datetime
+    actual = popup_home_admin()
+    data = {
+        "activo": bool(activo),
+        "imagen": imagen if imagen is not None else actual.get("imagen", ""),
+        "alt": (alt or "").strip()[:160],
+        "link": (link or "").strip(),
+        "frecuencia": frecuencia if frecuencia in ("sesion", "una_vez", "siempre") else "sesion",
+        "version": datetime.now().strftime("%Y%m%d%H%M%S"),
+        "en_landing": bool(en_landing),
+        "en_tienda": bool(en_tienda),
+    }
+    (_DATA / "popup_home.json").write_text(
+        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def guardar_meta_pixel_id(valor: str) -> None:
     ruta = _DATA / "integraciones.json"
     try:

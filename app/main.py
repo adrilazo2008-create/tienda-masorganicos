@@ -271,7 +271,8 @@ def home(request: Request):
                        zonas=zonas.zonas(),
                        productores=contenido.productores(),
                        testimonios=contenido.testimonios(),
-                       home_cfg=contenido.home_config())
+                       home_cfg=contenido.home_config(),
+                       popup=contenido.popup_home("landing"))
     return render(request, "home.html",
                   destacados=catalogo.destacados(12),
                   habituales=_habituales(_cliente_actual(request), 8),
@@ -279,7 +280,8 @@ def home(request: Request):
                   slides=contenido.carrusel_home(),
                   home_cfg=contenido.home_config(),
                   avisos=contenido.avisos(),
-                  receta=contenido.receta_semana())
+                  receta=contenido.receta_semana(),
+                  popup=contenido.popup_home("tienda"))
 
 
 @app.get("/catalogo", response_class=HTMLResponse)

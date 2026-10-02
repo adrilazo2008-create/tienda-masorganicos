@@ -1,0 +1,47 @@
+{% if popup %}
+<div class="popup-home" id="popup-home" role="dialog" aria-modal="true"
+     aria-label="{{ popup.alt or 'Aviso' }}" data-version="{{ popup.version }}"
+     data-frecuencia="{{ popup.frecuencia }}" hidden>
+  <div class="popup-home-caja">
+    <button type="button" class="popup-home-x" aria-label="Cerrar" id="popup-home-x">×</button>
+    {% if popup.link %}<a href="{{ popup.link }}" id="popup-home-link">{% endif %}
+    <img src="{{ IMG_BASE }}/popup/{{ popup.imagen }}" alt="{{ popup.alt }}" decoding="async">
+    {% if popup.link %}</a>{% endif %}
+  </div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('popup-home');
+  if (!el) return;
+  var clave = 'popup-visto-' + el.dataset.version, f = el.dataset.frecuencia;
+  function visto(){
+    try {
+      if (f === 'una_vez') return !!localStorage.getItem(clave);
+      if (f === 'sesion') return !!sessionStorage.getItem(clave);
+    } catch(e){}
+    return false;
+  }
+  function cerrar(){
+    el.hidden = true; document.body.classList.remove('popup-abierto');
+    try {
+      if (f === 'una_vez') localStorage.setItem(clave, '1');
+      else if (f === 'sesion') sessionStorage.setItem(clave, '1');
+    } catch(e){}
+  }
+  if (visto()) return;
+  var img = el.querySelector('img');
+  function abrir(){
+    el.hidden = false; document.body.classList.add('popup-abierto');
+    document.getElementById('popup-home-x').focus();
+  }
+  /* Se muestra recién cuando la imagen cargó: nunca un popup vacío. */
+  if (img.complete && img.naturalWidth) abrir();
+  else img.addEventListener('load', abrir);
+  document.getElementById('popup-home-x').addEventListener('click', cerrar);
+  el.addEventListener('click', function(e){ if (e.target === el) cerrar(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !el.hidden) cerrar(); });
+  var l = document.getElementById('popup-home-link');
+  if (l) l.addEventListener('click', cerrar);
+})();
+</script>
+{% endif %}

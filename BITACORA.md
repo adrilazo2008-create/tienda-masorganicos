@@ -511,3 +511,36 @@ se actualizara.
 Verificado en producción: `/` muestra la landing con el botón "Ir a la
 tienda", `/catalogo` y el resto de la tienda siguen funcionando sin
 cambios (el toggle `LANDING_HOME` solo afecta la home).
+
+---
+
+## 2026-10-01 — Popup de bienvenida administrable + campos del panel más grandes
+
+Pedido de Adriana: una imagen/propaganda al entrar que el cliente cierra con
+una X, activable o no desde el panel.
+
+**Decisiones:**
+- Mismo patrón que Receta/Avisos: JSON en `app/data/popup_home.json`, sin
+  tocar la base. Se maneja desde `/admin/popup`.
+- Solo imagen (sin video por ahora). Se sube a `{IMG_BASE}/popup/`. Link
+  opcional al tocarla.
+- Se activa/apaga con un switch general, y con dos casillas se elige dónde
+  sale: **landing** (`masorganicos.com.ar`) y/o **home de la tienda**. Ojo:
+  mientras producción tenga `LANDING_HOME=true`, la home del catálogo no se
+  ve en `/`, así que ahí hay que tildar "landing".
+- Frecuencia: una vez por visita (default, `sessionStorage`), una sola vez
+  por persona (`localStorage`; cada guardado cambia `version`, así un popup
+  nuevo vuelve a salir) o cada vez.
+- Se muestra recién cuando la imagen cargó (nunca un popup vacío); cierra
+  con X, click afuera o Esc. Apagado/sin imagen → no se renderiza nada.
+- Parcial `_popup.html`, incluido en `home.html` y `landing.html`.
+
+**Panel:** los inputs/textarea/select del admin no tenían estilo (tamaño
+mínimo del navegador). Se agregó CSS en `admin_base.html`: ancho completo
+(máx. 640px), más relleno, textarea alto y redimensionable. Afecta a todas
+las pantallas del admin salvo la tabla de Zonas.
+
+**Aprendizaje de testing local:** el server del puerto 8010 (con `--reload`)
+vigilaba otra carpeta y no recargaba cambios de este repo; y el `.env` local
+tiene `LANDING_HOME=true`, así que para ver la home de la tienda hay que
+correr con `LANDING_HOME=false`.

@@ -14,6 +14,14 @@
   .admin-cab nav{display:flex;gap:1rem;flex-wrap:wrap;font-size:.88rem}
   .admin-tabla input[type=number]{width:100%;min-width:90px}
   .admin-tabla td,.admin-tabla th{white-space:nowrap}
+  /* campos de texto cómodos de leer y editar (antes quedaban con el tamaño mínimo del navegador) */
+  .cont label{display:block;margin:.7rem 0 0;font-weight:500}
+  .cont label.radio{display:flex;align-items:center;gap:.5rem}
+  .cont input:not([type=checkbox]):not([type=radio]):not([type=file]),
+  .cont select,.cont textarea{display:block;width:100%;max-width:640px;margin-top:.25rem;padding:.65rem .75rem;
+    font:inherit;font-size:1rem;border:1px solid var(--linea);border-radius:8px;background:#fff;color:var(--tinta)}
+  .cont textarea{min-height:6.5rem;line-height:1.45;resize:vertical}
+  .admin-tabla input[type=number]{max-width:none}
 </style>
 </head>
 <body>
@@ -27,6 +35,7 @@
       <a href="/admin/destacados">Destacados</a>
       <a href="/admin/carrusel">Carrusel</a>
       <a href="/admin/receta">Receta de la semana</a>
+      <a href="/admin/popup">Popup de bienvenida</a>
       <a href="/admin/pixel">Meta Pixel</a>
       <a href="/admin/salir">Salir</a>
     </nav>

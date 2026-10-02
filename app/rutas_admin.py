@@ -270,6 +270,34 @@ async def admin_receta_guardar(request: Request, titulo: str = Form(""),
     return RedirectResponse("/admin/receta", status_code=303)
 
 
+# --------------------------------------------------------------------------- popup de bienvenida
+
+@router.get("/popup", response_class=HTMLResponse)
+def admin_popup(request: Request):
+    if not _logueado(request):
+        return RedirectResponse("/admin/login", status_code=303)
+    return _render(request, "admin_popup.html", popup=contenido.popup_home_admin())
+
+
+@router.post("/popup")
+async def admin_popup_guardar(request: Request, alt: str = Form(""), link: str = Form(""),
+                              frecuencia: str = Form("sesion"), activo: str = Form(None),
+                              en_landing: str = Form(None), en_tienda: str = Form(None)):
+    if not _logueado(request):
+        return RedirectResponse("/admin/login", status_code=303)
+    form = await request.form()
+    imagen = None
+    subida = form.get("archivo_imagen")
+    if subida is not None and getattr(subida, "filename", ""):
+        nombre = await _guardar_archivo(subida, _dir_imagenes("popup"))
+        if nombre:
+            imagen = nombre
+    contenido.guardar_popup_home(alt, link, frecuencia, activo is not None, imagen=imagen,
+                                 en_landing=en_landing is not None, en_tienda=en_tienda is not None)
+    request.session["admin_msg"] = "Popup de bienvenida actualizado."
+    return RedirectResponse("/admin/popup", status_code=303)
+
+
 # --------------------------------------------------------------------------- pixel
 
 @router.get("/pixel", response_class=HTMLResponse)

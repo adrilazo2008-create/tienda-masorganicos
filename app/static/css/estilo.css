@@ -500,3 +500,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .blog-post-cta{max-width:720px;margin:2rem auto 0;background:var(--verde-claro);
   border:1px solid #cfe3c2;border-radius:14px;padding:1.3rem 1.4rem;text-align:center}
 .blog-post-cta p{margin:0 0 .8rem;color:var(--verde-osc);font-weight:600}
+
+/* Popup de bienvenida (admin: /admin/popup) */
+.popup-home[hidden]{display:none}
+.popup-home{position:fixed;inset:0;z-index:1000;background:rgba(20,30,15,.6);display:flex;align-items:center;justify-content:center;padding:1rem}
+.popup-home-caja{position:relative;max-width:min(92vw,460px);max-height:88vh}
+.popup-home-caja img{display:block;max-width:100%;max-height:88vh;border-radius:var(--radio);box-shadow:var(--sombra);margin:0 auto}
+.popup-home-x{position:absolute;top:-.6rem;right:-.6rem;z-index:1;width:2.4rem;height:2.4rem;border-radius:50%;border:0;background:#fff;color:var(--tinta);font-size:1.6rem;line-height:1;cursor:pointer;box-shadow:var(--sombra)}
+body.popup-abierto{overflow:hidden}
