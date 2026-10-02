@@ -582,11 +582,10 @@ tienda con `LANDING_HOME=true` (ver fix del mismo día en `main.py`).
   (`carrusel_home`, `home`, `integraciones`, `receta_semana`, `popup_home`):
   antes, cada deploy los pisaba con la copia del repo (habría apagado el popup
   y la receta en cada deploy). El resto de `app/data/` sí se actualiza.
-- **Pendiente (no hecho):** sacar de `public_html/.htaccess` las dos líneas
-  `RewriteCond %{HTTP_HOST} ^.*$` + `RewriteRule ^/?$ "https\:\/\/tienda…"`
-  que redirigen la raíz de `masorganicos.com.ar` a `tienda.*`. Mi edición
-  automática de ese archivo de producción fue bloqueada por permisos, así que
-  la hace Adriana a mano desde el Administrador de archivos (copiando antes el
-  archivo como `.htaccess.bak-redirect`) o autoriza a Claude a hacerlo. Hasta
-  entonces `masorganicos.com.ar/` sigue yendo a la tienda; el resto de las
-  rutas de ese dominio (`/envios`, `/blog`…) ya las sirve la app nueva.
+- **Hecho (2026-10-02, con autorización de Adriana):** se sacaron de
+  `public_html/.htaccess` las dos líneas (`RewriteCond %{HTTP_HOST} ^.*$` +
+  `RewriteRule ^/?$ … tienda…`) que redirigían la raíz de `masorganicos.com.ar`
+  a `tienda.*`. Respaldo del archivo original: `public_html/.htaccess.bak-redirect`.
+  Verificado: `masorganicos.com.ar/` sirve la landing sin redirigir. **Ojo:**
+  el 301 viejo queda cacheado en navegadores que ya lo vieron (hay que probar
+  con otra URL, ej. `/?x=1`, o ventana privada).
