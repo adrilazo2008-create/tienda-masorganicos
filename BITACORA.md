@@ -444,17 +444,34 @@ from Remote + Deploy HEAD Commit):**
 4. Verificado en producción: home, `/carrito` y `/admin/receta` responden
    bien.
 
-**Pendiente (para quien siga con la landing/blog):** falta correr
-`pip install -r requirements.txt` en el virtualenv de producción para
-que `/blog` funcione de verdad — hoy devolvería error 500 al pedirlo
-(no tumba más el resto del sitio, pero el blog en sí sigue sin poder
-convertir Markdown). El virtualenv vive bajo `~/virtualenv/...` en
-cPanel; instalar desde ahí (Setup Python App, si se registra la app ahí,
-o por SSH) antes de anunciar el blog como disponible.
-
 **Lección para el ecosistema:** cualquier commit que agregue una
 dependencia nueva a `requirements.txt` de `tienda` necesita, además del
 deploy de Git, un `pip install -r requirements.txt` manual en el
-virtualenv de producción — `.cpanel.yml` no lo hace solo. Vale la pena
-agregar ese paso al checklist antes de decir "ya está deployado" cada
-vez que se toque `requirements.txt`.
+virtualenv de producción — `.cpanel.yml` no lo hacía solo.
+
+**Fix permanente (commit `f095093`):** se agregó al `.cpanel.yml` una
+tarea que corre
+`/home3/iebbbhrt/virtualenv/public_html/claude2026/tienda/3.11/bin/pip install -r $DEPLOYPATH/requirements.txt`
+en cada deploy, para que esto no se repita — se confirmó que ese es el
+`pip` real del virtualenv de producción (encontrado vía `UAPI
+Fileman::list_files`, sin necesitar SSH). Ya está pusheado a GitHub.
+
+**Pendiente — el pull de este último commit quedó trabado en cPanel:**
+"Update from Remote" trajo bien los commits anteriores (desde el
+incidente hasta `517d785`), pero a partir de ahí `refs/remotes/origin/main`
+en el repo de cPanel sí avanzó hasta `f095093` (confirmado leyendo
+`.git/FETCH_HEAD` y `.git/refs/remotes/origin/main` directo por
+`UAPI Fileman::get_file_content`), **pero `refs/heads/main` (la rama
+local que de verdad se deploya) se quedó pisada en `517d785`** pese a
+varios reintentos, tanto por la UI como llamando directo a
+`execute/VersionControl/update`. No se pudo determinar la causa exacta
+sin acceso a shell/SSH (podría ser un conflicto local en el working copy
+del repo de cPanel). **La tienda sigue funcionando bien igual** — el
+`pip install` nuevo todavía no se aplicó, pero tampoco hace falta: hoy
+`/blog` simplemente da 500 si se lo pide (ver fix de `sitio.py` arriba),
+sin afectar el resto del sitio. Para terminar esto: la próxima vez que
+alguien entre a cPanel → Git Version Control → tienda → Pull or Deploy,
+probar "Update from Remote" de nuevo (puede que ya funcione solo) y
+recién ahí "Deploy HEAD Commit"; si sigue sin avanzar, revisar con SSH
+si el working copy del repo en `/home3/iebbbhrt/repositories/tienda`
+tiene cambios locales sin commitear que bloqueen el fast-forward.
