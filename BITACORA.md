@@ -560,3 +560,27 @@ mismo `.env`, así que el interruptor afectaba a los dos dominios.
 Sin cambios de `.env`. Probado con curl y distintos `Host`. Consecuencia
 buena: la casilla "En la home de la tienda" del popup ahora sí se ve en
 producción.
+
+---
+
+## 2026-10-02 — Landing en su propio dominio (masorganicos.com.ar) + deploy que no pisa el panel
+
+Adriana eligió que `masorganicos.com.ar` muestre la landing y `tienda.*` la
+tienda. **Hallazgo en cPanel:** `masorganicos.com.ar` (document root
+`public_html`) ya tenía una app Passenger propia en
+`public_html/claude2026/landing` (con `.env` correcto: `LANDING_HOME=true`,
+`URL_WEB`, `URL_TIENDA_PUBLICA`, token CAPI) pero con una copia VIEJA del
+código (sin `sitio.py` ni la landing nueva), y una regla en
+`public_html/.htaccess` (`RewriteRule ^/?$ … tienda…`) que redirigía la raíz a
+`tienda.*`. Por eso la landing "se veía" solo porque ese redirect caía en
+tienda con `LANDING_HOME=true` (ver fix del mismo día en `main.py`).
+
+**Cambios:**
+- `.cpanel.yml` ahora despliega a **las dos apps** (tienda y landing) con un
+  script compartido `deploy/desplegar.sh <carpeta> <pip>`.
+- El script **respalda y restaura los JSON editables desde /admin**
+  (`carrusel_home`, `home`, `integraciones`, `receta_semana`, `popup_home`):
+  antes, cada deploy los pisaba con la copia del repo (habría apagado el popup
+  y la receta en cada deploy). El resto de `app/data/` sí se actualiza.
+- Se sacó la regla de redirect del `.htaccess` de `public_html` (queda
+  respaldo `.htaccess.bak-redirect`).

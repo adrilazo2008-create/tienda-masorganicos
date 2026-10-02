@@ -1,11 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home3/iebbbhrt/public_html/claude2026/tienda
-    - export VENVPIP=/home3/iebbbhrt/virtualenv/public_html/claude2026/tienda/3.11/bin/pip
-    - /bin/mkdir -p $DEPLOYPATH/tmp
-    - /bin/cp -R app $DEPLOYPATH/
-    - /bin/cp passenger_wsgi.py $DEPLOYPATH/
-    - /bin/cp requirements.txt $DEPLOYPATH/
-    - $VENVPIP install -r $DEPLOYPATH/requirements.txt
-    - /bin/touch $DEPLOYPATH/tmp/restart.txt
+    - /bin/bash deploy/desplegar.sh /home3/iebbbhrt/public_html/claude2026/tienda /home3/iebbbhrt/virtualenv/public_html/claude2026/tienda/3.11/bin/pip
+    - /bin/bash deploy/desplegar.sh /home3/iebbbhrt/public_html/claude2026/landing /home3/iebbbhrt/virtualenv/public_html/claude2026/landing/3.11/bin/pip
