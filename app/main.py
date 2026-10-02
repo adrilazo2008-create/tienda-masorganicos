@@ -266,7 +266,11 @@ def render(request: Request, plantilla: str, **extra):
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    if S.landing_home:
+    # Landing y tienda comparten este mismo despliegue (dos dominios, un .env):
+    # LANDING_HOME solo manda en el dominio de la landing; en tienda.* siempre
+    # se ve la home de la tienda.
+    host = (request.headers.get("host") or "").split(":")[0].lower()
+    if S.landing_home and not host.startswith(("tienda.", "www.tienda.")):
         return render(request, "landing.html", pagina="landing",
                        zonas=zonas.zonas(),
                        productores=contenido.productores(),

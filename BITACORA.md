@@ -544,3 +544,19 @@ las pantallas del admin salvo la tabla de Zonas.
 vigilaba otra carpeta y no recargaba cambios de este repo; y el `.env` local
 tiene `LANDING_HOME=true`, así que para ver la home de la tienda hay que
 correr con `LANDING_HOME=false`.
+
+---
+
+## 2026-10-02 — Fix: tienda.masorganicos.com.ar mostraba la landing
+
+Adriana notó que `tienda.masorganicos.com.ar` (y `www.tienda.…`) llevaba a la
+landing en vez de a la tienda. **Causa:** el 2026-10-01 se puso
+`LANDING_HOME=true` en el `.env` de producción para que `masorganicos.com.ar`
+muestre la landing, pero landing y tienda comparten el mismo despliegue y el
+mismo `.env`, así que el interruptor afectaba a los dos dominios.
+
+**Fix:** `home()` en `main.py` ahora sirve la landing solo si
+`LANDING_HOME=true` **y** el host no empieza con `tienda.` / `www.tienda.`.
+Sin cambios de `.env`. Probado con curl y distintos `Host`. Consecuencia
+buena: la casilla "En la home de la tienda" del popup ahora sí se ve en
+producción.
