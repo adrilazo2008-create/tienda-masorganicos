@@ -589,3 +589,41 @@ tienda con `LANDING_HOME=true` (ver fix del mismo día en `main.py`).
   Verificado: `masorganicos.com.ar/` sirve la landing sin redirigir. **Ojo:**
   el 301 viejo queda cacheado en navegadores que ya lo vieron (hay que probar
   con otra URL, ej. `/?x=1`, o ventana privada).
+
+---
+
+## 2026-10-03 — Reservas automáticas para proveedores marcados "siempre reservar"
+
+**Pedido (Adriana):** leche y yogures de cabra y de la recría se piden para la
+entrega fresca de la próxima semana, pero si el producto tiene stock la tienda
+no generaba fila en `reservas` (solo lo hacía para Granja agotado). Caso
+concreto: Claudia Balcaza pidió un yogur natural con stock y había que
+tratarlo como reserva igual.
+
+**Decisión:** transparente para el cliente (lo agrega al carrito y compra
+normal, sin cartel "Agotado" ni botón "Reservar"); internamente se registra
+igual que cualquier reserva. Se marca **por proveedor** (más fácil que por
+producto).
+
+**Cómo quedó:**
+- Tabla `reservas_proveedores (proveedor_codigo)` en el ERP, creada y
+  administrada desde `conectar` (pantalla Reservas). Si no existe todavía, la
+  tienda asume que no hay ninguno marcado (no rompe nada).
+- `reservas.productos_reserva_siempre()` trae los ids de producto de esos
+  proveedores (join `mprimas.Proveedor`), con cache de 60 s para no consultar
+  la base en cada línea del carrito; `es_reserva_siempre(id)`.
+- `catalogo.es_reserva(producto)` = (agotado y Granja) **o** proveedor
+  marcado. Reemplaza la condición vieja en los tres lugares donde se decidía:
+  `pedidos.agregar_item` (editar un pedido), y en `main.py` tanto la marca de
+  la observación de cada línea como el loop que llama a `reservas.crear`
+  al confirmar el checkout.
+- La observación de la línea queda "RESERVA (entrega próxima del proveedor)"
+  cuando hay stock (`TEXTO_RESERVA_PROXIMA_ENTREGA`), distinta de "RESERVA
+  (sin stock, encargar a proveedor)", para que en la comanda/VB6 no diga que
+  falta stock cuando no es así.
+- Un fallo al crear la reserva sigue sin romper el checkout (queda en
+  `errores.log`, igual que antes).
+
+**Ojo:** requiere deploy manual por cPanel, y que Adriana marque los
+proveedores en `conectar`. Los pedidos hechos antes no se reservan solos.
+**Sin probar contra la base real** al momento de escribir esto.
