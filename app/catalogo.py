@@ -159,6 +159,11 @@ class Producto:
     destacado: bool
     stock: float
     etiquetas: tuple = ()
+    # Articulo con plantilla de composicion (bolson/combo, tabla
+    # combo_componentes del ERP): se arma en el momento de la venta, asi que
+    # NO tiene stock propio y nunca avisa "pocas unidades"/"agotado": esta
+    # disponible o no (Activo / noweb), nada mas (Adriana, 2026-10-04).
+    es_combo: bool = False
 
     @property
     def unidad(self) -> str:
@@ -174,13 +179,13 @@ class Producto:
         mostrándose igual (no se saca del catálogo) pero hay que avisarlo
         mejor que con "pocas unidades". Verduras/Frutas nunca avisan: ahí el
         stock en 0 es la normalidad de todos los días (RUBROS_SIN_AVISO_STOCK)."""
-        if self.rubro_id in RUBROS_SIN_AVISO_STOCK:
+        if self.es_combo or self.rubro_id in RUBROS_SIN_AVISO_STOCK:
             return False
         return self.stock <= 0
 
     @property
     def poco_stock(self) -> bool:
-        if self.rubro_id in RUBROS_SIN_AVISO_STOCK:
+        if self.es_combo or self.rubro_id in RUBROS_SIN_AVISO_STOCK:
             return False
         return not self.agotado and self.stock < STOCK_ALERTA
 
@@ -265,7 +270,7 @@ def _filtrar_por_stock(prods: list[Producto]) -> list[Producto]:
     reservado = pedidos.stock_reservado()
     salida = []
     for p in prods:
-        if p.rubro_id in RUBROS_SIN_CONTROL_STOCK:
+        if p.es_combo or p.rubro_id in RUBROS_SIN_CONTROL_STOCK:
             salida.append(p)
             continue
         disponible = p.stock - float(reservado.get(p.id, 0))
@@ -274,11 +279,24 @@ def _filtrar_por_stock(prods: list[Producto]) -> list[Producto]:
     return salida
 
 
+def _codigos_combo() -> set:
+    """Codigos de los articulos que tienen plantilla de composicion
+    (combo_componentes, la arma/mantiene el proyecto `stock`). Si la tabla no
+    existe o falla la consulta, la tienda sigue como antes (ningun combo)."""
+    try:
+        with engine_erp.connect() as cx:
+            return {str(r[0]).strip() for r in cx.execute(text("SELECT DISTINCT codigo_combo FROM combo_componentes"))}
+    except Exception:
+        return set()
+
+
 def _todos_los_productos() -> list[Producto]:
     """Todos los productos vendibles en web + etiquetas. Consulta pesada -> se cachea."""
     sql = _SELECT + " ORDER BY m.destacado DESC, m.Descripcion"
     with engine_erp.connect() as cx:
         prods = [_fila_a_producto(r) for r in cx.execute(text(sql))]
+    combos = _codigos_combo()
+    prods = [replace(p, es_combo=True) if p.codigo in combos else p for p in prods]
     return _filtrar_por_stock(_con_etiquetas(prods))
 
 

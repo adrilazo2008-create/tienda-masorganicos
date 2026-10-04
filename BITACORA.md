@@ -627,3 +627,20 @@ producto).
 **Ojo:** requiere deploy manual por cPanel, y que Adriana marque los
 proveedores en `conectar`. Los pedidos hechos antes no se reservan solos.
 **Sin probar contra la base real** al momento de escribir esto.
+
+## 2026-10-04 — Combos/bolsones con plantilla: sin cartel de stock
+
+Los artículos que tienen plantilla de composición (tabla `combo_componentes` del
+ERP, la mantiene `stock`: bolsones, combo ensalada, etc. — hoy 9) **se arman al
+momento de la venta**, así que no tienen stock propio y nunca mostraban un
+número útil. Adriana pidió que no muestren "Pocas unidades" ni "Agotado": están
+disponibles o no (según `Activo` / `noweb`), nada más.
+
+- `catalogo.Producto.es_combo` (se marca al cargar el catálogo con
+  `_codigos_combo()`); `agotado` y `poco_stock` dan siempre falso para combos y
+  `_filtrar_por_stock` no los saca de la tienda aunque su stock sea 0, sea cual
+  sea su rubro (antes dependía de que fueran de Verduras/Frutas).
+- Si falla la consulta de `combo_componentes`, la tienda se comporta como antes.
+- Verificado con el catálogo real: los 9 combos salen con `agotado=False` y
+  `poco_stock=False`.
+- Deploy manual en cPanel (Update from Remote + Deploy HEAD Commit).
