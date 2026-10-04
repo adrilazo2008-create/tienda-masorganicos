@@ -484,8 +484,8 @@ def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: De
     from . import catalogo
 
     p = _producto_para_agregar(producto_id)
-    es_reserva = p.agotado and p.rubro_id == catalogo.RUBRO_GRANJA
-    obs = catalogo.marcar_reserva_en_obs(observacion, es_reserva)
+    es_reserva = catalogo.es_reserva(p)
+    obs = catalogo.marcar_reserva_en_obs(observacion, es_reserva, con_stock=not p.agotado)
     now = datetime.now()
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)

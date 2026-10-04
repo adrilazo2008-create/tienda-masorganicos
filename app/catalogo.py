@@ -66,11 +66,27 @@ RUBROS_SIN_AVISO_STOCK = {1, 2}  # Verduras, Frutas: sin cartel Agotado/Pocas un
 TEXTO_RESERVA = "RESERVA (sin stock, encargar a proveedor)"
 
 
-def marcar_reserva_en_obs(observacion: str, es_reserva: bool) -> str:
+# Para productos de proveedores marcados "siempre reservar" (ver reservas.py):
+# la persona los pide como cualquier otro, pero hay stock -- se anota igual
+# como reserva porque tiene que esperar la proxima entrega del proveedor.
+TEXTO_RESERVA_PROXIMA_ENTREGA = "RESERVA (entrega próxima del proveedor)"
+
+
+def es_reserva(p) -> bool:
+    """True si pedir este producto tiene que generar una fila en `reservas`:
+    Granja agotado (flujo de siempre), o producto de un proveedor marcado
+    "siempre reservar" aunque haya stock (2026-10-03, pedido de Adriana: leche
+    y yogures de cabra / recria, que se piden para la entrega fresca)."""
+    from . import reservas
+    return (p.agotado and p.rubro_id == RUBRO_GRANJA) or reservas.es_reserva_siempre(p.id)
+
+
+def marcar_reserva_en_obs(observacion: str, es_reserva: bool, con_stock: bool = False) -> str:
     obs = (observacion or "").strip()
     if not es_reserva:
         return obs
-    return f"{TEXTO_RESERVA}. {obs}" if obs else TEXTO_RESERVA
+    texto = TEXTO_RESERVA_PROXIMA_ENTREGA if con_stock else TEXTO_RESERVA
+    return f"{texto}. {obs}" if obs else texto
 
 # Orden de los rubros en el menú (Codigo del parámetro 33).
 # Reagrupamiento hecho en el ERP (sept 2026): Limpieza(Varios)→Belleza,

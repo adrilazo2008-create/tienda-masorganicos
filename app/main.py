@@ -588,7 +588,7 @@ def checkout_confirmar(
             producto_id=l.producto.id, cantidad=l.cantidad,
             precio_unitario=l.producto.precio, unidad_id=l.producto.unidad_id,
             observacion=catalogo.marcar_reserva_en_obs(
-                l.observacion, l.producto.agotado and l.producto.rubro_id == catalogo.RUBRO_GRANJA))
+                l.observacion, catalogo.es_reserva(l.producto), con_stock=not l.producto.agotado))
             for l in car.lineas],
         efectivo=(pago == "efectivo"),
         id_sucursal=id_sucursal, id_direccion_envio=id_dir, id_zona_envio=id_zona_envio,
@@ -607,7 +607,7 @@ def checkout_confirmar(
             custom_data={"value": float(p.total()), "currency": "ARS", "num_items": len(car.lineas)},
             cliente=cli)
         for l in car.lineas:
-            if l.producto.agotado and l.producto.rubro_id == catalogo.RUBRO_GRANJA:
+            if catalogo.es_reserva(l.producto):
                 try:
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
                                     cliente_codigo=cli.cliente_codigo, nombre=cli.nombre_completo,

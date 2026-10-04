@@ -10,6 +10,7 @@ esto es solo el registro aparte para que el stock/compras tengan visibilidad
 de qué hay que reponer y para quién."""
 from __future__ import annotations
 
+import time
 from datetime import datetime
 from decimal import Decimal
 
@@ -39,6 +40,36 @@ def _asegurar_tabla() -> None:
                 actualizado_en DATETIME NULL
             )
         """))
+
+
+# Proveedores marcados "siempre reservar" (se administra desde `conectar`,
+# pantalla Reservas): los productos de esos proveedores generan reserva en cada
+# pedido aunque haya stock -- el cliente no lo ve, para el es una compra
+# normal. Tabla `reservas_proveedores` (la crea `conectar`); si todavia no
+# existe, simplemente no hay ninguno marcado. Cache corto para no consultar la
+# base en cada producto del carrito.
+_CACHE_TTL = 60
+_cache_siempre: dict = {"t": 0.0, "ids": frozenset()}
+
+
+def productos_reserva_siempre() -> frozenset:
+    ahora = time.time()
+    if ahora - _cache_siempre["t"] < _CACHE_TTL:
+        return _cache_siempre["ids"]
+    try:
+        with engine_erp.connect() as cx:
+            ids = frozenset(int(r[0]) for r in cx.execute(text(
+                "SELECT m.id FROM mprimas m "
+                "INNER JOIN reservas_proveedores rp ON rp.proveedor_codigo = m.Proveedor"
+            )))
+    except Exception:
+        ids = frozenset()
+    _cache_siempre.update(t=ahora, ids=ids)
+    return ids
+
+
+def es_reserva_siempre(producto_id: int) -> bool:
+    return int(producto_id) in productos_reserva_siempre()
 
 
 def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
