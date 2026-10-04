@@ -28,12 +28,12 @@
     if (el || !document.body) return;
     var css = document.createElement('style');
     css.textContent =
-      '#mo-cargando{position:fixed;top:14px;left:50%;transform:translate(-50%,-8px);' +
+      '#mo-cargando{position:fixed;bottom:18px;right:18px;transform:translateY(8px);' +
       'z-index:2147483000;display:flex;align-items:center;gap:.6rem;padding:.55rem 1.1rem;' +
       'background:#1a1a1a;color:#fff;border-radius:999px;font:600 14px/1 Arial,sans-serif;' +
       'box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;visibility:hidden;pointer-events:none;' +
       'transition:opacity .15s,transform .15s,visibility .15s}' +
-      '#mo-cargando.visible{opacity:1;visibility:visible;transform:translate(-50%,0)}' +
+      '#mo-cargando.visible{opacity:1;visibility:visible;transform:translateY(0)}' +
       '#mo-cargando i{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);' +
       'border-top-color:#F5B800;border-radius:50%;animation:mo-giro .8s linear infinite}' +
       '@keyframes mo-giro{to{transform:rotate(360deg)}}' +
