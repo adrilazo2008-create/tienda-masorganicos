@@ -87,7 +87,8 @@
   // --- pedidos en segundo plano ---
   if (window.fetch) {
     var fetchOriginal = window.fetch;
-    window.fetch = function () {
+    window.fetch = function (u) {
+      if (typeof u === 'string' && u.indexOf('/sesion/ping') === 0) return fetchOriginal.apply(this, arguments);
       pendientes++; actualizar();
       var p = fetchOriginal.apply(this, arguments);
       var fin = function () { pendientes = Math.max(0, pendientes - 1); actualizar(); };
