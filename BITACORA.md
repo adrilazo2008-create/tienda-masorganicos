@@ -788,3 +788,21 @@ Parque, Villa C") se muestran sin el paréntesis abierto (`zonas._titulo_limpio`
    `barrios.json` y por el polígono más chico.
 3. Error `postMessage` de Clarity: sin investigar.
 (Hecho 2026-10-06: eliminada la ficha de prueba duplicada `PRUEBA Web Nueva`, user 3975.)
+
+### 2026-10-06 — Pedido con líneas "fantasma" en el VB6 (#22318)
+Una clienta editó su pedido ya hecho y sacó 6 productos; ella veía 12 y a Adriana
+le llegaron 18. Causa: la tienda "sacaba" una línea con `transacciones.activo = 0`,
+pero **el VB6 baja todas las líneas de `transacciones` sin mirar `activo`** (la tienda
+y `conectar` sí lo filtran). Arreglo: sacar una línea ahora la **archiva y la borra**
+(`pedidos.quitar_item` → tabla `transacciones_quitadas`: id, grupo, producto, cantidad,
+precio, observación, creada_en, quitada_en). Se limpiaron los pedidos Nuevos pendientes
+(#22326: 3 líneas). Mismo cambio en `conectar` (`preparacion_guardar`). Pedidos ya
+bajados al VB6 quedan como estaban: #22318 (había que sacar a mano en Visual:
+Espinaca 1, Boniato 0,5, Bananas 0,75, Manzana roja PINK 0,75, Leche entera La Recría
+1, Yogur Skyr Natural Noma 1) y #22258 (28/9, ya facturado, 3 líneas).
+Además: un producto que ya no se muestra en la tienda (sin stock/oculto) aparecía como
+"Producto #6990" en el pedido de la clienta; ahora muestra el nombre real
+(`catalogo.nombres_por_id`).
+Pendiente a futuro (no se tocó): las vistas `pedidosWebMO` (total de la grilla) y
+`productoPedido` también suman líneas sin filtrar `activo`; ya no importa mientras
+nunca queden líneas con `activo = 0`.

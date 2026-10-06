@@ -767,8 +767,9 @@ def cuenta_pedido(request: Request, pedido_id: int):
     if not d:
         return RedirectResponse("/cuenta", status_code=303)
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
-    return render(request, "cuenta_pedido.html", p=d, prods=prods,
+    return render(request, "cuenta_pedido.html", p=d, prods=prods, nombres=nombres,
                   subtotal=subtotal, total=subtotal + d["precio_envio"])
 
 
@@ -777,8 +778,9 @@ def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, err
     if not d:
         return RedirectResponse("/cuenta", status_code=303)
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
-    return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods,
+    return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods, nombres=nombres,
                   subtotal=subtotal, total=subtotal + d["precio_envio"], error=error)
 
 
@@ -793,8 +795,9 @@ def cuenta_pedido_editar(request: Request, pedido_id: int):
     if not d["editable"]:
         return RedirectResponse(f"/cuenta/pedido/{pedido_id}", status_code=303)
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
-    return render(request, "cuenta_pedido_editar.html", p=d, prods=prods,
+    return render(request, "cuenta_pedido_editar.html", p=d, prods=prods, nombres=nombres,
                   subtotal=subtotal, total=subtotal + d["precio_envio"], error="")
 
 

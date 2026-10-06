@@ -11,7 +11,7 @@
       <img src="{{ img_producto(prod.codigo) if prod else '' }}" alt="" width="64" height="64"
            loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
       <div class="cl-info">
-        {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>Producto #{{ l.producto_id }}</span>{% endif %}
+        {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>{{ nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id) }}</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.precio) }}{% if prod %} x {{ prod.unidad }}{% endif %}</span>
         {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
       </div>

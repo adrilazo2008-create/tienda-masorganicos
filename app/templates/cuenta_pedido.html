@@ -23,7 +23,7 @@
       <tr>
         <td class="num">{{ fmt_cantidad(l.cantidad) }}{% if prod %} {{ prod.unidad }}{% endif %}</td>
         <td>
-          {{ prod.nombre if prod else 'Producto #' ~ l.producto_id }}
+          {{ prod.nombre if prod else (nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id)) }}
           {% if l.observacion %}<br><small>“{{ l.observacion }}”</small>{% endif %}
         </td>
         <td class="num">{{ pesos(l.cantidad * l.precio) }}</td>

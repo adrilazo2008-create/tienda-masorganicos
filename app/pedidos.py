@@ -514,7 +514,62 @@ def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: De
                 "No se pudo crear la reserva al editar el pedido %s (producto %s)", pedido_id, p.id)
 
 
+_TABLA_QUITADAS_LISTA = False
+
+
+def asegurar_tabla_quitadas() -> None:
+    """Archivo de las líneas que el cliente sacó de un pedido ya hecho. Se
+    guardan acá (no como `activo = 0` en `transacciones`) porque el sistema de
+    escritorio (VB6) baja TODAS las líneas de `transacciones` sin mirar `activo`
+    (pedido #22318, 05/10/2026: la clienta sacó 6 y a Adriana le llegaron 18)."""
+    global _TABLA_QUITADAS_LISTA
+    if _TABLA_QUITADAS_LISTA:
+        return
+    with engine_tienda.begin() as cx:
+        cx.execute(text("""
+            CREATE TABLE IF NOT EXISTS transacciones_quitadas (
+                id BIGINT NOT NULL PRIMARY KEY,
+                grupo BIGINT NOT NULL,
+                producto_id VARCHAR(191) NULL,
+                cantidad DOUBLE NULL,
+                precio DOUBLE NULL,
+                observacion VARCHAR(191) NULL,
+                creada_en DATETIME NULL,
+                quitada_en DATETIME NOT NULL,
+                INDEX (grupo)
+            )
+        """))
+    _TABLA_QUITADAS_LISTA = True
+
+
+def _archivar_y_borrar_linea(cx: Connection, transaccion_id: int, pedido_id: int) -> None:
+    cx.execute(text("""
+        INSERT IGNORE INTO transacciones_quitadas
+            (id, grupo, producto_id, cantidad, precio, observacion, creada_en, quitada_en)
+        SELECT id, grupo, producto_id, cantidad, precio, observacion, created_at, NOW()
+        FROM transacciones WHERE id = :id AND grupo = :g
+    """), {"id": transaccion_id, "g": pedido_id})
+    cx.execute(text("DELETE FROM transacciones WHERE id = :id AND grupo = :g"),
+               {"id": transaccion_id, "g": pedido_id})
+
+
+def limpiar_lineas_desactivadas(solo_pendientes: bool = True) -> int:
+    """Archiva y borra las líneas `activo = 0` que quedaron de antes (los pedidos
+    Nuevos todavía no bajaron al VB6: si se bajaran así, llegarían de más)."""
+    asegurar_tabla_quitadas()
+    filtro = "AND g.status = 0" if solo_pendientes else ""
+    with engine_tienda.begin() as cx:
+        filas = cx.execute(text(f"""
+            SELECT t.id, t.grupo FROM transacciones t JOIN grupos g ON g.id = t.grupo
+            WHERE t.activo = 0 AND g.activo = 1 {filtro}
+        """)).all()
+        for tid, gid in filas:
+            _archivar_y_borrar_linea(cx, int(tid), int(gid))
+        return len(filas)
+
+
 def quitar_item(pedido_id: int, cliente_id: int, transaccion_id: int) -> None:
+    asegurar_tabla_quitadas()
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)
         n_activas = cx.execute(text(
@@ -522,9 +577,7 @@ def quitar_item(pedido_id: int, cliente_id: int, transaccion_id: int) -> None:
         ), {"g": pedido_id}).scalar()
         if n_activas <= 1:
             raise PedidoQuedariaVacio()
-        cx.execute(text(
-            "UPDATE transacciones SET activo = 0, updated_at = :now WHERE id = :id AND grupo = :g"
-        ), {"now": datetime.now(), "id": transaccion_id, "g": pedido_id})
+        _archivar_y_borrar_linea(cx, transaccion_id, pedido_id)
         _recalcular_envio(cx, pedido_id)
 
 
