@@ -22,7 +22,7 @@
   {"match": "santa barbara", "id_zona": 2, "etiqueta": "Santa Bárbara, Pacheco"},
   {"match": "el canton", "id_zona": 5, "etiqueta": "El Cantón, Escobar"},
   {"match": "villa nueva", "id_zona": 5, "etiqueta": "Villa Nueva, Tigre"},
-  {"match": "talar del lago", "id_zona": 17, "etiqueta": "Talar del Lago"},
+  {"match": "talar del lago", "id_zona": 2, "etiqueta": "Talar del Lago, Pacheco"},
   {"match": "boat center", "id_zona": 2, "etiqueta": "Boat Center, Pacheco"},
   {"match": "los troncos", "id_zona": 4, "etiqueta": "Los Troncos del Talar"},
   {"match": "pacheco golf", "id_zona": 2, "etiqueta": "Pacheco Golf Club, Pacheco"},
