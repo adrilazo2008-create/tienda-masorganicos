@@ -45,6 +45,16 @@ class Sucursal:
     ciudad: str
 
 
+def _titulo_limpio(titulo: str) -> str:
+    """El varchar(45) de la tabla corta algunos títulos a mitad de un paréntesis
+    ("CABA Norte (Devoto, Villa del Parque, Villa C"): si quedó abierto, se
+    muestra solo lo anterior ("CABA Norte")."""
+    t = (titulo or "").strip()
+    if "(" in t and ")" not in t:
+        t = t.split("(")[0].strip()
+    return t
+
+
 def zonas() -> list[Zona]:
     from .catalogo import _cacheado
     return _cacheado("zonas", 120, _zonas)   # cambios en la tabla se ven a los ~2 min
@@ -55,7 +65,7 @@ def _zonas() -> list[Zona]:
              FROM zonas WHERE activo = 1 ORDER BY titulo"""
     with engine_tienda.connect() as cx:
         return [
-            Zona(int(r.id_zona), r.titulo.strip(), Decimal(str(r.precio)),
+            Zona(int(r.id_zona), _titulo_limpio(r.titulo), Decimal(str(r.precio)),
                  Decimal(str(r.mim_compra)), Decimal(str(r.envio_gratis)),
                  int(r.descuento or 0), (r.texto or "").strip(), (r.horario or "").strip())
             for r in cx.execute(text(sql))

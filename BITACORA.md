@@ -766,3 +766,15 @@ un email falso `sinmail_<tel>@masorganicos.local` (6 usuarios hoy; 2 pedidos del
 comunicarnos con vos por WhatsApp"; un cliente reconocido cuyo email falte o sea
 `sinmail*` ve el campo (visible) en vez del hidden; el sugerido no precarga el falso.
 Sigue siendo opcional a propósito (no frenar pedidos).
+
+### 2026-10-05 (noche) — Prueba completa en Instagram: OK (pedido #22330)
+Pedido #22330 hecho de punta a punta dentro del navegador de Instagram (Android):
+cliente 4530, zona Pacheco, envío "el día" $1.500, dirección Zapiola 1422. Quedó
+oculto como prueba (`status=2, activo=0`, sin borrar). De la prueba salieron dos
+mejoras: 1) el aviso de "falta dirección" aparecía arriba de la página y la persona
+no lo veía → ahora `confirmarCheckout()` valida zona y calle/barrio en el
+navegador y muestra el aviso pegado al botón (el servidor sigue validando);
+2) el desplegable de zona mostraba "Título — envío $X" largo y confuso en el celular →
+ahora solo el nombre de la zona (el costo ya se ve en el resumen al elegirla); los
+títulos cortados por el `varchar(45)` (p. ej. "CABA Norte (Devoto, Villa del
+Parque, Villa C") se muestran sin el paréntesis abierto (`zonas._titulo_limpio`).

@@ -13,7 +13,7 @@
 
 <form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout"
       onkeydown="if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();}"
-      onsubmit="var b=document.getElementById('btn-confirmar'); if(b.dataset.enviando) return false; b.dataset.enviando='1'; b.textContent='Enviando…'; setTimeout(function(){ b.disabled=true; }, 0);">
+      onsubmit="return confirmarCheckout(this);">
   <input type="hidden" name="token" value="{{ token }}">
   <div class="co-col">
 
@@ -56,7 +56,7 @@
               <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}"
                       data-min="{{ z.minimo_compra }}" data-diaprecio="{{ z.precio_dia }}"
                       data-mensaje="{{ z.mensaje }}">
-                {{ z.titulo }} — envío {{ pesos(z.precio) }}
+                {{ z.titulo }}
               </option>
             {% endfor %}
           </select>

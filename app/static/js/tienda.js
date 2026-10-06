@@ -298,12 +298,13 @@ document.addEventListener('DOMContentLoaded', function(){
 // checkout: evitar doble submit y hacer foco en el primer error
 document.addEventListener('DOMContentLoaded', function(){
   var f = document.getElementById('form-checkout');
-  if (f) f.addEventListener('submit', function(e){
-    var b = document.getElementById('btn-confirmar');
-    if (b){ b.disabled = true; b.textContent = 'Enviando…'; }
-  });
   var err = document.getElementById('checkout-error') || document.getElementById('login-error');
-  if (err) err.focus();
+  if (err){
+    // el error vive arriba de todo: llevar la vista hasta él (en el navegador
+    // interno de Instagram focus() solo no desplaza la página)
+    try { err.scrollIntoView({ block: 'center' }); } catch(e){ window.scrollTo(0, 0); }
+    err.focus({ preventScroll: true });
+  }
 });
 
 /* volver a la lista en el mismo punto -------------------------------------- */
@@ -535,3 +536,33 @@ window.addEventListener('pageshow', function(){
     b.textContent = 'Confirmar pedido';
   }
 });
+
+// Confirmar pedido: valida lo mínimo ANTES de enviar y avisa pegado al botón
+// (si el aviso aparecía arriba de la página, la persona no se enteraba).
+function confirmarCheckout(f){
+  var b = document.getElementById('btn-confirmar');
+  if (b && b.dataset.enviando) return false;
+  var envio = f.querySelector('input[name=entrega][value=envio]');
+  if (envio && envio.checked){
+    var dir = ((f.direccion || {}).value || '').trim();
+    var bar = ((f.barrio || {}).value || '').trim();
+    var zona = (f.id_zona || {}).value;
+    var msg = '', campo = null;
+    if (!zona || zona === '0'){ msg = 'Elegí tu zona de envío.'; campo = f.id_zona; }
+    else if (!dir && !bar){ msg = 'Completá la calle o el barrio donde entregamos.'; campo = f.direccion; }
+    if (msg){
+      var aviso = document.getElementById('aviso-checkout');
+      if (!aviso){
+        aviso = document.createElement('p');
+        aviso.id = 'aviso-checkout'; aviso.className = 'err-box'; aviso.setAttribute('role', 'alert');
+        b.parentNode.insertBefore(aviso, b);
+      }
+      aviso.textContent = msg;
+      try { aviso.scrollIntoView({ block: 'center' }); } catch(e){}
+      if (campo && campo.focus) campo.focus({ preventScroll: true });
+      return false;
+    }
+  }
+  if (b){ b.dataset.enviando = '1'; b.textContent = 'Enviando…'; setTimeout(function(){ b.disabled = true; }, 0); }
+  return true;
+}
