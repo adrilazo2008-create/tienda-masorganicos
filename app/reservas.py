@@ -62,6 +62,15 @@ def productos_reserva_siempre() -> frozenset:
                 "SELECT m.id FROM mprimas m "
                 "INNER JOIN reservas_proveedores rp ON rp.proveedor_codigo = m.Proveedor"
             )))
+            # Excepciones por producto (tabla que crea `conectar`); si todavia
+            # no existe, no hay ninguna.
+            try:
+                excluidos = frozenset(int(r[0]) for r in cx.execute(text(
+                    "SELECT producto_id FROM reservas_productos_excluidos"
+                )))
+            except Exception:
+                excluidos = frozenset()
+            ids = ids - excluidos
     except Exception:
         ids = frozenset()
     _cache_siempre.update(t=ahora, ids=ids)
