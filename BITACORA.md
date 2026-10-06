@@ -756,3 +756,13 @@ Pendiente: repetir la prueba completa dentro de Instagram con estos cambios.
 Decisión (Adriana): el costo de envío de un cliente logueado con zona guardada se
 muestra SOLO en el carrito; en las fichas de producto la consulta aparece únicamente
 para quien no está logueado o no tiene zona guardada.
+
+### 2026-10-05 — Email como contacto de respaldo
+Pedido de Adriana: un cliente real dejó un teléfono por el que no se pudo contactar
+por WhatsApp y no había otra vía. El campo de email ya existía pero era opcional y
+decía "para enviarte el resumen" (la tienda no manda resúmenes) y, vacío, se grababa
+un email falso `sinmail_<tel>@masorganicos.local` (6 usuarios hoy; 2 pedidos del
+05/10). Ahora: etiqueta "Email (opcional)" + aviso "lo usamos solo si no logramos
+comunicarnos con vos por WhatsApp"; un cliente reconocido cuyo email falte o sea
+`sinmail*` ve el campo (visible) en vez del hidden; el sugerido no precarga el falso.
+Sigue siendo opcional a propósito (no frenar pedidos).

@@ -2,14 +2,22 @@
   <p class="ok-box">¡Hola de nuevo, {{ cliente_encontrado.nombre }}! Ya tenemos tus datos.</p>
   <input type="hidden" name="nombre" value="{{ cliente_encontrado.nombre }}">
   <input type="hidden" name="apellido" value="{{ cliente_encontrado.apellido }}">
+  {% set sin_email = (not cliente_encontrado.email) or cliente_encontrado.email.startswith('sinmail') %}
+  {% if sin_email %}
+  <label>Email (opcional)
+    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="tucorreo@ejemplo.com">
+  </label>
+  <small class="chico">Es opcional: lo usamos solo si no logramos comunicarnos con vos por WhatsApp.</small>
+  {% else %}
   <input type="hidden" name="email" value="{{ cliente_encontrado.email }}">
+  {% endif %}
   <details class="mini">
     <summary>¿No sos {{ cliente_encontrado.nombre }}? Ingresá tus datos</summary>
     <div class="grid2">
       <label>Nombre <input name="nombre" autocomplete="given-name"></label>
       <label>Apellido <input name="apellido" autocomplete="family-name"></label>
     </div>
-    <label>Email <input type="email" name="email" autocomplete="email" spellcheck="false"></label>
+    {% if not sin_email %}<label>Email <input type="email" name="email" autocomplete="email" spellcheck="false"></label>{% endif %}
   </details>
   {% if direcciones_cliente and direcciones_cliente|length > 1 %}
   <label>Dirección de entrega
@@ -69,10 +77,11 @@
     <label>Nombre <input name="nombre" autocomplete="given-name" required value="{{ sugerido.nombre if sugerido else '' }}"></label>
     <label>Apellido <input name="apellido" autocomplete="family-name" required value="{{ sugerido.apellido if sugerido else '' }}"></label>
   </div>
-  <label>Email
-    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="para enviarte el resumen"
-           value="{{ sugerido.email if sugerido else '' }}">
+  <label>Email (opcional)
+    <input type="email" name="email" autocomplete="email" spellcheck="false" placeholder="tucorreo@ejemplo.com"
+           value="{{ sugerido.email if sugerido and not sugerido.email.startswith('sinmail') else '' }}">
   </label>
+  <small class="chico">Es opcional: lo usamos solo si no logramos comunicarnos con vos por WhatsApp.</small>
   {% if sugerido and (sugerido.direccion or sugerido.localidad) %}
   <script>
   (function(){
