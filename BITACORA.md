@@ -700,3 +700,16 @@ Pendiente: `zonas.geojson` solo trae 10 polígonos de 17 zonas (faltan, p. ej., 
 13 Martínez/Olivos/Vicente López y la 5 Nordelta): esas zonas solo se detectan
 por barrio/título; direcciones de Vicente López caen en "Virreyes, Beccar, San
 Isidro".
+
+### 2026-10-05 (noche) — `barrios.json` ampliado (localidades + barrios privados de Pacheco)
+Idea de Adriana: resolver primero por la tabla de barrios y recién después por
+el mapa. Quedó así (consulta de envío y checkout): 1) `barrios.json`, 2) título
+de zona, 3) mapa solo con altura. `barrioCoincidente()` en `tienda.js`: sin
+tildes, gana la coincidencia más larga, soporta `excluir` (ej. "tigre" no vale si
+dice "pacheco"). Entradas nuevas (26 → 46): Benavidez/Maschwitz → 7; Garín/
+Tortuguitas/Ricardo Rojas → 8; Dique Luján → 9; Tigre/San Fernando → 4; Martínez/
+Olivos/Vicente López → 13; barrios privados de Pacheco → 2 (Pacheco Golf Club,
+Santa Bárbara, Talar del Lago 1 y 2, Barrancas de Santa María y San José, Solares
+del Talar, Laguna del Sol). **Cambio:** "Santa Bárbara" pasó de zona 5 (Nordelta) a
+2 por pedido de Adriana. "Talar del Lago" a secas sigue en zona 17.
+"Talar" solo → muestra Talar y Talar (cercano al local).

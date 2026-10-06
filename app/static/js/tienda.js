@@ -43,6 +43,22 @@ function stepCantHTMX(btn, dir){
   if (btn.form) btn.form.requestSubmit();
 }
 
+// Busca el barrio/localidad conocido (barrios.json) dentro de lo que escribió la
+// persona: sin importar tildes ni mayúsculas, gana la coincidencia más larga
+// ("talar del lago 1" antes que "talar del lago") y se respeta "excluir"
+// (ej. "tigre" no vale si también dice "pacheco").
+function barrioCoincidente(barrios, q){
+  var n = function(t){ return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+  var ql = n(q), mejor = null;
+  for (var b = 0; b < barrios.length; b++){
+    var x = barrios[b];
+    if (!x.id_zona || ql.indexOf(x.match) === -1) continue;
+    if ((x.excluir || []).some(function(e){ return ql.indexOf(e) !== -1; })) continue;
+    if (!mejor || x.match.length > mejor.match.length) mejor = x;
+  }
+  return mejor;
+}
+
 // Zonas superpuestas (ej. "Pacheco" dentro del polígono grande de "Don
 // Torcuato"): se elige la de menor área que contiene el punto, no la primera.
 function zonaMasEspecifica(polis, lng, lat, pip){
@@ -175,18 +191,16 @@ function iniciarBuscaZona(){
     sel.value = '0'; recalcularEnvio();
 
     // 1) ¿es un barrio / country conocido? (Nordelta, barrios privados, etc.)
-    var ql = q.toLowerCase();
-    for (var b = 0; b < barrios.length; b++){
-      if (ql.indexOf(barrios[b].match) !== -1){
-        form.localidad.value = barrios[b].etiqueta;
-        var nro0 = (q.match(/\b(\d{1,5})\b/) || [])[1];
-        if (nro0) form.altura.value = nro0;
-        if (fijarZona(barrios[b].id_zona,
-              'Barrio reconocido: ' + barrios[b].etiqueta +
-              '. Completá calle / lote / casa. Revisá la zona.')) {
-          btn.disabled = false; btn.textContent = 'Detectar';
-          return;
-        }
+    var bar = barrioCoincidente(barrios, q);
+    if (bar){
+      form.localidad.value = bar.etiqueta;
+      var nro0 = (q.match(/\b(\d{1,5})\b/) || [])[1];
+      if (nro0) form.altura.value = nro0;
+      if (fijarZona(bar.id_zona,
+            'Barrio reconocido: ' + bar.etiqueta +
+            '. Completá calle / lote / casa. Revisá la zona.')) {
+        btn.disabled = false; btn.textContent = 'Detectar';
+        return;
       }
     }
 
@@ -465,10 +479,8 @@ window.etiquetarClarity = function(){
   }
 
   function buscar(q, res, btn){
-    var ql = q.toLowerCase();
-    for (var b = 0; b < barrios.length; b++){
-      if (ql.indexOf(barrios[b].match) !== -1 && barrios[b].id_zona) return mostrarZona(res, barrios[b].id_zona);
-    }
+    var bar = barrioCoincidente(barrios, q);
+    if (bar) return mostrarZona(res, bar.id_zona);
     // Nombre de localidad que coincide con el título de una o más zonas
     // ("Pacheco" -> Pacheco / Pacheco (Barrios Privados)): no hace falta mapa.
     if (!/\d/.test(q) && q.length >= 4){
