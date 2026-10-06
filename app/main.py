@@ -600,14 +600,14 @@ def checkout_confirmar(
                           sucursales=zonas.sucursales(), error="Elegí una zona de envío.",
                           permitir_escribir=graba, token=secrets.token_urlsafe(12))
 
-    # Un envío sin calle ni barrio no se puede entregar (2026-10-05: se podía
-    # confirmar con la dirección en blanco).
+    # Un envío necesita calle O barrio (alcanza con uno de los dos; la altura
+    # no es obligatoria). 2026-10-05: se podía confirmar con la dirección en blanco.
     if entrega != "retira" and not (direccion.strip() or barrio.strip()):
         cli_sesion = _cliente_actual(request)
         dirs = clientes.direcciones(cli_sesion.id) if cli_sesion else []
         return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                       sucursales=zonas.sucursales(), permitir_escribir=graba,
-                      error="Completá la calle y la altura de tu dirección para el envío.",
+                      error="Para el envío necesitamos tu dirección: completá la calle o el barrio donde entregamos.",
                       cliente_checkout=cli_sesion, cliente_encontrado=cli_sesion,
                       existe=cli_sesion is not None,
                       direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
