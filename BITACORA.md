@@ -734,3 +734,22 @@ dispositivo es "anónimo" ese día si nunca inició sesión (`logueado` = GREATE
 Por dispositivo, no por persona. Se descartan robots (user-agent), visitas HTMX e
 internas (`mo_interno=1`). Lo muestra `conectar` → "Accesos a la tienda" (totales
 y desglose por día).
+
+### 2026-10-05 (prueba real desde Instagram, Android)
+Adriana probó un pedido completo en el navegador interno de Instagram (Android).
+Hallazgos y arreglos:
+1. **El escape forzado a Chrome al confirmar era dañino:** Instagram muestra "Estás
+   saliendo de nuestra app", el botón quedaba en "Enviando…" (el `onsubmit` inline lo
+   deshabilita antes de que corra el JS), y al continuar abría Chrome con otra sesión
+   (cookies separadas; cayó en el cliente SBREDES) y sin carrito. **Se eliminó**
+   `escaparSiEsWebviewMeta()`: ahora el pedido se hace dentro de Instagram (que es la
+   prueba que faltaba) y el aviso del banner queda como sugerencia. Además
+   `pageshow` destraba el botón si se vuelve a la página.
+2. **Se podía confirmar un envío sin calle ni barrio:** ahora el servidor lo rechaza
+   ("Completá la calle y la altura…"). Había quedado guardada una dirección vacía
+   (user 4530, ADRIANA LAZO) que el checkout mostraba como "dirección guardada"
+   vacía: `clientes.direcciones()` ahora ignora las direcciones sin calle ni barrio.
+3. **Consulta de envío para clientes logueados:** si el cliente tiene dirección guardada
+   con zona, se muestra directamente el costo de SU zona y el botón pasa a "¿Enviás a
+   otra dirección?" (`zona_cliente()` en `main.py`).
+Pendiente: repetir la prueba completa dentro de Instagram con estos cambios.

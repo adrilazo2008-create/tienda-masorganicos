@@ -273,7 +273,9 @@ def guardar_direccion(cliente_id: int, direccion: str, altura: int, localidad: s
 
 def direcciones(cliente_id: int) -> list[dict]:
     sql = """SELECT id_direccion, direccion, altura, localidad, id_zona, infoAdicional, principal, barrio, lote
-             FROM direccion WHERE id_cliente = :c AND activo = 1 ORDER BY principal DESC, id_direccion DESC"""
+             FROM direccion WHERE id_cliente = :c AND activo = 1
+             AND (TRIM(COALESCE(direccion, '')) <> '' OR TRIM(COALESCE(barrio, '')) <> '')
+             ORDER BY principal DESC, id_direccion DESC"""
     with engine_tienda.connect() as cx:
         return [dict(id=int(r.id_direccion), direccion=r.direccion, altura=r.altura,
                      localidad=r.localidad, id_zona=r.id_zona, info=r.infoAdicional,

@@ -1,5 +1,11 @@
 <div class="consulta-envio" id="consulta-envio">
-  <button type="button" class="ce-abrir" aria-expanded="false">🚚 ¿Cuánto sale el envío a tu zona?</button>
+  {% set zc = zona_cliente(cliente) %}
+  {% if zc %}
+  <p class="ce-tuzona">🚚 <b>Envío a tu zona ({{ zc.titulo }}):</b>
+    {{ pesos(zc.precio) }} a coordinar · {{ 'sin cargo' if not zc.precio_dia else pesos(zc.precio_dia) }} el día de reparto{% if zc.envio_gratis %}
+    (sin cargo desde {{ pesos(zc.envio_gratis) }}){% endif %}.</p>
+  {% endif %}
+  <button type="button" class="ce-abrir" aria-expanded="false">{{ '¿Enviás a otra dirección? Consultá el costo' if zc else '🚚 ¿Cuánto sale el envío a tu zona?' }}</button>
   <div class="ce-panel" hidden>
     <form class="ce-form" autocomplete="off">
       <input type="text" class="ce-dir" placeholder="Tu barrio o dirección y localidad" enterkeyhint="search"

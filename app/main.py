@@ -180,6 +180,24 @@ templates.env.globals["img_etiqueta"] = (
     lambda archivo: f"{S.img_base_url}/etiquetas/{archivo}"
 )
 templates.env.globals["WHATSAPP"] = "5491155046740"
+
+
+def _zona_del_cliente(cli):
+    """Zona de la dirección guardada del cliente logueado (para mostrarle su
+    costo de envío sin pedirle nada). None si no hay dirección con zona."""
+    if not cli:
+        return None
+    try:
+        for d in clientes.direcciones(cli.id):
+            z = zonas.zona(int(d.get("id_zona") or 0))
+            if z:
+                return z
+    except Exception:
+        pass
+    return None
+
+
+templates.env.globals["zona_cliente"] = _zona_del_cliente
 # Enlaces entre el sitio institucional y la tienda. Vacío = mismo origen (local).
 # En producción se setean por .env: URL_WEB=https://masorganicos.com.ar y
 # URL_TIENDA=https://tienda.masorganicos.com.ar
@@ -581,6 +599,19 @@ def checkout_confirmar(
             return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                           sucursales=zonas.sucursales(), error="Elegí una zona de envío.",
                           permitir_escribir=graba, token=secrets.token_urlsafe(12))
+
+    # Un envío sin calle ni barrio no se puede entregar (2026-10-05: se podía
+    # confirmar con la dirección en blanco).
+    if entrega != "retira" and not (direccion.strip() or barrio.strip()):
+        cli_sesion = _cliente_actual(request)
+        dirs = clientes.direcciones(cli_sesion.id) if cli_sesion else []
+        return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
+                      sucursales=zonas.sucursales(), permitir_escribir=graba,
+                      error="Completá la calle y la altura de tu dirección para el envío.",
+                      cliente_checkout=cli_sesion, cliente_encontrado=cli_sesion,
+                      existe=cli_sesion is not None,
+                      direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                      token=secrets.token_urlsafe(12))
 
     # cliente
     cli = clientes.buscar_por_telefono(telefono) or (

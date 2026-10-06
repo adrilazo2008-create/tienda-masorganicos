@@ -295,32 +295,10 @@ document.addEventListener('DOMContentLoaded', function(){
   arrancar();
 });
 
-// checkout: si venimos del browser in-app de Instagram/Facebook en Android,
-// escapar a Chrome antes de cerrar el pedido (ese webview es la causa de la
-// mayoría de los errores JS/postMessage que reportó Clarity). En iOS no hay
-// forma confiable de forzar el navegador externo desde JS (restricción de
-// Apple/WebKit), así que ahí se sigue el flujo normal dentro de la app.
-// Se abre siempre en la MISMA url de checkout, para que la persona la
-// termine de cerrar ya en Chrome — no hay forma de pasarle el carrito de un
-// navegador a otro (son cookies de sesión separadas), pero adentro del
-// webview el pedido no estaba llegando a cerrarse de todos modos.
-function escaparSiEsWebviewMeta(){
-  var ua = navigator.userAgent || '';
-  var esWebviewMeta = /Instagram|FBAN|FBAV|FB_IAB/i.test(ua);
-  var esAndroid = /Android/i.test(ua);
-  if (!esWebviewMeta || !esAndroid) return false;
-  var url = location.href;
-  var sinEsquema = url.replace(/^https?:\/\//, '');
-  var fallback = encodeURIComponent(url);
-  location.href = 'intent://' + sinEsquema + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + fallback + ';end';
-  return true;
-}
-
 // checkout: evitar doble submit y hacer foco en el primer error
 document.addEventListener('DOMContentLoaded', function(){
   var f = document.getElementById('form-checkout');
   if (f) f.addEventListener('submit', function(e){
-    if (escaparSiEsWebviewMeta()){ e.preventDefault(); return; }
     var b = document.getElementById('btn-confirmar');
     if (b){ b.disabled = true; b.textContent = 'Enviando…'; }
   });
@@ -530,7 +508,7 @@ window.etiquetarClarity = function(){
         cargar().then(function(){
           var guardada = '';
           try { guardada = localStorage.getItem('mo-zona') || ''; } catch(e){}
-          if (guardada && !res.innerHTML) mostrarZona(res, guardada);
+          if (guardada && !res.innerHTML && !box.querySelector('.ce-tuzona')) mostrarZona(res, guardada);
         });
         inp.focus();
       });
@@ -546,3 +524,14 @@ window.etiquetarClarity = function(){
   document.addEventListener('DOMContentLoaded', iniciar);
   document.body.addEventListener('htmx:afterSwap', iniciar);   // el carrito se re-dibuja por HTMX
 })();
+
+// Si se vuelve a la página del checkout (botón "atrás", cartel de otra app que se
+// cancela, caché de ida y vuelta), el botón de confirmar no debe quedar trabado
+// en "Enviando…".
+window.addEventListener('pageshow', function(){
+  var b = document.getElementById('btn-confirmar');
+  if (b && b.dataset.enviando && !document.getElementById('checkout-ok')){
+    delete b.dataset.enviando; b.disabled = false;
+    b.textContent = 'Confirmar pedido';
+  }
+});
