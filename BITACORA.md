@@ -778,3 +778,13 @@ navegador y muestra el aviso pegado al botón (el servidor sigue validando);
 ahora solo el nombre de la zona (el costo ya se ve en el resumen al elegirla); los
 títulos cortados por el `varchar(45)` (p. ej. "CABA Norte (Devoto, Villa del
 Parque, Villa C") se muestran sin el paréntesis abierto (`zonas._titulo_limpio`).
+
+## Pendientes (a 2026-10-06) — recordárselos a Adriana al retomar la tienda
+1. **Pantalla de seguimiento del embudo (Clarity)**: visita → ficha → agregar → carrito →
+   checkout → pedido confirmado, por origen (UTM) y sin visitas internas. Piezas listas:
+   eventos de Clarity, `accesos_clientes`, `accesos_visitantes`, `busquedas_sin_resultado`.
+   Ella quiere hacerla, "no hoy".
+2. **Polígonos de zonas** (faltan 9 de 17): lo deja para más adelante; hoy se resuelve por
+   `barrios.json` y por el polígono más chico.
+3. Error `postMessage` de Clarity: sin investigar.
+(Hecho 2026-10-06: eliminada la ficha de prueba duplicada `PRUEBA Web Nueva`, user 3975.)
