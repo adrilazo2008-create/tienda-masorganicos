@@ -753,3 +753,6 @@ Hallazgos y arreglos:
    con zona, se muestra directamente el costo de SU zona y el botón pasa a "¿Enviás a
    otra dirección?" (`zona_cliente()` en `main.py`).
 Pendiente: repetir la prueba completa dentro de Instagram con estos cambios.
+Decisión (Adriana): el costo de envío de un cliente logueado con zona guardada se
+muestra SOLO en el carrito; en las fichas de producto la consulta aparece únicamente
+para quien no está logueado o no tiene zona guardada.

@@ -51,7 +51,8 @@
     {% else %}
     <p class="prod-nota">El precio y la disponibilidad se confirman al preparar tu pedido.</p>
     {% endif %}
-    {% include "_consulta_envio.html" %}
+    {# Cliente logueado con zona guardada: su costo de envío se ve solo en el carrito #}
+    {% if not zona_cliente(cliente) %}{% include "_consulta_envio.html" %}{% endif %}
   </div>
 </div>
 
