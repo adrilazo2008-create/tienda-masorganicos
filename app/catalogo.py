@@ -317,6 +317,41 @@ def listar(categoria_id: Optional[int] = None, rubro_id: Optional[int] = None,
     return res[:limite] if limite else list(res)
 
 
+def agotados_que_coinciden(busqueda: str, limite: int = 6) -> list[str]:
+    """Nombres de productos que existen (activos, habilitados para la web) y
+    coinciden con la búsqueda pero no se listan porque no tienen stock — para
+    decir "Agotado hoy" en vez de "No encontramos productos"."""
+    q = (busqueda or "").strip().lower()
+    if len(q) < 3:
+        return []
+    visibles = {p.id for p in _cacheado("catalogo_todos", 180, _todos_los_productos)}
+    like = f"%{q}%"
+    try:
+        with engine_erp.connect() as cx:
+            filas = cx.execute(text(_SELECT + " AND (LOWER(m.Descripcion) LIKE :q OR LOWER(COALESCE(m.detalle,'')) LIKE :q)"
+                                    " ORDER BY m.Descripcion LIMIT 40"), {"q": like})
+            return [str(r.nombre).strip() for r in filas if int(r.id) not in visibles][:limite]
+    except Exception:
+        return []
+
+
+def registrar_busqueda_sin_resultado(busqueda: str, hay_agotados: bool) -> None:
+    """Guarda el término buscado sin resultado (para ver qué piden y no
+    tenemos). Nunca rompe la búsqueda si falla la base."""
+    from sqlalchemy import text as _t
+    from .db import engine_tienda
+    try:
+        with engine_tienda.begin() as cx:
+            cx.execute(_t("""CREATE TABLE IF NOT EXISTS busquedas_sin_resultado (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT, termino VARCHAR(191) NOT NULL,
+                agotado TINYINT NOT NULL DEFAULT 0, creado_en DATETIME NOT NULL,
+                INDEX (termino))"""))
+            cx.execute(_t("INSERT INTO busquedas_sin_resultado (termino, agotado, creado_en) VALUES (:t, :a, NOW())"),
+                       {"t": busqueda.strip().lower()[:191], "a": 1 if hay_agotados else 0})
+    except Exception:
+        pass
+
+
 def obtener(producto_id: int) -> Optional[Producto]:
     with engine_erp.connect() as cx:
         r = cx.execute(text(_SELECT + " AND m.id = :id"), {"id": producto_id}).first()

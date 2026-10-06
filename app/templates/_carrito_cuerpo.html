@@ -21,16 +21,16 @@
       <div class="cl-info">
         <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
         <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
-        <form method="post" action="/carrito/actualizar" class="cl-obs-form">
+        <form method="post" action="/carrito/actualizar" class="cl-obs-form" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
           <input type="hidden" name="indice" value="{{ l.indice }}">
           <input type="hidden" name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}">
           <input name="observacion" value="{{ l.observacion }}" class="cl-obs-input" maxlength="191"
                  placeholder="Observación (opcional)" autocomplete="off"
                  aria-label="Observación de {{ l.producto.nombre }}"
-                 onchange="this.form.submit()">
+                 onchange="this.form.requestSubmit()">
         </form>
       </div>
-      <form method="post" action="/carrito/actualizar" class="cl-cant">
+      <form method="post" action="/carrito/actualizar" class="cl-cant" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
         <input type="hidden" name="indice" value="{{ l.indice }}">
         <div class="cant" role="group" aria-label="Cantidad de {{ l.producto.nombre }}">
           <button type="button" onclick="stepCarrito(this,-1)" aria-label="Quitar uno">−</button>
@@ -38,13 +38,13 @@
                  data-step="{{ '0.25' if l.producto.fraccionable else '1' }}"
                  data-min="{{ '0.25' if l.producto.fraccionable else '1' }}"
                  aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off"
-                 onchange="this.form.submit()">
+                 onchange="this.form.requestSubmit()">
           <button type="button" onclick="stepCarrito(this,1)" aria-label="Agregar uno">+</button>
         </div>
         <span>{{ l.producto.unidad }}</span>
       </form>
       <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
-      <form method="post" action="/carrito/quitar" class="cl-quitar">
+      <form method="post" action="/carrito/quitar" class="cl-quitar" hx-post="/carrito/quitar" hx-swap="none">
         <input type="hidden" name="indice" value="{{ l.indice }}">
         <button type="submit" aria-label="Quitar">✕</button>
       </form>
@@ -56,6 +56,7 @@
     <h2>Resumen</h2>
     <p class="rr"><span>Subtotal</span><span class="num">{{ pesos(car.subtotal) }}</span></p>
     <p class="rr chico">El costo de envío se calcula en el próximo paso según tu zona. No se cobra en el sitio: pagás al recibir.</p>
+    {% include "_consulta_envio.html" %}
     <a href="/checkout" class="btn-grande">Cerrar pedido</a>
     <a href="/catalogo" class="btn-sec">Seguir comprando</a>
   </aside>

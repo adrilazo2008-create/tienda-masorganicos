@@ -56,7 +56,23 @@
         {% for p in productos %}{% include "_card.html" %}{% endfor %}
       </div>
     {% else %}
+      {% if busqueda and agotados %}
+      <div class="vacio">
+        <p><b>Agotado hoy:</b> {{ agotados|join(', ') }}.</p>
+        <p>Si lo necesitás, consultanos y vemos cuándo vuelve a entrar.</p>
+        <a class="btn-grande" target="_blank" rel="noopener"
+           href="https://wa.me/{{ WHATSAPP }}?text={{ ('Hola! Quería consultar por: ' ~ busqueda ~ ' (figura agotado en la tienda)')|urlencode }}">Consultar por WhatsApp</a>
+      </div>
+      {% elif busqueda %}
+      <div class="vacio">
+        <p>No encontramos “{{ busqueda }}” en la tienda.</p>
+        <p>Probá con otra palabra o preguntanos: si lo conseguimos, te avisamos.</p>
+        <a class="btn-grande" target="_blank" rel="noopener"
+           href="https://wa.me/{{ WHATSAPP }}?text={{ ('Hola! Estoy buscando: ' ~ busqueda ~ ' ¿lo tienen?')|urlencode }}">Preguntar por WhatsApp</a>
+      </div>
+      {% else %}
       <p class="vacio">No encontramos productos. Probá con otro rubro o término.</p>
+      {% endif %}
     {% endif %}
   </section>
 </div>

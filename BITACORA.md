@@ -644,3 +644,59 @@ disponibles o no (según `Activo` / `noweb`), nada más.
 - Verificado con el catálogo real: los 9 combos salen con `agotado=False` y
   `poco_stock=False`.
 - Deploy manual en cPanel (Update from Remote + Deploy HEAD Commit).
+
+## 2026-10-05 — Cambios a partir del informe de Clarity (25/9–4/10)
+
+Informe armado con Cowork (~100 sesiones con carrito + 11 grabaciones).
+Resuelto en código:
+- **Carrito +/−:** antes cada clic hacía `form.submit()` (recarga completa; con
+  red lenta los clics parecían muertos). Ahora `stepCarrito` espera 450 ms tras
+  el último clic y manda UN pedido por HTMX; `/carrito/actualizar` y
+  `/carrito/quitar` devuelven badge + cuerpo del carrito por OOB (sin recarga).
+  Verificado: 5 clics rápidos → cantidad 6, sin recarga de página.
+- **Tarjeta:** el texto de detalle (cortado con "…") ahora es un link a la ficha.
+- **Host único:** el redirect 301 ahora cubre `www.tienda.*` → `tienda.*`
+  (además de http → https, que ya estaba). Pendiente confirmar en producción
+  que carrito/sesión persisten tras el redirect.
+- **Navegador interno de Instagram/Facebook:** aviso arriba ("abrí en
+  Chrome/Safari"), cerrable; en Android el checkout ya escapaba a Chrome.
+- **Búsqueda sin resultado:** si el producto existe pero está sin stock → "Agotado
+  hoy: …" + botón de WhatsApp; si no existe, mensaje + WhatsApp. Los términos
+  quedan en la tabla nueva `busquedas_sin_resultado` (`termino`, `agotado`,
+  `creado_en`; se crea sola).
+- **Clarity:** `?interno=1` marca el navegador como visita interna (tag
+  `visita=interna`; `?interno=0` lo quita); eventos `agregar_al_carrito` y
+  `pedido_confirmado` (en `/checkout/ok`, no en modo prueba). Solo si la persona
+  aceptó cookies (igual que antes).
+No tocado (decisión de Adriana / investigación): costo de envío antes del
+carrito, pantalla de zonas (alguien cargó datos dos veces), recarga cada ~5 min
+(no se encontró ningún `setInterval`/refresh en la tienda; hipótesis: pestaña en
+segundo plano o extensión), pedido completo de prueba dentro de Instagram.
+
+### 2026-10-05 (después) — "¿Cuánto sale el envío a tu zona?"
+Idea de Adriana para el punto de costo de envío: link chico debajo de "Agregar
+al carrito" (ficha de producto) y en el resumen del carrito. Abre un campo para
+barrio/dirección; detecta la zona (barrios conocidos → si no, geocodificación +
+polígonos, igual que el checkout) y muestra precio a coordinar, precio el día de
+reparto, envío gratis desde, compra mínima, todo de la tabla `zonas`
+(`/envios/zonas.json`). Si no la encuentra: link a `/envios` (lista de zonas y
+valores) y a WhatsApp. Recuerda la zona en el navegador (`mo-zona`). Evento
+Clarity `consulta_envio_abrir`. Probado en local: Nordelta (barrio), Vicente
+López (geocodificada) y dirección inexistente (cae al mensaje de ayuda).
+
+### 2026-10-05 (más tarde) — Fix: zona mal detectada ("pacheco" → CABA Norte)
+Causas encontradas probando "pacheco" en la consulta de envío:
+1. Nominatim tomaba "pacheco" como la calle homónima de Villa Urquiza (CABA).
+2. **Polígonos superpuestos:** el de "Pacheco" está dentro del grande de "Don
+   Torcuato" y el código tomaba el *primero* que contenía el punto. Ahora gana el
+   de menor área (`zonaMasEspecifica` en `tienda.js`; mismo criterio en
+   `verificador-zona.js`, /envios y landing). Corrige también el checkout.
+Reglas de la consulta de envío: 1) barrio conocido (`barrios.json`); 2) texto que
+coincide con título de zona(s) — si hay varias (Pacheco / Pacheco Barrios
+Privados) se listan todas; 3) con número de altura se geocodifica; 4) sin número
+y sin coincidencia NO se geocodifica (devuelve el centro del partido, zona
+arbitraria) y se pide calle y altura.
+Pendiente: `zonas.geojson` solo trae 10 polígonos de 17 zonas (faltan, p. ej., la
+13 Martínez/Olivos/Vicente López y la 5 Nordelta): esas zonas solo se detectan
+por barrio/título; direcciones de Vicente López caen en "Virreyes, Beccar, San
+Isidro".

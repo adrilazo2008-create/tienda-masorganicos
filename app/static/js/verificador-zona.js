@@ -111,9 +111,15 @@ function iniciarVerificadorZona() {
 
   function evaluar(lat, lng) {
     if (!poligonos.length) return;
-    var zona = null;
+    // Zonas superpuestas: gana la de menor área (la más específica).
+    var zona = null, mejorArea = Infinity;
     for (var i = 0; i < poligonos.length; i++) {
-      if (puntoEnPoligono(lng, lat, poligonos[i].anillo)) { zona = poligonos[i].props; break; }
+      var anillo = poligonos[i].anillo;
+      if (!puntoEnPoligono(lng, lat, anillo)) continue;
+      var a = 0;
+      for (var k = 0, j = anillo.length - 1; k < anillo.length; j = k++) a += anillo[j][0] * anillo[k][1] - anillo[k][0] * anillo[j][1];
+      a = Math.abs(a / 2);
+      if (a < mejorArea) { mejorArea = a; zona = poligonos[i].props; }
     }
     if (zona) {
       var p = [];

@@ -508,3 +508,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .popup-home-caja img{display:block;max-width:100%;max-height:88vh;border-radius:var(--radio);box-shadow:var(--sombra);margin:0 auto}
 .popup-home-x{position:absolute;top:-.6rem;right:-.6rem;z-index:1;width:2.4rem;height:2.4rem;border-radius:50%;border:0;background:#fff;color:var(--tinta);font-size:1.6rem;line-height:1;cursor:pointer;box-shadow:var(--sombra)}
 body.popup-abierto{overflow:hidden}
+
+/* tarjeta: el texto de detalle también abre la ficha */
+.card-det a{color:inherit;text-decoration:none}
+.card-det a:hover{text-decoration:underline}
+.vacio .btn-grande{display:inline-block;margin-top:.6rem}
+
+/* aviso en el navegador interno de Instagram/Facebook */
+.aviso-webview{display:flex;gap:.6rem;align-items:flex-start;background:#fff4d6;color:#4a3b00;
+  border-bottom:1px solid #f0d98a;padding:.7rem 1rem;font-size:.9rem;line-height:1.4}
+.aviso-webview p{margin:0;flex:1}
+.aviso-webview button{background:none;border:0;font-size:1.4rem;line-height:1;cursor:pointer;color:inherit}
+
+/* consulta de costo de envío (ficha y carrito) */
+.consulta-envio{margin:.9rem 0}
+.ce-abrir{background:none;border:0;padding:0;color:var(--verde,#2f7d31);font:inherit;font-weight:600;
+  text-decoration:underline;cursor:pointer}
+.ce-panel{margin-top:.6rem}
+.ce-form{display:flex;gap:.5rem;flex-wrap:wrap}
+.ce-form input{flex:1;min-width:12rem}
+.ce-res{margin:.6rem 0 0;font-size:.92rem;line-height:1.5}
+.ce-lista{margin:.4rem 0;padding-left:1.1rem}

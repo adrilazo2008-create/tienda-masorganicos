@@ -19,9 +19,20 @@ function stepCant(btn, dir){
 }
 
 // + / - en el carrito: ajusta la cantidad y guarda (submit del form)
+// Espera 450 ms después del último clic (varios clics seguidos = un solo
+// pedido) y actualiza el carrito por HTMX, sin recargar la página.
+var _tCarrito = {};
 function stepCarrito(btn, dir){
   stepCant(btn, dir);                       // el input es hermano dentro de .cant
-  if (btn.form) btn.form.submit();
+  var f = btn.form;
+  if (!f) return;
+  var idx = (f.querySelector('input[name=indice]') || {}).value;
+  clearTimeout(_tCarrito[idx]);
+  _tCarrito[idx] = setTimeout(function(){
+    var form = document.body.contains(f) ? f : null;
+    if (!form) return;
+    if (window.htmx && form.requestSubmit) form.requestSubmit(); else form.submit();
+  }, 450);
 }
 
 // + / - en un form con hx-post (ej. editar pedido): igual que stepCarrito pero
@@ -30,6 +41,21 @@ function stepCarrito(btn, dir){
 function stepCantHTMX(btn, dir){
   stepCant(btn, dir);
   if (btn.form) btn.form.requestSubmit();
+}
+
+// Zonas superpuestas (ej. "Pacheco" dentro del polígono grande de "Don
+// Torcuato"): se elige la de menor área que contiene el punto, no la primera.
+function zonaMasEspecifica(polis, lng, lat, pip){
+  var mejor = 0, mejorArea = Infinity;
+  for (var i = 0; i < polis.length; i++){
+    var ring = polis[i].geometry.coordinates[0];
+    if (!pip(lng, lat, ring)) continue;
+    var a = 0;
+    for (var k = 0, j = ring.length - 1; k < ring.length; j = k++) a += ring[j][0] * ring[k][1] - ring[k][0] * ring[j][1];
+    a = Math.abs(a / 2);
+    if (a < mejorArea){ mejorArea = a; mejor = polis[i].properties.id_zona || 0; }
+  }
+  return mejor;
 }
 
 // checkout: mostrar/ocultar bloques y recalcular total
@@ -182,10 +208,7 @@ function iniciarBuscaZona(){
         var loc = a.city || a.town || a.village || a.suburb || a.city_district || a.municipality || '';
         if (loc) form.localidad.value = loc;
 
-        var zid = 0;
-        for (var i = 0; i < polis.length; i++){
-          if (pip(lng, lat, polis[i].geometry.coordinates[0])){ zid = polis[i].properties.id_zona || 0; break; }
-        }
+        var zid = zonaMasEspecifica(polis, lng, lat, pip);
         var ok = fijarZona(zid, 'Zona detectada: ' + opcionTexto(zid) +
               '. Revisá que sea correcta y ajustá si hace falta.');
         if (!ok){
@@ -207,6 +230,7 @@ document.body.addEventListener('htmx:afterSwap', function(e){
     if (t && !t.dataset.timed){
       t.dataset.timed = '1';
       if (window.fbq) fbq('track', 'AddToCart');
+      if (window.clarity) clarity('event', 'agregar_al_carrito');
       setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 220); }, 2600);
     }
   }
@@ -345,3 +369,167 @@ document.addEventListener('DOMContentLoaded', function(){
     if (e.detail && e.detail.successful) setTimeout(volverALista, 900);
   });
 });
+
+// Navegador interno de Instagram/Facebook: avisar antes de que arme el pedido.
+// (~43% de las visitas llegan ahí y casi ningún pedido termina; en Android el
+// checkout ya escapa a Chrome, pero iOS no tiene forma de forzarlo.)
+document.addEventListener('DOMContentLoaded', function(){
+  var ua = navigator.userAgent || '';
+  if (!/Instagram|FBAN|FBAV|FB_IAB/i.test(ua)) return;
+  try { if (sessionStorage.getItem('aviso-webview-cerrado')) return; } catch(e){}
+  var esIos = /iPhone|iPad|iPod/i.test(ua);
+  var d = document.createElement('div');
+  d.className = 'aviso-webview';
+  d.setAttribute('role', 'note');
+  d.innerHTML = '<p><b>Para comprar más fácil:</b> abrí esta página en ' +
+    (esIos ? 'Safari (tocá los <b>···</b> o el ícono de compartir y elegí “Abrir en Safari”)'
+           : 'Chrome (tocá los <b>⋮</b> y elegí “Abrir en el navegador”)') + '.</p>' +
+    '<button type="button" aria-label="Cerrar aviso">×</button>';
+  d.querySelector('button').addEventListener('click', function(){
+    d.remove(); try { sessionStorage.setItem('aviso-webview-cerrado', '1'); } catch(e){}
+  });
+  document.body.insertBefore(d, document.body.firstChild);
+  if (window.clarity) clarity('set', 'navegador', 'instagram_facebook');
+});
+
+// Clarity: etiquetar visitas internas. Entrar una vez con ?interno=1 las marca
+// en este navegador (?interno=0 la quita). Se aplica apenas Clarity carga.
+(function(){
+  try {
+    var m = /[?&]interno=([01])/.exec(location.search);
+    if (m) localStorage.setItem('mo-interno', m[1]);
+  } catch(e){}
+})();
+window.etiquetarClarity = function(){
+  if (!window.clarity) return;
+  var interno = false;
+  try { interno = localStorage.getItem('mo-interno') === '1'; } catch(e){}
+  clarity('set', 'visita', interno ? 'interna' : 'cliente');
+  if (interno) clarity('upgrade', 'visita_interna');
+};
+
+// "¿Cuánto sale el envío a tu zona?" (ficha de producto y carrito): detecta la
+// zona por barrio conocido o por geocodificación (misma lógica que el
+// checkout) y muestra el costo de la tabla `zonas`. Si no la encuentra,
+// manda a la lista de zonas y valores (/envios). Recuerda la zona elegida.
+(function(){
+  var datos = null, polis = null, barrios = null;
+  function cargar(){
+    if (datos) return Promise.resolve();
+    return Promise.all([
+      fetch('/envios/zonas.json').then(function(r){ return r.json(); }),
+      fetch('/envios/zonas.geojson').then(function(r){ return r.json(); }),
+      fetch('/envios/barrios.json').then(function(r){ return r.json(); }).catch(function(){ return []; })
+    ]).then(function(r){
+      datos = r[0]; barrios = r[2] || [];
+      polis = ((r[1] || {}).features || []).filter(function(f){ return f.geometry && f.geometry.type === 'Polygon'; });
+    });
+  }
+  function pip(x, y, ring){
+    var d = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++){
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) d = !d;
+    }
+    return d;
+  }
+  function pesos(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
+  function esc(t){ var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+  function mostrarZona(res, zid){
+    var z = datos[String(zid)];
+    if (!z) return noEncontrada(res);
+    try { localStorage.setItem('mo-zona', String(zid)); } catch(e){}
+    var h = '<b>' + esc(z.titulo) + '</b><br>' +
+      'Envío con día y horario a coordinar: <b>' + pesos(z.precio) + '</b>.<br>' +
+      'El día que repartimos tu zona: <b>' + (z.precio_dia ? pesos(z.precio_dia) : 'sin cargo') + '</b>' +
+      (z.gratis ? ' (sin cargo desde ' + pesos(z.gratis) + ')' : '') + '.';
+    if (z.mensaje) h += '<br><small>' + esc(z.mensaje) + '</small>';
+    if (z.minimo) h += '<br><small>Compra mínima en tu zona: ' + pesos(z.minimo) + '.</small>';
+    res.innerHTML = h;
+  }
+  function sinTildes(t){ return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function mostrarVarias(res, ids){
+    var h = 'Hay más de una zona con ese nombre — el costo depende de dónde estés:<ul class="ce-lista">';
+    ids.forEach(function(k){
+      var z = datos[k];
+      h += '<li><b>' + esc(z.titulo) + '</b>: ' + pesos(z.precio) + ' a coordinar · ' +
+           (z.precio_dia ? pesos(z.precio_dia) : 'sin cargo') + ' el día de reparto</li>';
+    });
+    res.innerHTML = h + '</ul>Escribí tu <b>calle y altura</b> (ej. “Av. Hipólito Yrigoyen 1200, Pacheco”) ' +
+      'y te decimos cuál es la tuya.';
+  }
+  function noEncontrada(res){
+    res.innerHTML = 'No pudimos ubicar tu zona. Probá con calle y altura, o <a href="/envios">mirá la lista de zonas y valores</a> ' +
+      'o <a href="https://wa.me/5491155046740" target="_blank" rel="noopener">consultanos por WhatsApp</a>.';
+  }
+
+  function buscar(q, res, btn){
+    var ql = q.toLowerCase();
+    for (var b = 0; b < barrios.length; b++){
+      if (ql.indexOf(barrios[b].match) !== -1 && barrios[b].id_zona) return mostrarZona(res, barrios[b].id_zona);
+    }
+    // Nombre de localidad que coincide con el título de una o más zonas
+    // ("Pacheco" -> Pacheco / Pacheco (Barrios Privados)): no hace falta mapa.
+    if (!/\d/.test(q) && q.length >= 4){
+      var qn = sinTildes(q);
+      var hits = Object.keys(datos).filter(function(k){ return sinTildes(datos[k].titulo).indexOf(qn) !== -1; });
+      if (hits.length === 1) return mostrarZona(res, hits[0]);
+      if (hits.length > 1) return mostrarVarias(res, hits);
+    }
+    // Sin número no geocodificamos: devuelve el centro del partido/localidad y
+    // puede caer en una zona equivocada. Mejor pedir calle y altura.
+    if (!/\d/.test(q)){
+      res.innerHTML = 'No reconocimos ese nombre. Escribí tu <b>calle y altura</b> con la localidad ' +
+        '(ej. “Av. Hipólito Yrigoyen 1200, Pacheco”), o <a href="/envios">mirá la lista de zonas y valores</a>.';
+      return;
+    }
+    btn.disabled = true;
+    var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=ar&q=' +
+      encodeURIComponent(q + ', Buenos Aires, Argentina');
+    var tieneAltura = /\d/.test(q);
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        // Sin número es una localidad/barrio ("Pacheco"): una calle homónima
+        // (ej. calle Pacheco de Villa Urquiza) daría la zona equivocada.
+        if (d && !tieneAltura) d = d.filter(function(h){ return h.category !== 'highway'; });
+        if (!d || !d.length) return noEncontrada(res);
+        var lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
+        var zid = zonaMasEspecifica(polis, lng, lat, pip);
+        zid ? mostrarZona(res, zid) : noEncontrada(res);
+      })
+      .catch(function(){ noEncontrada(res); })
+      .finally(function(){ btn.disabled = false; });
+  }
+
+  function iniciar(){
+    document.querySelectorAll('#consulta-envio:not([data-listo])').forEach(function(box){
+      box.dataset.listo = '1';
+      var abrir = box.querySelector('.ce-abrir'), panel = box.querySelector('.ce-panel');
+      var form = box.querySelector('.ce-form'), inp = box.querySelector('.ce-dir');
+      var res = box.querySelector('.ce-res'), btn = form.querySelector('button');
+      abrir.addEventListener('click', function(){
+        panel.hidden = !panel.hidden;
+        abrir.setAttribute('aria-expanded', String(!panel.hidden));
+        if (panel.hidden) return;
+        if (window.clarity) clarity('event', 'consulta_envio_abrir');
+        cargar().then(function(){
+          var guardada = '';
+          try { guardada = localStorage.getItem('mo-zona') || ''; } catch(e){}
+          if (guardada && !res.innerHTML) mostrarZona(res, guardada);
+        });
+        inp.focus();
+      });
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var q = (inp.value || '').trim();
+        if (q.length < 3){ res.textContent = 'Escribí tu barrio o dirección con la localidad.'; return; }
+        res.textContent = 'Buscando…';
+        cargar().then(function(){ buscar(q, res, btn); });
+      });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', iniciar);
+  document.body.addEventListener('htmx:afterSwap', iniciar);   // el carrito se re-dibuja por HTMX
+})();

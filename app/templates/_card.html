@@ -14,7 +14,7 @@
   </a>
   <div class="card-body">
     <h3><a href="/producto/{{ p.id }}">{{ p.nombre }}</a></h3>
-    {% if p.detalle %}<p class="card-det">{{ p.detalle|truncate(90) }}</p>{% endif %}
+    {% if p.detalle %}<p class="card-det"><a href="/producto/{{ p.id }}">{{ p.detalle|truncate(90) }}</a></p>{% endif %}
     <p class="card-precio"><span class="num">{{ pesos(p.precio) }}</span> <small>x {{ p.unidad }}</small></p>
     <form class="card-add" hx-post="/carrito/agregar" hx-target="#toasts" hx-swap="afterbegin">
       <input type="hidden" name="producto_id" value="{{ p.id }}">

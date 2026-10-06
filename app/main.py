@@ -55,8 +55,17 @@ async def forzar_https(request: Request, call_next):
     compartirse cookies entre los dos, se rompía el carrito/sesión y el
     tracking de Meta para una parte del tráfico. No hay .htaccess versionado
     acá (Passenger/cPanel), así que el redirect se fuerza en la app."""
-    if S.entorno == "production" and request.url.scheme == "http":
-        return RedirectResponse(str(request.url.replace(scheme="https")), status_code=301)
+    if S.entorno == "production":
+        host = (request.headers.get("host") or "").split(":")[0].lower()
+        destino = request.url
+        if request.url.scheme == "http":
+            destino = destino.replace(scheme="https")
+        # www.tienda.* -> tienda.* (Clarity, oct. 2026: sesiones repartidas entre
+        # hosts con y sin www; cada host tiene su propia cookie de sesión/carrito).
+        if host.startswith("www.tienda."):
+            destino = destino.replace(netloc=destino.netloc[4:])
+        if str(destino) != str(request.url):
+            return RedirectResponse(str(destino), status_code=301)
     return await call_next(request)
 
 # --------------------------------------------------------------------------- errores
@@ -309,9 +318,13 @@ def ver_catalogo(request: Request, categoria: Optional[int] = None,
         titulo = f'“{q}”'
     else:
         titulo = "Todos los productos"
+    agotados: list[str] = []
+    if q and q.strip() and not productos:
+        agotados = catalogo.agotados_que_coinciden(q)
+        catalogo.registrar_busqueda_sin_resultado(q, len(agotados) > 0)
     return render(request, "catalogo.html", productos=productos, rubros=rubros,
                   rubro_actual=rubro_actual, categoria_actual=cat_actual,
-                  busqueda=q or "", titulo=titulo)
+                  busqueda=q or "", titulo=titulo, agotados=agotados)
 
 
 @app.get("/producto/{producto_id}", response_class=HTMLResponse)
@@ -377,6 +390,16 @@ def envios_geojson():
                         headers={"Cache-Control": "public, max-age=3600"})
 
 
+@app.get("/envios/zonas.json")
+def envios_zonas_json():
+    """Precios por zona para el "¿Cuánto sale el envío?" de la ficha y el carrito."""
+    from fastapi.responses import JSONResponse
+    datos = {str(z.id): {"titulo": z.titulo, "precio": int(z.precio), "precio_dia": int(z.precio_dia),
+                         "gratis": int(z.envio_gratis), "minimo": int(z.minimo_compra),
+                         "mensaje": z.mensaje} for z in zonas.zonas()}
+    return JSONResponse(datos, headers={"Cache-Control": "public, max-age=300"})
+
+
 @app.get("/envios/barrios.json")
 def envios_barrios():
     import json
@@ -429,17 +452,35 @@ def ver_carrito(request: Request):
                   carrito_msg=request.session.pop("carrito_msg", None))
 
 
+def _respuesta_carrito(request: Request):
+    """Tras cambiar el carrito: si vino de HTMX devolvemos solo el cuerpo del
+    carrito (+ badge) por OOB, sin recargar la página entera."""
+    if not request.headers.get("HX-Request"):
+        return RedirectResponse("/carrito", status_code=303)
+    car = carrito_mod.resolver(request.session)
+    if car.vacio:
+        return HTMLResponse("", headers={"HX-Redirect": "/carrito"})
+    n = car.cantidad_items
+    en_carrito = {l.producto.id for l in car.lineas}
+    sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
+    extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug)
+    return HTMLResponse(
+        f'<span id="carrito-badge" class="badge" aria-live="polite" '
+        f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>'
+        + templates.get_template("_carrito_cuerpo_oob.html").render(extra))
+
+
 @app.post("/carrito/actualizar")
 def carrito_actualizar(request: Request, indice: int = Form(...), cantidad: str = Form(...),
                         observacion: Optional[str] = Form(None)):
     carrito_mod.actualizar(request.session, indice, cantidad, observacion)
-    return RedirectResponse("/carrito", status_code=303)
+    return _respuesta_carrito(request)
 
 
 @app.post("/carrito/quitar")
 def carrito_quitar(request: Request, indice: int = Form(...)):
     carrito_mod.quitar(request.session, indice)
-    return RedirectResponse("/carrito", status_code=303)
+    return _respuesta_carrito(request)
 
 
 # --------------------------------------------------------------------------- checkout

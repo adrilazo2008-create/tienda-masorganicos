@@ -45,4 +45,5 @@
 {% if meta_pixel and not ok.simulado %}
 <script>if(window.fbq)fbq('track','Purchase',{value:{{ ok.total }},currency:'ARS',num_items:{{ ok['items']|length }}},{eventID:{{ ('purchase-' ~ ok.numero)|tojson }}});</script>
 {% endif %}
+{% if not ok.simulado %}<script>if(window.clarity)clarity('event','pedido_confirmado');</script>{% endif %}
 {% endblock %}

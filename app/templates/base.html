@@ -33,6 +33,7 @@ window.cargarClarity = function(){
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   })(window, document, "clarity", "script", "{{ clarity_id }}");
   window.clarity.loaded = true;
+  window.etiquetarClarity && window.etiquetarClarity();
 };
 try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarClarity(); } catch(e){}
 </script>
