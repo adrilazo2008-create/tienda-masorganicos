@@ -335,9 +335,15 @@ def agotados_que_coinciden(busqueda: str, limite: int = 6) -> list[str]:
         return []
 
 
-def registrar_busqueda_sin_resultado(busqueda: str, hay_agotados: bool) -> None:
+_COLS_BUSQUEDA_OK = False
+
+
+def registrar_busqueda_sin_resultado(busqueda: str, hay_agotados: bool, cliente=None) -> None:
     """Guarda el término buscado sin resultado (para ver qué piden y no
-    tenemos). Nunca rompe la búsqueda si falla la base."""
+    tenemos), con el cliente si estaba logueado (users.id, nombre, teléfono y
+    cliente_codigo del ERP si ya está vinculado). Nunca rompe la búsqueda si
+    falla la base."""
+    global _COLS_BUSQUEDA_OK
     from sqlalchemy import text as _t
     from .db import engine_tienda
     try:
@@ -346,8 +352,25 @@ def registrar_busqueda_sin_resultado(busqueda: str, hay_agotados: bool) -> None:
                 id BIGINT PRIMARY KEY AUTO_INCREMENT, termino VARCHAR(191) NOT NULL,
                 agotado TINYINT NOT NULL DEFAULT 0, creado_en DATETIME NOT NULL,
                 INDEX (termino))"""))
-            cx.execute(_t("INSERT INTO busquedas_sin_resultado (termino, agotado, creado_en) VALUES (:t, :a, NOW())"),
-                       {"t": busqueda.strip().lower()[:191], "a": 1 if hay_agotados else 0})
+        if not _COLS_BUSQUEDA_OK:
+            # columnas agregadas 2026-10-05 sobre la tabla ya existente
+            for col, ddl in (("user_id", "INT NULL"), ("cliente_codigo", "INT NULL"),
+                             ("nombre", "VARCHAR(191) NULL"), ("telefono", "BIGINT NULL")):
+                try:
+                    with engine_tienda.begin() as cx:
+                        cx.execute(_t(f"ALTER TABLE busquedas_sin_resultado ADD COLUMN {col} {ddl}"))
+                except Exception:
+                    pass  # ya existe
+            _COLS_BUSQUEDA_OK = True
+        with engine_tienda.begin() as cx:
+            cx.execute(_t("""INSERT INTO busquedas_sin_resultado
+                (termino, agotado, creado_en, user_id, cliente_codigo, nombre, telefono)
+                VALUES (:t, :a, NOW(), :u, :cc, :n, :tel)"""),
+                {"t": busqueda.strip().lower()[:191], "a": 1 if hay_agotados else 0,
+                 "u": cliente.id if cliente else None,
+                 "cc": cliente.cliente_codigo if cliente else None,
+                 "n": cliente.nombre_completo[:191] if cliente else None,
+                 "tel": cliente.telefono or None if cliente else None})
     except Exception:
         pass
 

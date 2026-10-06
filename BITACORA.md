@@ -713,3 +713,8 @@ Santa Bárbara, Talar del Lago 1 y 2, Barrancas de Santa María y San José, Sol
 del Talar, Laguna del Sol). **Cambio:** "Santa Bárbara" pasó de zona 5 (Nordelta) a
 2 por pedido de Adriana. "Talar del Lago" a secas sigue en zona 17.
 "Talar" solo → muestra Talar y Talar (cercano al local).
+
+### 2026-10-05 — Búsquedas sin resultado con cliente
+`registrar_busqueda_sin_resultado` guarda también, si hay cliente logueado,
+`user_id`, `cliente_codigo`, `nombre` y `telefono` (columnas agregadas con ALTER
+la primera vez). Se lee desde `conectar` → "Búsquedas sin resultado".

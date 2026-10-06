@@ -321,7 +321,7 @@ def ver_catalogo(request: Request, categoria: Optional[int] = None,
     agotados: list[str] = []
     if q and q.strip() and not productos:
         agotados = catalogo.agotados_que_coinciden(q)
-        catalogo.registrar_busqueda_sin_resultado(q, len(agotados) > 0)
+        catalogo.registrar_busqueda_sin_resultado(q, len(agotados) > 0, _cliente_actual(request))
     return render(request, "catalogo.html", productos=productos, rubros=rubros,
                   rubro_actual=rubro_actual, categoria_actual=cat_actual,
                   busqueda=q or "", titulo=titulo, agotados=agotados)
