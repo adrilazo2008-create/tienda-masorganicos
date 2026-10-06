@@ -718,3 +718,11 @@ del Talar, Laguna del Sol). **Cambio:** "Santa Bárbara" pasó de zona 5 (Nordel
 `registrar_busqueda_sin_resultado` guarda también, si hay cliente logueado,
 `user_id`, `cliente_codigo`, `nombre` y `telefono` (columnas agregadas con ALTER
 la primera vez). Se lee desde `conectar` → "Búsquedas sin resultado".
+
+### 2026-10-05 — Registro de accesos de clientes logueados
+Nuevo `app/accesos.py` + tabla `accesos_clientes` (`fecha`, `user_id`, `primera`,
+`ultima`, `paginas`; PK fecha+user_id). Se llama desde `render()` (páginas GET
+completas, no HTMX) con el cliente de la sesión; escribe en un hilo aparte y
+traga cualquier error (nunca demora ni rompe una página). Se ignoran visitas con
+cookie `mo_interno=1` (la pone `tienda.js` al entrar con `?interno=1`; `?interno=0`
+la saca). Se lee desde `conectar` → "Accesos a la tienda".

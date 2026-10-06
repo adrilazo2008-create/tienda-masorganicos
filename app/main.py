@@ -20,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
+from . import accesos, catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -268,7 +268,9 @@ def ctx(request: Request, **extra):
 
 
 def render(request: Request, plantilla: str, **extra):
-    return templates.TemplateResponse(request, plantilla, ctx(request, **extra))
+    contexto = ctx(request, **extra)
+    accesos.registrar(request, contexto.get("cliente"))
+    return templates.TemplateResponse(request, plantilla, contexto)
 
 
 # --------------------------------------------------------------------------- páginas

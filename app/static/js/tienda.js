@@ -412,6 +412,7 @@ document.addEventListener('DOMContentLoaded', function(){
   try {
     var m = /[?&]interno=([01])/.exec(location.search);
     if (m) localStorage.setItem('mo-interno', m[1]);
+    if (m) document.cookie = 'mo_interno=' + m[1] + '; path=/; max-age=' + (m[1] === '1' ? 63072000 : 0) + '; SameSite=Lax';
   } catch(e){}
 })();
 window.etiquetarClarity = function(){
