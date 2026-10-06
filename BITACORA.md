@@ -726,3 +726,11 @@ completas, no HTMX) con el cliente de la sesión; escribe en un hilo aparte y
 traga cualquier error (nunca demora ni rompe una página). Se ignoran visitas con
 cookie `mo_interno=1` (la pone `tienda.js` al entrar con `?interno=1`; `?interno=0`
 la saca). Se lee desde `conectar` → "Accesos a la tienda".
+
+### 2026-10-05 — Contador de visitantes anónimos
+`accesos.py` ahora también escribe `accesos_visitantes` (`fecha`, `visitante_id` =
+UUID de la cookie de sesión, `logueado`, `primera`, `ultima`, `paginas`). Un
+dispositivo es "anónimo" ese día si nunca inició sesión (`logueado` = GREATEST).
+Por dispositivo, no por persona. Se descartan robots (user-agent), visitas HTMX e
+internas (`mo_interno=1`). Lo muestra `conectar` → "Accesos a la tienda" (totales
+y desglose por día).
