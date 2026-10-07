@@ -806,3 +806,6 @@ Además: un producto que ya no se muestra en la tienda (sin stock/oculto) aparec
 Pendiente a futuro (no se tocó): las vistas `pedidosWebMO` (total de la grilla) y
 `productoPedido` también suman líneas sin filtrar `activo`; ya no importa mientras
 nunca queden líneas con `activo = 0`.
+
+## 2026-10-07 - Checkout: la localidad es obligatoria para envios
+Si se elige envio y la localidad esta vacia o es solo provincia/pais ("Buenos Aires Argentina"), el checkout vuelve con el mensaje "Para el envio necesitamos tu localidad". Motivo: pedidos con localidad basura (autocompletado) que salian asi en el ticket y en el ERP. Requiere deploy manual en cPanel.

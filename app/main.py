@@ -5,6 +5,7 @@ Arranque local:   uvicorn app.main:app --reload
 from __future__ import annotations
 
 import logging
+import re
 import secrets
 import time
 import traceback
@@ -602,12 +603,17 @@ def checkout_confirmar(
 
     # Un envío necesita calle O barrio (alcanza con uno de los dos; la altura
     # no es obligatoria). 2026-10-05: se podía confirmar con la dirección en blanco.
-    if entrega != "retira" and not (direccion.strip() or barrio.strip()):
+    # La localidad tambien es obligatoria (2026-10-07): sin ella el ticket y el ERP quedaban con
+    # la localidad vacia o con basura del autocompletado ("Buenos Aires Argentina").
+    localidad_sirve = bool(re.sub(r"(?i)(buenos aires|bs\.? ?as\.?|argentina|provincia de|[\s,/-])+", "", localidad or ""))
+    if entrega != "retira" and (not (direccion.strip() or barrio.strip()) or not localidad_sirve):
         cli_sesion = _cliente_actual(request)
         dirs = clientes.direcciones(cli_sesion.id) if cli_sesion else []
         return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
                       sucursales=zonas.sucursales(), permitir_escribir=graba,
-                      error="Para el envío necesitamos tu dirección: completá la calle o el barrio donde entregamos.",
+                      error=("Para el envío necesitamos tu dirección: completá la calle o el barrio donde entregamos."
+                             if not (direccion.strip() or barrio.strip())
+                             else "Para el envío necesitamos tu localidad (por ejemplo Pacheco, Tigre, Don Torcuato)."),
                       cliente_checkout=cli_sesion, cliente_encontrado=cli_sesion,
                       existe=cli_sesion is not None,
                       direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
