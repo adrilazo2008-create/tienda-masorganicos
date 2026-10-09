@@ -546,6 +546,24 @@ def checkout_identificar(request: Request, telefono: str = Form(...)):
                   sugerido=sugerido)
 
 
+@app.get("/checkout/descuento", response_class=HTMLResponse)
+def checkout_descuento(codigo_descuento: str = ""):
+    """Aviso en vivo bajo el campo 'Código de descuento': se tomó o no se tomó."""
+    from html import escape
+    if not codigo_descuento.strip():
+        return HTMLResponse("")
+    d = descuentos.validar(codigo_descuento)
+    if not d:
+        return HTMLResponse(
+            '<p class="desc-msg desc-no">✗ No reconocemos ese código (o ya no está vigente). '
+            'Revisá que esté bien escrito; si no, el pedido se envía sin descuento.</p>')
+    cond = f" {escape(d.condiciones)}" if d.condiciones else ""
+    return HTMLResponse(
+        f'<p class="desc-msg desc-ok">✓ Código <b>{escape(d.codigo)}</b> aplicado: '
+        f'{d.porcentaje.normalize():f}% de descuento{(" —" + cond.lower()) if cond else ""}. '
+        'El descuento se aplica al momento de facturar, por eso no figura en el total de arriba.</p>')
+
+
 @app.post("/checkout/confirmar", response_class=HTMLResponse)
 def checkout_confirmar(
     request: Request,

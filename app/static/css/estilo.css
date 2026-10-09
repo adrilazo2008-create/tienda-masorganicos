@@ -529,3 +529,7 @@ body.popup-abierto{overflow:hidden}
 .ce-form input{flex:1;min-width:12rem}
 .ce-res{margin:.6rem 0 0;font-size:.92rem;line-height:1.5}
 .ce-lista{margin:.4rem 0;padding-left:1.1rem}
+
+.desc-msg{margin:.2rem 0 .8rem;font-size:.88rem;padding:.5rem .7rem;border-radius:var(--radio)}
+.desc-ok{background:#e8f5e9;color:#1b5e20}
+.desc-no{background:#fdecea;color:#b71c1c}

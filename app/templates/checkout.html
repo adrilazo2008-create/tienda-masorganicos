@@ -98,7 +98,9 @@
 
     <fieldset class="co-box">
       <legend>4 · Extras (opcional)</legend>
-      <label>Código de descuento <input name="codigo_descuento" autocomplete="off" spellcheck="false"></label>
+      <label>Código de descuento <input name="codigo_descuento" autocomplete="off" spellcheck="false"
+        hx-get="/checkout/descuento" hx-trigger="input changed delay:400ms, change" hx-target="#desc-aviso" hx-swap="innerHTML"></label>
+      <div id="desc-aviso" aria-live="polite"></div>
       <label>Aclaraciones para el pedido
         <textarea name="observacion" maxlength="500" rows="2"></textarea>
       </label>
