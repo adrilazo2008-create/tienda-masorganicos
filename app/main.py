@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import accesos, catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
+from . import accesos, atribucion, catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -288,6 +288,7 @@ def ctx(request: Request, **extra):
 
 def render(request: Request, plantilla: str, **extra):
     contexto = ctx(request, **extra)
+    atribucion.capturar(request)
     accesos.registrar(request, contexto.get("cliente"))
     return templates.TemplateResponse(request, plantilla, contexto)
 
@@ -697,6 +698,7 @@ def checkout_confirmar(
     numero = None
     if graba:
         numero = pedidos.crear(p)
+        atribucion.guardar(numero, request.session.get("atrib"))
         # mismo event_id que el fbq('track','Purchase', ..., {eventID: '...'})
         # del navegador (checkout_ok.html) -> Meta deduplica el evento del
         # Pixel con el de la Conversions API en vez de contarlo dos veces.

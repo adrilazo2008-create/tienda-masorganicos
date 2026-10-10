@@ -809,3 +809,7 @@ nunca queden líneas con `activo = 0`.
 
 ## 2026-10-07 - Checkout: la localidad es obligatoria para envios
 Si se elige envio y la localidad esta vacia o es solo provincia/pais ("Buenos Aires Argentina"), el checkout vuelve con el mensaje "Para el envio necesitamos tu localidad". Motivo: pedidos con localidad basura (autocompletado) que salian asi en el ticket y en el ERP. Requiere deploy manual en cPanel.
+
+## 2026-10-10 - Landing para Meta Ads: eventos, UTM y atribución de pedidos
+Landing lista para tráfico pago: `fbq` Lead (enlaces a la tienda) y ClickWhatsApp (enlaces a wa.me); cookie `_fbc` desde `fbclid` en `.masorganicos.com.ar` (solo con consentimiento); consentimiento de cookies compartido landing↔tienda en la cookie `mo-cookies` del dominio raíz (`static/js/consentimiento.js`); cartel de cookies compacto en celular y popup que espera a que se elija; hero sin el bug de alto en celular; pedido mínimo de envío visible; texto "Más de 1.200 familias compran con nosotros" en landing, home y Quiénes somos.
+Atribución: los enlaces de la landing a la tienda llevan `utm_source/medium/campaign/content` y `fbclid` (`static/js/seguimiento-meta.js`). `app/atribucion.py` los guarda en la sesión al entrar a la tienda y `/checkout/confirmar` los graba en `grupos` (columnas nuevas `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `fbclid`, creadas solas). Es "último anuncio de la sesión", vale 30 días, y no pisa una atribución ya grabada. Pedidos anteriores al 10/10/2026 no tienen dato. `conectar` → Pedidos web muestra la columna "Anuncio".
