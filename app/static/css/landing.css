@@ -3,7 +3,10 @@
 .hero-landing{display:flex;align-items:center;gap:2rem}
 .hero-landing-texto{flex:1 1 380px;min-width:0}
 .hero-landing-img{flex:1 1 360px;width:100%;max-width:440px;aspect-ratio:4/3;object-fit:cover;
-  border-radius:16px;box-shadow:0 10px 30px -12px rgba(31,84,35,.35)}
+  border-radius:16px;box-shadow:0 10px 30px -12px rgba(31,84,35,.35);background:var(--verde-claro)}
+.envio-min{display:inline-block;margin:1rem 0 0;padding:.45rem .9rem;border-radius:999px;background:#fff;
+  border:1.5px solid var(--verde);color:var(--verde-osc);font-weight:600;font-size:.95rem}
+.envio-min small{font-weight:400;color:var(--gris)}
 
 .como-subtitulo{color:var(--verde-osc);margin:1.6rem 0 .8rem;font-size:1.1rem}
 
@@ -36,5 +39,6 @@
   .local-card{flex-direction:column}
   .local-card img{max-width:none;min-height:160px}
   .hero-landing{flex-direction:column}
-  .hero-landing-img{max-width:none;order:-1}
+  .hero-landing-img{max-width:none;order:-1;flex:none;aspect-ratio:2/1;max-height:150px}
 }
+.zona-min{color:var(--gris);font-size:.85rem}

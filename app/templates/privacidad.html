@@ -75,7 +75,7 @@
 
 <script>
   function cambiarPrefCookies(){
-    try { localStorage.removeItem('mo-cookies'); } catch(e){}
+    window.moConsent.clear();
     location.reload();
   }
 </script>

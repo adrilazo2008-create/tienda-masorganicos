@@ -533,3 +533,11 @@ body.popup-abierto{overflow:hidden}
 .desc-msg{margin:.2rem 0 .8rem;font-size:.88rem;padding:.5rem .7rem;border-radius:var(--radio)}
 .desc-ok{background:#e8f5e9;color:#1b5e20}
 .desc-no{background:#fdecea;color:#b71c1c}
+
+/* Cartel de cookies compacto en celular: no tapa el contenido y el WhatsApp queda visible */
+@media(max-width:559px){
+  .cookie-banner{left:.5rem;right:.5rem;bottom:.5rem;padding:.7rem .8rem;gap:.55rem;border-radius:12px}
+  .cookie-banner p{font-size:.78rem;line-height:1.35}
+  .cookie-acc button{padding:.5rem .6rem;font-size:.85rem}
+  body.cookies-pendientes .wa-flotante{bottom:8.5rem}
+}

@@ -1,3 +1,5 @@
+<script src="/static/js/consentimiento.js?v={{ V }}"></script>
+<script src="/static/js/seguimiento-meta.js?v={{ V }}"></script>
 {% if meta_pixel %}
 <script>
 /* Meta Pixel: solo se carga si la persona acepta las cookies de medición. */
@@ -8,9 +10,10 @@ window.cargarPixel = function(){
   n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
   t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,
   'script','https://connect.facebook.net/en_US/fbevents.js');
+  if (window.moGuardarFbc) window.moGuardarFbc();
   fbq('init','{{ meta_pixel }}');fbq('track','PageView');
 };
-try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarPixel(); } catch(e){}
+try { if (window.moConsent.get() === 'si') window.cargarPixel(); } catch(e){}
 </script>
 {% endif %}
 {% if clarity_id %}
@@ -26,6 +29,6 @@ window.cargarClarity = function(){
   })(window, document, "clarity", "script", "{{ clarity_id }}");
   window.clarity.loaded = true;
 };
-try { if (localStorage.getItem('mo-cookies') === 'si') window.cargarClarity(); } catch(e){}
+try { if (window.moConsent.get() === 'si') window.cargarClarity(); } catch(e){}
 </script>
 {% endif %}

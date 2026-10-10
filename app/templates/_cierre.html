@@ -22,16 +22,19 @@
 </div>
 <script>
   function cookiesElegir(v){
-    try { localStorage.setItem('mo-cookies', v); } catch(e){}
+    window.moConsent.set(v);
     var b = document.getElementById('cookie-banner'); if (b) b.hidden = true;
+    document.body.classList.remove('cookies-pendientes');
+    document.dispatchEvent(new Event('mo-cookies-listo'));
     if (v === 'si' && window.cargarPixel) window.cargarPixel();
     if (v === 'si' && window.cargarClarity) window.cargarClarity();
   }
   (function(){
     var elegido = '';
-    try { elegido = localStorage.getItem('mo-cookies') || ''; } catch(e){}
+    elegido = window.moConsent.get();
     if (elegido !== 'si' && elegido !== 'no'){
       var b = document.getElementById('cookie-banner'); if (b) b.hidden = false;
+      document.body.classList.add('cookies-pendientes');
     }
   })();
 </script>

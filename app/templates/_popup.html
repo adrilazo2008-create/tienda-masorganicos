@@ -35,8 +35,13 @@
     document.getElementById('popup-home-x').focus();
   }
   /* Se muestra recién cuando la imagen cargó: nunca un popup vacío. */
-  if (img.complete && img.naturalWidth) abrir();
-  else img.addEventListener('load', abrir);
+  function cuandoListo(){
+    var cb = document.getElementById('cookie-banner');
+    if (cb && !cb.hidden){ document.addEventListener('mo-cookies-listo', cuandoListo, {once:true}); return; }
+    if (img.complete && img.naturalWidth) abrir();
+    else img.addEventListener('load', abrir, {once:true});
+  }
+  cuandoListo();
   document.getElementById('popup-home-x').addEventListener('click', cerrar);
   el.addEventListener('click', function(e){ if (e.target === el) cerrar(); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !el.hidden) cerrar(); });

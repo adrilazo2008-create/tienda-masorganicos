@@ -18,6 +18,8 @@
       <a href="{{ URL_TIENDA }}/catalogo" class="btn-grande">Ver lo que hay esta semana</a>
       <a href="#zona-cobertura" class="btn-sec">¿Llegamos a tu zona?</a>
     </div>
+    {% set minimos = zonas | selectattr('activo') | map(attribute='minimo_compra') | list %}
+    {% if minimos %}<p class="envio-min">🚚 Pedido mínimo para envío: desde {{ pesos(minimos|min) }} <small>(según tu zona)</small></p>{% endif %}
   </div>
   <img src="{{ IMG_BASE }}/landing/verduras-luz.jpg?v={{ V }}"
        alt="Verduras y frutas frescas a contraluz, con tomates, lechuga y zanahorias"
@@ -25,7 +27,7 @@
        onerror="this.hidden=true">
 </section>
 
-<p class="trust-band"><b>Desde 2019</b>, acompañamos a más de <b>5.000 familias</b> a comer mejor.</p>
+<p class="trust-band"><b>Desde 2019.</b> <b>Más de 1.200 familias compran con nosotros.</b></p>
 
 <section class="bloque">
   <h2>Sabemos lo que se siente</h2>
@@ -82,7 +84,7 @@
     <li>
       <span class="cf-num">1</span>
       <h3>Armás tu pedido</h3>
-      <p>Elegís en la tienda online frutas, verduras y almacén. Hay una compra mínima según tu zona.</p>
+      <p>Elegís en la tienda online frutas, verduras y almacén. Pedido mínimo de envío: desde {{ pesos(minimos|min) }}, según tu zona.</p>
     </li>
     <li>
       <span class="cf-num">2</span>
@@ -165,7 +167,7 @@
   <details class="verificar-zona">
     <summary>¿No encontrás tu dirección? Ver el detalle de zonas y días</summary>
     <ul class="zonas-detalle">
-      {% for z in zonas %}<li><b>{{ z.titulo }}</b> — {{ z.mensaje }}</li>{% endfor %}
+      {% for z in zonas %}<li><b>{{ z.titulo }}</b> — {{ z.mensaje }} <span class="zona-min">Pedido mínimo: {{ pesos(z.minimo_compra) }}.</span></li>{% endfor %}
     </ul>
   </details>
 
