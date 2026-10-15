@@ -706,11 +706,18 @@ def checkout_confirmar(
             "Purchase", f"purchase-{numero}", request,
             custom_data={"value": float(p.total()), "currency": "ARS", "num_items": len(car.lineas)},
             cliente=cli)
+        # sincronizar_erp (arriba) puede haber vinculado al cliente recien ahora: `cli` quedo con el dato
+        # de antes, asi que se relee. Sin esto la reserva se grababa sin cliente_codigo y no aparecia
+        # al facturar (2026-10-14).
+        try:
+            cliente_codigo_reserva = (clientes.obtener(cli.id) or cli).cliente_codigo
+        except Exception:
+            cliente_codigo_reserva = cli.cliente_codigo
         for l in car.lineas:
             if catalogo.es_reserva(l.producto):
                 try:
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
-                                    cliente_codigo=cli.cliente_codigo, nombre=cli.nombre_completo,
+                                    cliente_codigo=cliente_codigo_reserva, nombre=cli.nombre_completo,
                                     telefono=cli.telefono, cantidad=l.cantidad,
                                     pedido_grupo_id=numero,
                                     tipo_entrega=("retiro" if p.retira else "envio"))
