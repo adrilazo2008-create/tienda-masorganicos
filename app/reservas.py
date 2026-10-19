@@ -131,7 +131,7 @@ def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
             try:
                 abierta = cx.execute(text(
                     "SELECT id, cantidad FROM reservas WHERE regla_recurrente_id = :r AND pedido_grupo_id IS NULL "
-                    "AND estado IN ('pendiente', 'encargado') AND creado_en >= NOW() - INTERVAL :d DAY "
+                    "AND estado IN ('pendiente', 'encargado', 'recibido') AND creado_en >= NOW() - INTERVAL :d DAY "
                     "ORDER BY creado_en DESC LIMIT 1"), dict(r=regla_id, d=VENTANA_FIJA_DIAS)).first()
             except Exception:
                 abierta = None
