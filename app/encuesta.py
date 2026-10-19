@@ -2,7 +2,7 @@
 solo a clientes nuevos. La lee `conectar` (pantalla "Cómo nos conocieron").
 
 Tabla `como_nos_conocio` (base de la tienda): una fila por usuario (`user_id` único: no se vuelve a
-preguntar). `respuesta` = instagram | facebook | recomendacion | google | otro | omitido
+preguntar). `respuesta` = instagram | facebook | recomendacion | google | whatsapp | local | otro | omitido
 ("omitido" = cerró el cartel sin contestar; cuenta como ya preguntado pero no como dato).
 
 Cliente nuevo = el pedido que acaba de hacer es el primero: ningún pedido web anterior activo y,
@@ -19,7 +19,7 @@ from .db import engine_erp, engine_tienda
 
 log = logging.getLogger(__name__)
 
-RESPUESTAS = ("instagram", "facebook", "recomendacion", "google", "otro", "omitido")
+RESPUESTAS = ("instagram", "facebook", "recomendacion", "google", "whatsapp", "local", "otro", "omitido")
 _tabla_lista = False
 
 

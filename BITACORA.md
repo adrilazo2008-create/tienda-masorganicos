@@ -829,3 +829,6 @@ Atribución: los enlaces de la landing a la tienda llevan `utm_source/medium/cam
 - Criterio de **cliente nuevo** (`encuesta.debe_preguntar`): ese pedido es el primero (ningún `grupos` anterior `activo=1` del mismo usuario) y, si `users.cliente_codigo` existe, ningún FC/PT previo en `cptescli` (alguien que ya compraba en el local no es «nuevo»). Nunca en modo simulado. Cualquier error → no se muestra.
 - Tabla nueva `como_nos_conocio` (`user_id` UNIQUE, `cliente_codigo`, `grupo_id`, `respuesta`, `texto`, `creado_en`), se crea sola. `respuesta`: instagram|facebook|recomendacion|google|otro|omitido.
 - Probado contra la tienda local con un usuario y pedido de prueba (borrados al final): aparece el cartel, graba una sola vez, la segunda respuesta no pisa. **Falta desplegar a cPanel** (deploy manual, pedir confirmación).
+
+### 2026-10-19 (luego) — Encuesta: más opciones
+Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa a decir «Otro (contanos)» (sigue abriendo el campo de texto opcional). Nuevas claves en `como_nos_conocio.respuesta`: `whatsapp`, `local`.
