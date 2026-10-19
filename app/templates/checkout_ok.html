@@ -42,6 +42,57 @@
 
   <a href="/catalogo" class="btn-grande">Seguir comprando</a>
 </div>
+{% if encuesta and ok.numero and not ok.simulado %}
+<div class="popup-home" id="encuesta" role="dialog" aria-modal="true" aria-labelledby="encuesta-t" hidden>
+  <div class="encuesta-caja">
+    <button type="button" class="popup-home-x" aria-label="Cerrar" id="encuesta-x">×</button>
+    <h2 id="encuesta-t">¿Cómo nos conociste?</h2>
+    <p>Nos ayuda a saber dónde encontrarte a vos y a otras familias. ¡Gracias!</p>
+    <div class="encuesta-ops">
+      <button type="button" data-r="instagram">Instagram</button>
+      <button type="button" data-r="facebook">Facebook</button>
+      <button type="button" data-r="recomendacion">Me recomendaron</button>
+      <button type="button" data-r="google">Google</button>
+      <button type="button" data-r="otro">Otro</button>
+    </div>
+    <form class="encuesta-otro" id="encuesta-otro" hidden>
+      <input type="text" id="encuesta-texto" maxlength="120" placeholder="¿Dónde? (opcional)" aria-label="Otro, opcional">
+      <button type="submit" class="btn-grande">Enviar</button>
+    </form>
+    <button type="button" class="encuesta-no" id="encuesta-no">Ahora no</button>
+  </div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('encuesta'); if (!el) return;
+  var grupo = {{ ok.numero|tojson }}, enviado = false;
+  function cerrar(){ el.hidden = true; document.body.classList.remove('popup-abierto'); }
+  function enviar(r, t){
+    if (enviado) return; enviado = true; cerrar();
+    try {
+      var f = new URLSearchParams({grupo_id: grupo, respuesta: r, texto: t || ''});
+      fetch('/checkout/encuesta', {method:'POST', body:f, credentials:'same-origin', keepalive:true}).catch(function(){});
+    } catch(e){}
+  }
+  el.querySelectorAll('[data-r]').forEach(function(b){
+    b.addEventListener('click', function(){
+      if (b.dataset.r === 'otro'){
+        document.getElementById('encuesta-otro').hidden = false;
+        document.getElementById('encuesta-texto').focus();
+      } else enviar(b.dataset.r);
+    });
+  });
+  document.getElementById('encuesta-otro').addEventListener('submit', function(e){
+    e.preventDefault(); enviar('otro', document.getElementById('encuesta-texto').value);
+  });
+  document.getElementById('encuesta-x').addEventListener('click', function(){ enviar('omitido'); });
+  document.getElementById('encuesta-no').addEventListener('click', function(){ enviar('omitido'); });
+  el.addEventListener('click', function(e){ if (e.target === el) enviar('omitido'); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !el.hidden) enviar('omitido'); });
+  setTimeout(function(){ el.hidden = false; document.body.classList.add('popup-abierto'); }, 1200);
+})();
+</script>
+{% endif %}
 {% if meta_pixel and not ok.simulado %}
 <script>if(window.fbq)fbq('track','Purchase',{value:{{ ok.total }},currency:'ARS',num_items:{{ ok['items']|length }}},{eventID:{{ ('purchase-' ~ ok.numero)|tojson }}});</script>
 {% endif %}

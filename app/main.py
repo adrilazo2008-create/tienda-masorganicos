@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import accesos, atribucion, catalogo, clientes, contenido, descuentos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
+from . import accesos, atribucion, catalogo, clientes, contenido, descuentos, encuesta, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -772,11 +772,22 @@ def checkout_ok(request: Request):
         ok = pedidos.resumen_confirmacion(numero)
         if not ok:
             return RedirectResponse("/", status_code=303)
-        return render(request, "checkout_ok.html", ok=ok)
+        return render(request, "checkout_ok.html", ok=ok, encuesta=encuesta.debe_preguntar(numero))
     ok = request.session.pop("pedido_ok", None)
     if not ok:
         return RedirectResponse("/", status_code=303)
     return render(request, "checkout_ok.html", ok=ok)
+
+
+@app.post("/checkout/encuesta")
+def checkout_encuesta(request: Request, grupo_id: int = Form(0), respuesta: str = Form(""),
+                      texto: str = Form("")):
+    """¿Cómo nos conociste? Siempre responde 200 (el cartel nunca debe molestar)."""
+    from fastapi.responses import JSONResponse
+    cid = request.session.get("cliente_id")
+    if cid:
+        encuesta.guardar(int(cid), grupo_id, respuesta, texto)
+    return JSONResponse({"ok": True})
 
 
 # --------------------------------------------------------------------------- mi cuenta

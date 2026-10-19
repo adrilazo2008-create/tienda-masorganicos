@@ -541,3 +541,15 @@ body.popup-abierto{overflow:hidden}
   .cookie-acc button{padding:.5rem .6rem;font-size:.85rem}
   body.cookies-pendientes .wa-flotante{bottom:8.5rem}
 }
+
+/* encuesta "¿Cómo nos conociste?" (pantalla de pedido enviado) */
+.encuesta-caja{position:relative;background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:1.4rem 1.2rem 1rem;max-width:min(92vw,420px);width:100%;text-align:center}
+.encuesta-caja h2{margin:0 0 .3rem;font-size:1.25rem}
+.encuesta-caja p{margin:0 0 .9rem;color:var(--tinta-suave,#555);font-size:.95rem}
+.encuesta-ops{display:flex;flex-direction:column;gap:.5rem}
+.encuesta-ops button{padding:.7rem;border:1px solid #cfd8c4;border-radius:var(--radio);background:#fff;font:inherit;cursor:pointer}
+.encuesta-ops button:hover,.encuesta-ops button:focus{background:#f0f5ea}
+.encuesta-otro{display:flex;gap:.5rem;margin-top:.6rem}
+.encuesta-otro[hidden]{display:none}
+.encuesta-otro input{flex:1;min-width:0;padding:.6rem;border:1px solid #cfd8c4;border-radius:var(--radio);font:inherit}
+.encuesta-no{margin-top:.7rem;background:none;border:0;color:#777;text-decoration:underline;cursor:pointer;font:inherit}
