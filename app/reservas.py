@@ -81,23 +81,75 @@ def es_reserva_siempre(producto_id: int) -> bool:
     return int(producto_id) in productos_reserva_siempre()
 
 
+# Si el producto es una RESERVA FIJA del cliente (tabla `reservas_recurrentes`, la administra `conectar`), pedirlo por la web
+# NO es una reserva extra: ya la tiene. Ventana (dias) en la que se considera "la reserva de esta semana".
+VENTANA_FIJA_DIAS = 8
+
+
+def _regla_fija(cx, producto_id: int, cliente_codigo: int | None, telefono: int | None):
+    """Regla fija activa del cliente para ese producto (o None). Se busca por cliente y, si el pedido no tiene cliente ERP
+    vinculado, por teléfono."""
+    try:
+        if cliente_codigo:
+            fila = cx.execute(text(
+                "SELECT id, cantidad FROM reservas_recurrentes WHERE activa = 1 AND producto_id = :p AND cliente_codigo = :c "
+                "ORDER BY id LIMIT 1"), dict(p=producto_id, c=cliente_codigo)).first()
+            if fila:
+                return fila
+        if telefono:
+            return cx.execute(text(
+                "SELECT id, cantidad FROM reservas_recurrentes WHERE activa = 1 AND producto_id = :p AND telefono = :t "
+                "ORDER BY id LIMIT 1"), dict(p=producto_id, t=telefono)).first()
+    except Exception:
+        return None   # tablas/columnas de las reservas fijas todavia no existen: se comporta como siempre
+    return None
+
+
 def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
           nombre: str, telefono: int | None, cantidad: Decimal,
           pedido_grupo_id: int | None, tipo_entrega: str | None = None) -> int:
     """`tipo_entrega`: 'envio' | 'retiro' | None (se toma de grupos.retira en el
     pedido que originó la reserva). `origen` queda fijo en 'tienda' -- estas
     reservas siempre vienen de un pedido online, a diferencia de las que se
-    cargan a mano desde `conectar` (ahi el origen es el usuario que la cargo)."""
+    cargan a mano desde `conectar` (ahi el origen es el usuario que la cargo).
+
+    Reserva fija (2026-10-19, caso Rocío Andrada con su leche semanal): si el cliente tiene una regla fija para ese producto,
+    el pedido NO suma una reserva más:
+      * si ya existe la reserva de la semana de esa regla (generada por el job de los sábados, sin pedido asignado) se la
+        vincula a este pedido (queda «dentro del pedido», no repite en «tiene reservado») y solo se crea una reserva nueva
+        por lo que EXCEDA a la fija;
+      * si todavía no existe, la reserva que crea este pedido queda marcada como la de la regla (`regla_recurrente_id`), así el
+        job semanal no genera otra encima."""
     _asegurar_tabla()
     now = datetime.now()
+    cantidad = Decimal(cantidad)
     with engine_erp.begin() as cx:
-        res = cx.execute(text("""
-            INSERT INTO reservas
-                (producto_id, producto_nombre, cliente_codigo, nombre, telefono,
-                 cantidad, tipo_entrega, pedido_grupo_id, origen, estado, creado_en)
-            VALUES
-                (:pid, :pnombre, :ccod, :nombre, :tel, :cant, :tipo, :grupo, 'tienda', 'pendiente', :now)
-        """), dict(pid=producto_id, pnombre=producto_nombre[:191], ccod=cliente_codigo,
-                    nombre=nombre[:191], tel=telefono, cant=Decimal(cantidad), tipo=tipo_entrega,
-                    grupo=pedido_grupo_id, now=now))
+        regla_id = None
+        regla = _regla_fija(cx, producto_id, cliente_codigo, telefono)
+        if regla is not None and pedido_grupo_id:
+            regla_id = int(regla[0])
+            try:
+                abierta = cx.execute(text(
+                    "SELECT id, cantidad FROM reservas WHERE regla_recurrente_id = :r AND pedido_grupo_id IS NULL "
+                    "AND estado IN ('pendiente', 'encargado') AND creado_en >= NOW() - INTERVAL :d DAY "
+                    "ORDER BY creado_en DESC LIMIT 1"), dict(r=regla_id, d=VENTANA_FIJA_DIAS)).first()
+            except Exception:
+                abierta = None
+                regla_id = None
+            if abierta is not None:
+                cx.execute(text(
+                    "UPDATE reservas SET pedido_grupo_id = :g, tipo_entrega = COALESCE(:t, tipo_entrega), actualizado_en = :n "
+                    "WHERE id = :id AND pedido_grupo_id IS NULL"), dict(g=pedido_grupo_id, t=tipo_entrega, n=now, id=int(abierta[0])))
+                sobra = cantidad - Decimal(abierta[1])
+                if sobra <= 0:
+                    return int(abierta[0])
+                cantidad, regla_id = sobra, None        # lo que excede a la fija sigue siendo una reserva normal
+        cols = "producto_id, producto_nombre, cliente_codigo, nombre, telefono, cantidad, tipo_entrega, pedido_grupo_id, origen, estado, creado_en"
+        vals = ":pid, :pnombre, :ccod, :nombre, :tel, :cant, :tipo, :grupo, 'tienda', 'pendiente', :now"
+        if regla_id is not None:
+            cols += ", regla_recurrente_id"; vals += ", :regla"
+        res = cx.execute(text(f"INSERT INTO reservas ({cols}) VALUES ({vals})"),
+                         dict(pid=producto_id, pnombre=producto_nombre[:191], ccod=cliente_codigo,
+                              nombre=nombre[:191], tel=telefono, cant=cantidad, tipo=tipo_entrega,
+                              grupo=pedido_grupo_id, now=now, regla=regla_id))
         return int(res.lastrowid)
