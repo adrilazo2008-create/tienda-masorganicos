@@ -832,3 +832,9 @@ Atribución: los enlaces de la landing a la tienda llevan `utm_source/medium/cam
 
 ### 2026-10-19 (luego) — Encuesta: más opciones
 Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa a decir «Otro (contanos)» (sigue abriendo el campo de texto opcional). Nuevas claves en `como_nos_conocio.respuesta`: `whatsapp`, `local`.
+
+## 2026-10-20 — Artículos sin stock propio en la tienda (receta y «usa el stock de»)
+- Pedido de Adriana: los artículos con receta («se elabora al momento»: zanahoria rallada, jugos) y los cortes vinculados al stock de otro (pollo) no deben figurar «Agotado» ni ocultarse por falta de stock propio. Se definen en `stock` (ficha del artículo → «Receta / origen del stock», tabla `articulo_origen` del ERP).
+- `catalogo._marcar_origen_stock` (se aplica en `_todos_los_productos`, `obtener` y `obtener_varios`): **receta** (y combo) → `es_combo=True`: nunca «Agotado»/«Pocas unidades» ni se ocultan, quedan disponibles mientras estén Activo y habilitados para la web. **Vinculado** → su stock pasa a ser el del artículo base en Central ÷ factor: figura «Agotado» solo cuando se termina el base (y se oculta como cualquier artículo si su rubro lo controla). Los códigos se comparan en minúscula.
+- Antes `obtener`/`obtener_varios` no marcaban los combos (solo la lista): ahora sí, mismo criterio.
+- Probado contra la base real: el jugo detox (rubro 4, antes oculto con stock 0) y la zanahoria rallada quedan visibles; `60014` muestra 48,276 (50,69 ÷ 1,05). Limitación: el stock reservado por pedidos web sin bajar se descuenta por cada corte por separado, no del base compartido. **Falta deploy** (cPanel manual).

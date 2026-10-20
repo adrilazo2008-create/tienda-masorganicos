@@ -290,13 +290,65 @@ def _codigos_combo() -> set:
         return set()
 
 
+def _origenes_stock() -> tuple[set, dict]:
+    """(codigos con receta, {codigo del corte: (codigo base, factor)}) de la tabla `articulo_origen`
+    (la arma `stock`, ficha del articulo -> Receta / origen del stock). Si la tabla no existe o falla,
+    la tienda sigue como antes."""
+    try:
+        with engine_erp.connect() as cx:
+            filas = cx.execute(text("SELECT codigo, modo, codigo_base, factor FROM articulo_origen")).fetchall()
+    except Exception:
+        return set(), {}
+    recetas, vinculos = set(), {}
+    for r in filas:
+        cod = str(r[0]).strip()
+        if r[1] == "receta":
+            recetas.add(cod)
+        elif r[1] == "vinculo" and r[2] and float(r[3] or 0) > 0:
+            vinculos[cod] = (str(r[2]).strip(), float(r[3]))
+    return recetas, vinculos
+
+
+def _marcar_origen_stock(prods: list[Producto]) -> list[Producto]:
+    """Articulos sin stock propio (2026-10-20):
+    - combo (plantilla) y receta ("se elabora al momento"): nunca "agotado" ni se ocultan por falta de stock
+      (es_combo=True): estan disponibles o no (Activo / noweb);
+    - vinculado ("usa el stock de"): su stock es el del articulo base en Central dividido el factor, asi solo
+      figura agotado cuando se termina el base (y se oculta como cualquier articulo si su rubro lo controla)."""
+    # Los codigos conviven en mayuscula y minuscula (ROM0029 / rom0029): todo se compara en minuscula.
+    combos = {c.lower() for c in _codigos_combo()}
+    recetas, vinculos = _origenes_stock()
+    recetas = {c.lower() for c in recetas}
+    vinculos = {c.lower(): v for c, v in vinculos.items()}
+    base_stock: dict[str, float] = {}
+    if vinculos:
+        bases = sorted({b for b, _ in vinculos.values()})
+        q = text("SELECT TRIM(Codigo), Stock FROM StockDepo WHERE deposito = :d AND Codigo IN :c").bindparams(
+            bindparam("c", expanding=True))
+        try:
+            with engine_erp.connect() as cx:
+                base_stock = {str(r[0]).strip().lower(): float(r[1] or 0)
+                              for r in cx.execute(q, {"d": DEPOSITO_CENTRAL, "c": bases})}
+        except Exception:
+            base_stock = {}
+    salida = []
+    for p in prods:
+        cod = p.codigo.lower()
+        if cod in combos or cod in recetas:
+            p = replace(p, es_combo=True)
+        elif cod in vinculos:
+            base, factor = vinculos[cod]
+            p = replace(p, stock=round(base_stock.get(base.lower(), 0.0) / factor, 3))
+        salida.append(p)
+    return salida
+
+
 def _todos_los_productos() -> list[Producto]:
     """Todos los productos vendibles en web + etiquetas. Consulta pesada -> se cachea."""
     sql = _SELECT + " ORDER BY m.destacado DESC, m.Descripcion"
     with engine_erp.connect() as cx:
         prods = [_fila_a_producto(r) for r in cx.execute(text(sql))]
-    combos = _codigos_combo()
-    prods = [replace(p, es_combo=True) if p.codigo in combos else p for p in prods]
+    prods = _marcar_origen_stock(prods)
     return _filtrar_por_stock(_con_etiquetas(prods))
 
 
@@ -380,7 +432,7 @@ def obtener(producto_id: int) -> Optional[Producto]:
         r = cx.execute(text(_SELECT + " AND m.id = :id"), {"id": producto_id}).first()
     if not r:
         return None
-    p = _con_etiquetas([_fila_a_producto(r)])[0]
+    p = _con_etiquetas(_marcar_origen_stock([_fila_a_producto(r)]))[0]
     filtrado = _filtrar_por_stock([p])
     return filtrado[0] if filtrado else None
 
@@ -392,7 +444,7 @@ def obtener_varios(ids: list[int]) -> dict[int, Producto]:
     q = text(_SELECT + " AND m.id IN :ids").bindparams(bindparam("ids", expanding=True))
     with engine_erp.connect() as cx:
         prods = [_fila_a_producto(r) for r in cx.execute(q, {"ids": ids})]
-    return {p.id: p for p in _filtrar_por_stock(_con_etiquetas(prods))}
+    return {p.id: p for p in _filtrar_por_stock(_con_etiquetas(_marcar_origen_stock(prods)))}
 
 
 def nombres_por_id(ids: list[int]) -> dict[int, str]:
