@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 import time
+import unicodedata
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Optional
@@ -352,6 +353,39 @@ def _todos_los_productos() -> list[Producto]:
     return _filtrar_por_stock(_con_etiquetas(prods))
 
 
+def _sin_tildes(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", (s or "").lower())
+                   if unicodedata.category(c) != "Mn")
+
+
+def _raiz(palabra: str) -> str:
+    """Raíz tosca de una palabra en español: saca plural (s/es) y género/
+    terminación (a/o) para que morrón/morrones y rojo/roja/rojos coincidan."""
+    if len(palabra) > 4 and palabra.endswith("es"):
+        palabra = palabra[:-2]
+    elif len(palabra) > 3 and palabra.endswith("s"):
+        palabra = palabra[:-1]
+    if len(palabra) > 3 and palabra[-1] in "aoe":
+        palabra = palabra[:-1]
+    return palabra
+
+
+def _raices(texto: str) -> list[str]:
+    return [_raiz(w) for w in re.findall(r"[a-z0-9ñ]+", _sin_tildes(texto))]
+
+
+def coincide_busqueda(busqueda: str, nombre: str, detalle: str = "") -> bool:
+    """Búsqueda tolerante: ignora mayúsculas, tildes, plural/singular y género,
+    y cada palabra buscada tiene que aparecer (como comienzo de palabra) en el
+    nombre o el detalle, en cualquier orden ("rojo morrones" encuentra
+    "Morrón rojo")."""
+    pedidas = _raices(busqueda)
+    if not pedidas:
+        return False
+    palabras = _raices(f"{nombre} {detalle}")
+    return all(any(w.startswith(p) for w in palabras) for p in pedidas)
+
+
 def listar(categoria_id: Optional[int] = None, rubro_id: Optional[int] = None,
            busqueda: Optional[str] = None, solo_destacados: bool = False,
            limite: Optional[int] = None, con_etiquetas: bool = True) -> list[Producto]:
@@ -362,8 +396,7 @@ def listar(categoria_id: Optional[int] = None, rubro_id: Optional[int] = None,
     if rubro_id:
         res = [p for p in res if p.rubro_id == rubro_id]
     if busqueda:
-        q = busqueda.strip().lower()
-        res = [p for p in res if q in p.nombre.lower() or q in p.detalle.lower()]
+        res = [p for p in res if coincide_busqueda(busqueda, p.nombre, p.detalle)]
     if solo_destacados:
         res = [p for p in res if p.destacado]
     return res[:limite] if limite else list(res)
@@ -377,12 +410,12 @@ def agotados_que_coinciden(busqueda: str, limite: int = 6) -> list[str]:
     if len(q) < 3:
         return []
     visibles = {p.id for p in _cacheado("catalogo_todos", 180, _todos_los_productos)}
-    like = f"%{q}%"
     try:
         with engine_erp.connect() as cx:
-            filas = cx.execute(text(_SELECT + " AND (LOWER(m.Descripcion) LIKE :q OR LOWER(COALESCE(m.detalle,'')) LIKE :q)"
-                                    " ORDER BY m.Descripcion LIMIT 40"), {"q": like})
-            return [str(r.nombre).strip() for r in filas if int(r.id) not in visibles][:limite]
+            filas = cx.execute(text(_SELECT + " ORDER BY m.Descripcion"))
+            return [str(r.nombre).strip() for r in filas
+                    if int(r.id) not in visibles
+                    and coincide_busqueda(q, str(r.nombre), str(getattr(r, "detalle", "") or ""))][:limite]
     except Exception:
         return []
 

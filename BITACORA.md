@@ -838,3 +838,8 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 - `catalogo._marcar_origen_stock` (se aplica en `_todos_los_productos`, `obtener` y `obtener_varios`): **receta** (y combo) → `es_combo=True`: nunca «Agotado»/«Pocas unidades» ni se ocultan, quedan disponibles mientras estén Activo y habilitados para la web. **Vinculado** → su stock pasa a ser el del artículo base en Central ÷ factor: figura «Agotado» solo cuando se termina el base (y se oculta como cualquier artículo si su rubro lo controla). Los códigos se comparan en minúscula.
 - Antes `obtener`/`obtener_varios` no marcaban los combos (solo la lista): ahora sí, mismo criterio.
 - Probado contra la base real: el jugo detox (rubro 4, antes oculto con stock 0) y la zanahoria rallada quedan visibles; `60014` muestra 48,276 (50,69 ÷ 1,05). Limitación: el stock reservado por pedidos web sin bajar se descuenta por cada corte por separado, no del base compartido. **Falta deploy** (cPanel manual).
+
+## 2026-10-21 — Búsqueda inteligente (plural/singular, género, tildes)
+- Pedido de Adriana: una clienta buscó «morrón rojo» y el artículo es «morrones rojos» → «no encontramos». La búsqueda era un `LIKE` literal.
+- `catalogo.coincide_busqueda`: ignora mayúsculas y tildes, reduce cada palabra a una raíz (saca plural `s`/`es` y terminación `a/o/e`), y exige que **cada palabra buscada** sea comienzo de alguna palabra del nombre o detalle, en cualquier orden. Se usa en `listar` (catálogo y buscador rápido) y en `agotados_que_coinciden`.
+- Probado: morron rojo↔Morrones rojos, rojo morrones↔Morrón rojo, limon↔Limones, zanahorias↔Zanahoria; «papa» no trae Zapallo. Límite: no corrige errores de tipeo ni sinónimos. **Falta deploy** (cPanel manual).
