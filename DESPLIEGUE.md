@@ -19,6 +19,8 @@ La tienda está online en **https://tienda.masorganicos.com.ar**
 | FTP | host `167.250.5.60`, user `claude2026@masorganicos.com.ar` |
 | cPanel | user `iebbbhrt` |
 
+> **2026-10-22:** la tienda se publica **sola**. Un cron del cPanel (cada minuto) corre `~/deploy/deploy_apps.py`, que baja `main` por https y ejecuta los mismos dos pasos de `.cpanel.yml` (`deploy/desplegar.sh` para tienda y landing). Alcanza con `git push origin main`: **ya no hace falta pasar el link de cPanel**. El procedimiento manual de abajo sigue funcionando como respaldo. Log: `~/deploy/deploy.log` (entrada `tienda-auto`). Detalle en `C:\MO-IA\CLAUDE.md`, sección «Producción en el cPanel propio».
+
 ## Cómo actualizar la tienda (redeploy)
 
 **Por Git (lo normal):**
