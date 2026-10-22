@@ -843,3 +843,7 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 - Pedido de Adriana: una clienta buscó «morrón rojo» y el artículo es «morrones rojos» → «no encontramos». La búsqueda era un `LIKE` literal.
 - `catalogo.coincide_busqueda`: ignora mayúsculas y tildes, reduce cada palabra a una raíz (saca plural `s`/`es` y terminación `a/o/e`), y exige que **cada palabra buscada** sea comienzo de alguna palabra del nombre o detalle, en cualquier orden. Se usa en `listar` (catálogo y buscador rápido) y en `agotados_que_coinciden`.
 - Probado: morron rojo↔Morrones rojos, rojo morrones↔Morrón rojo, limon↔Limones, zanahorias↔Zanahoria; «papa» no trae Zapallo. Límite: no corrige errores de tipeo ni sinónimos. **Falta deploy** (cPanel manual).
+
+## 2026-10-22 — Reservas: pedir por la web algo ya reservado NO crea otra reserva
+- Caso Sartori: la clienta ya tenía reservado un yogur, hizo un pedido web y puso ese mismo yogur (se acordó de lo que tenía reservado). La tienda creó una reserva NUEVA para el renglón del pedido y la clienta quedó con dos.
+- Regla nueva en `reservas.crear`: si el cliente (por código ERP o teléfono) ya tiene una reserva abierta (pendiente/encargado/recibido, sin pedido asignado, no extra) de ese producto, el renglón del pedido **es** esa reserva: se vincula al pedido y solo se crea una reserva nueva por lo que EXCEDA a lo reservado. Mismo criterio que ya existía para las reservas fijas. Cubre la reserva al confirmar el pedido y al sumar renglones. **Falta deploy en cPanel.**

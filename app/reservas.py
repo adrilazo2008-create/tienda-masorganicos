@@ -144,6 +144,33 @@ def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
                 if sobra <= 0:
                     return int(abierta[0])
                 cantidad, regla_id = sobra, None        # lo que excede a la fija sigue siendo una reserva normal
+        # Reserva ya anotada por el cliente (2026-10-22, caso Sartori): si el cliente ya tenia una reserva abierta de ese
+        # producto y despues lo pide por la web, el renglon del pedido ES esa reserva (se acordo de lo que tenia
+        # reservado): se la vincula al pedido en vez de crear otra, y solo se crea una nueva por lo que EXCEDA.
+        if pedido_grupo_id and cantidad > 0 and (cliente_codigo or telefono):
+            try:
+                cond, par = [], dict(p=producto_id)
+                if cliente_codigo:
+                    cond.append("cliente_codigo = :c"); par["c"] = cliente_codigo
+                if telefono:
+                    cond.append("telefono = :t"); par["t"] = telefono
+                previas = cx.execute(text(
+                    "SELECT id, cantidad FROM reservas WHERE producto_id = :p AND pedido_grupo_id IS NULL "
+                    "AND COALESCE(es_extra, 0) = 0 AND estado IN ('pendiente', 'encargado', 'recibido') "
+                    "AND (" + " OR ".join(cond) + ") ORDER BY creado_en, id"), par).fetchall()
+            except Exception:
+                previas = []
+            primera = None
+            for pr in previas:
+                if cantidad <= 0:
+                    break
+                cx.execute(text(
+                    "UPDATE reservas SET pedido_grupo_id = :g, tipo_entrega = COALESCE(:t, tipo_entrega), actualizado_en = :n "
+                    "WHERE id = :id AND pedido_grupo_id IS NULL"), dict(g=pedido_grupo_id, t=tipo_entrega, n=now, id=int(pr[0])))
+                primera = primera or int(pr[0])
+                cantidad -= Decimal(pr[1])
+            if cantidad <= 0:
+                return primera
         cols = "producto_id, producto_nombre, cliente_codigo, nombre, telefono, cantidad, tipo_entrega, pedido_grupo_id, origen, estado, creado_en"
         vals = ":pid, :pnombre, :ccod, :nombre, :tel, :cant, :tipo, :grupo, 'tienda', 'pendiente', :now"
         if regla_id is not None:
