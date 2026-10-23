@@ -49,6 +49,11 @@ app = FastAPI(title="Tienda MasOrgánicos")
 app.add_middleware(SessionMiddleware, secret_key=S.secret_key, max_age=60 * 60 * 24 * 365 * 2)
 
 
+_HOST_TIENDA = "tienda.masorganicos.com.ar"
+_HOSTS_LANDING = {"masorganicos.com.ar", "www.masorganicos.com.ar"}
+_RUTAS_TIENDA = ("/catalogo", "/producto", "/carrito", "/checkout", "/cuenta", "/envios", "/faq")
+
+
 @app.middleware("http")
 async def forzar_https(request: Request, call_next):
     """El catálogo se veía tanto por http:// como por https:// (Clarity,
@@ -65,6 +70,13 @@ async def forzar_https(request: Request, call_next):
         # hosts con y sin www; cada host tiene su propia cookie de sesión/carrito).
         if host.startswith("www.tienda."):
             destino = destino.replace(netloc=destino.netloc[4:])
+        # La landing (masorganicos.com.ar) comparte código con la tienda, pero las
+        # rutas de compra tienen que vivir en un solo host: si no, el carrito se
+        # parte en dos cookies. Un solo salto (http y/o www incluidos), con ruta
+        # y query intactos (utm_*, fbclid).
+        if (host in _HOSTS_LANDING and request.method in ("GET", "HEAD")
+                and request.url.path.startswith(_RUTAS_TIENDA)):
+            destino = destino.replace(scheme="https", netloc=_HOST_TIENDA)
         if str(destino) != str(request.url):
             return RedirectResponse(str(destino), status_code=301)
     return await call_next(request)
