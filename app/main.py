@@ -291,7 +291,7 @@ def ctx(request: Request, **extra):
         cliente=_cliente_actual(request),
         entorno=S.entorno,
         anuncio=contenido.anuncio(),
-        meta_pixel=contenido.meta_pixel_id(),
+        meta_pixel=contenido.meta_pixel_id() if not meta_capi.es_host_local(request) else "",
         clarity_id=contenido.clarity_id(),
     )
     base.update(extra)

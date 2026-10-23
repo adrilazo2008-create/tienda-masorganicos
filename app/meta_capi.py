@@ -73,6 +73,12 @@ def _user_data(request: Request, cliente=None) -> dict:
     return ud
 
 
+def es_host_local(request: Request) -> bool:
+    """Pruebas en la PC (localhost): no deben contaminar las métricas de Meta."""
+    host = (request.headers.get("host") or "").split(":")[0].lower()
+    return host in ("localhost", "127.0.0.1", "[::1]") or host.endswith(".localhost")
+
+
 def enviar_evento(event_name: str, event_id: str, request: Request,
                    custom_data: dict, cliente=None) -> None:
     """Manda un evento a la Conversions API con el mismo event_id que su
@@ -80,7 +86,7 @@ def enviar_evento(event_name: str, event_id: str, request: Request,
     checkout: cualquier falla (token no configurado, sin red, error de Meta)
     queda solo logueada."""
     pixel_id = contenido.meta_pixel_id()
-    if not pixel_id or not S.meta_capi_token:
+    if not pixel_id or not S.meta_capi_token or es_host_local(request):
         return
     try:
         payload = {
