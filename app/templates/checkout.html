@@ -119,7 +119,12 @@
     </div>
     <p class="rr tot"><span>Subtotal</span><span class="num" id="r-subtotal" data-v="{{ car.subtotal }}">{{ pesos(car.subtotal) }}</span></p>
     <p class="rr"><span>Envío</span><span class="num" id="r-envio">a calcular</span></p>
+    <div id="r-modalidad" class="r-modalidad" hidden>
+      <label class="radio"><input type="radio" name="modalidad_resumen" value="coordinar" onchange="elegirModalidadResumen(this.value)"> <span id="r-opt-coord">A coordinar</span></label>
+      <label class="radio"><input type="radio" name="modalidad_resumen" value="dia" onchange="elegirModalidadResumen(this.value)"> <span id="r-opt-dia">En reparto por zona</span></label>
+    </div>
     <p class="rr tot"><span>Total estimado</span><span class="num" id="r-total">{{ pesos(car.subtotal) }}</span></p>
+    <p class="r-minimo" id="r-minimo" hidden></p>
     {% if eliminados %}
     <div class="stock-aviso">
       {% if car.vacio %}

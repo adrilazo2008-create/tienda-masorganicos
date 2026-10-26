@@ -89,6 +89,7 @@ function recalcularEnvio(){
   var entregaEnvio = document.querySelector('input[name=entrega][value=envio]').checked;
   var modBox = document.getElementById('modalidad-envio');
   var eligeModalidad = false;
+  var costoCoordR = 0, costoDiaR = 0, minimoR = 0, subR = sub;
 
   if (entregaEnvio && sel && sel.value !== '0'){
     var o = sel.options[sel.selectedIndex];
@@ -102,6 +103,7 @@ function recalcularEnvio(){
     var costoCoord = precio;
     var costoDia = (gratis && sub >= gratis) ? 0 : diapre;
     eligeModalidad = costoDia < costoCoord;   // solo ofrecemos elegir si "el día" conviene
+    costoCoordR = costoCoord; costoDiaR = costoDia; minimoR = minc;
 
     var modalidad = 'coordinar';
     var mr = document.querySelector('input[name=modalidad_envio]:checked');
@@ -122,10 +124,33 @@ function recalcularEnvio(){
   }
   if (modBox) modBox.hidden = !eligeModalidad;
 
+  // mismo selector, repetido en el resumen
+  var rBox = document.getElementById('r-modalidad');
+  if (rBox){
+    rBox.hidden = !eligeModalidad;
+    if (eligeModalidad){
+      var mm = document.querySelector('input[name=modalidad_envio]:checked');
+      var rr = document.querySelector('input[name=modalidad_resumen][value=' + (mm ? mm.value : 'coordinar') + ']');
+      if (rr) rr.checked = true;
+      var rc = document.getElementById('r-opt-coord'), rd = document.getElementById('r-opt-dia');
+      if (rc) rc.textContent = 'A coordinar — ' + fmtPeso(costoCoordR);
+      if (rd) rd.textContent = 'En reparto por zona — ' + (costoDiaR === 0 ? 'sin cargo' : fmtPeso(costoDiaR));
+    }
+  }
+  var rm = document.getElementById('r-minimo');
+  if (rm){
+    rm.hidden = !minimoR || subR >= minimoR;
+    rm.textContent = 'Valor del pedido por debajo del mínimo en tu zona (' + fmtPeso(minimoR) + ').';
+  }
+
   document.getElementById('r-envio').textContent = entregaEnvio ? fmtPeso(envio) : 'retiro sin costo';
   document.getElementById('r-total').textContent = fmtPeso(sub + envio);
   var ei = document.getElementById('envio-info'); if (ei) ei.textContent = info;
   var zd = document.getElementById('zona-detalle'); if (zd) zd.textContent = detalle.trim();
+}
+function elegirModalidadResumen(v){
+  var r = document.querySelector('input[name=modalidad_envio][value=' + v + ']');
+  if (r){ r.checked = true; recalcularEnvio(); }
 }
 function fmtPeso(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
 function iniciarCheckout(){ toggleEntrega(); iniciarBuscaZona(); }
