@@ -566,9 +566,32 @@ window.addEventListener('pageshow', function(){
 
 // Confirmar pedido: valida lo mínimo ANTES de enviar y avisa pegado al botón
 // (si el aviso aparecía arriba de la página, la persona no se enteraba).
+// Mismo criterio que clientes.celular_valido (servidor): área 11 (AMBA) + número = 10 dígitos, sin 0/15/54/9 delante.
+function celularValido(v){
+  var d = String(v || '').replace(/\D/g, '');
+  if (d.indexOf('549') === 0) d = d.slice(3); else if (d.indexOf('54') === 0) d = d.slice(2);
+  d = d.replace(/^0+/, '');
+  if (d.slice(0, 2) === '11' && d.slice(2, 4) === '15') d = d.slice(0, 2) + d.slice(4);
+  else if (d.slice(0, 2) === '15') d = '11' + d.slice(2);
+  if (d.length !== 10 || d.slice(0, 2) !== '11' || /^(\d)\1+$/.test(d)) return false;
+  return true;
+}
+
 function confirmarCheckout(f){
   var b = document.getElementById('btn-confirmar');
   if (b && b.dataset.enviando) return false;
+  var aviso0 = document.getElementById('aviso-checkout');
+  if (f.telefono && !celularValido(f.telefono.value)){
+    if (!aviso0){
+      aviso0 = document.createElement('p');
+      aviso0.id = 'aviso-checkout'; aviso0.className = 'err-box'; aviso0.setAttribute('role', 'alert');
+      b.parentNode.insertBefore(aviso0, b);
+    }
+    aviso0.textContent = 'Revisá tu celular: escribilo con código de área y número, por ejemplo 11 5504 6740.';
+    try { aviso0.scrollIntoView({ block: 'center' }); } catch(e){}
+    if (f.telefono.focus) f.telefono.focus({ preventScroll: true });
+    return false;
+  }
   var envio = f.querySelector('input[name=entrega][value=envio]');
   if (envio && envio.checked){
     var dir = ((f.direccion || {}).value || '').trim();

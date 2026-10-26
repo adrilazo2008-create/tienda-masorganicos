@@ -69,6 +69,40 @@ def debe_preguntar(grupo_id: int) -> bool:
         return False
 
 
+TEXTO_AVISO_WHATSAPP = ("Tu número de WhatsApp va a ser utilizado para contactarte y coordinar la entrega de tu pedido.")
+
+
+def registrar_aviso_whatsapp(grupo_id: int) -> None:
+    """Deja constancia (una sola vez por cliente) de que se le mostró el aviso de que su WhatsApp se usa para
+    contactarlo y coordinar la entrega: es el consentimiento que se pide para escribirle desde el sistema
+    (tabla `aviso_whatsapp`, base de la tienda; la puede leer `conectar`). Nunca rompe la confirmación del pedido."""
+    try:
+        with engine_tienda.begin() as cx:
+            cx.execute(text("""
+                CREATE TABLE IF NOT EXISTS aviso_whatsapp (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    cliente_codigo INT NULL,
+                    grupo_id INT NULL,
+                    telefono VARCHAR(20) NULL,
+                    texto VARCHAR(255) NOT NULL,
+                    mostrado_en DATETIME NOT NULL,
+                    UNIQUE KEY uq_user (user_id)
+                )
+            """))
+            g = cx.execute(text("SELECT cliente FROM grupos WHERE id = :g"), {"g": grupo_id}).first()
+            if not g or not g.cliente:
+                return
+            u = cx.execute(text("SELECT cliente_codigo, telefono FROM users WHERE id = :u"), {"u": int(g.cliente)}).first()
+            cx.execute(text("""
+                INSERT IGNORE INTO aviso_whatsapp (user_id, cliente_codigo, grupo_id, telefono, texto, mostrado_en)
+                VALUES (:u, :c, :g, :t, :x, NOW())
+            """), {"u": int(g.cliente), "c": u.cliente_codigo if u else None, "g": grupo_id,
+                   "t": str(u.telefono) if u and u.telefono else None, "x": TEXTO_AVISO_WHATSAPP})
+    except Exception:
+        log.exception("encuesta.registrar_aviso_whatsapp")
+
+
 def guardar(user_id: int, grupo_id: int, respuesta: str, texto: str = "") -> bool:
     """Graba la respuesta (una sola por usuario). El pedido debe ser de ese usuario."""
     if respuesta not in RESPUESTAS or not user_id:

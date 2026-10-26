@@ -62,6 +62,17 @@ def normalizar_telefono(valor: str) -> int:
     return n if n <= _INT_MAX else int(d[-9:])  # fallback defensivo
 
 
+def celular_valido(valor: str) -> bool:
+    """True si `valor` es un celular argentino usable para WhatsApp: código de área 11 + número = 10 dígitos
+    ("11 5504-6740", también con 0/15/54/9 delante: normalizar_telefono los saca) y no un número "de relleno"
+    (1111111111). Sirve para avisar ANTES de confirmar el pedido: coordinamos todo por WhatsApp."""
+    d = str(normalizar_telefono(valor))
+    # Las zonas son AMBA (área 11) y el teléfono se guarda como INT: un código de área más largo se corrompería.
+    if len(d) != 10 or not d.startswith("11") or len(set(d)) == 1:
+        return False
+    return True
+
+
 def _variante_11_15(tel: int) -> Optional[int]:
     """La otra forma del mismo número: en la base conviven celulares de AMBA
     cargados con código de área ("11 5504-6740") y cargados a la vieja usanza,

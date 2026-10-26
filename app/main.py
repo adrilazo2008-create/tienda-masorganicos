@@ -650,6 +650,19 @@ def checkout_confirmar(
                       direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                       token=secrets.token_urlsafe(12))
 
+    # El celular es el canal de todo (coordinamos por WhatsApp): se verifica antes de grabar nada. El navegador ya
+    # avisa al confirmar (confirmarCheckout); esto cubre el caso en que no lo haya hecho.
+    if not clientes.celular_valido(telefono):
+        cli_sesion = _cliente_actual(request)
+        dirs = clientes.direcciones(cli_sesion.id) if cli_sesion else []
+        return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
+                      sucursales=zonas.sucursales(), permitir_escribir=graba,
+                      error="Revisá tu celular: escribilo con código de área y número, por ejemplo 11 5504 6740.",
+                      cliente_checkout=cli_sesion, cliente_encontrado=cli_sesion,
+                      existe=cli_sesion is not None,
+                      direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                      token=secrets.token_urlsafe(12))
+
     # cliente
     cli = clientes.buscar_por_telefono(telefono) or (
         clientes.buscar_por_email(email) if email else None)
@@ -784,7 +797,10 @@ def checkout_ok(request: Request):
         ok = pedidos.resumen_confirmacion(numero)
         if not ok:
             return RedirectResponse("/", status_code=303)
-        return render(request, "checkout_ok.html", ok=ok, encuesta=encuesta.debe_preguntar(numero))
+        preguntar = encuesta.debe_preguntar(numero)
+        if preguntar and not ok.get("simulado"):
+            encuesta.registrar_aviso_whatsapp(numero)   # primer pedido: queda constancia de que se mostró el aviso
+        return render(request, "checkout_ok.html", ok=ok, encuesta=preguntar)
     ok = request.session.pop("pedido_ok", None)
     if not ok:
         return RedirectResponse("/", status_code=303)

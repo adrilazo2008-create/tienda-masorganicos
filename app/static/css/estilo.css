@@ -22,6 +22,7 @@ a,button,input,select,textarea,summary,label{touch-action:manipulation}
 .cont{max-width:1120px;margin:0 auto;padding:1rem}
 [id]{scroll-margin-top:120px}
 .chico{font-size:.85rem;color:var(--gris)}
+.encuesta-aviso{margin:.8rem 0 0;text-align:center}
 .num{font-variant-numeric:tabular-nums}
 .banda-dev{background:var(--acento);color:#fff;text-align:center;font-size:.8rem;padding:.25rem}
 
