@@ -69,12 +69,12 @@ def debe_preguntar(grupo_id: int) -> bool:
         return False
 
 
-TEXTO_AVISO_WHATSAPP = ("Tu número de WhatsApp va a ser utilizado para contactarte y coordinar la entrega de tu pedido.")
+TEXTO_AVISO_WHATSAPP = "Tu número de WhatsApp va a ser utilizado para contactarte."
 
 
 def registrar_aviso_whatsapp(grupo_id: int) -> None:
     """Deja constancia (una sola vez por cliente) de que se le mostró el aviso de que su WhatsApp se usa para
-    contactarlo y coordinar la entrega: es el consentimiento que se pide para escribirle desde el sistema
+    contactarlo (sin limitarlo a la entrega, a pedido de Adriana): es el consentimiento que se pide para escribirle desde el sistema
     (tabla `aviso_whatsapp`, base de la tienda; la puede leer `conectar`). Nunca rompe la confirmación del pedido."""
     try:
         with engine_tienda.begin() as cx:
