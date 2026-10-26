@@ -135,6 +135,8 @@ function recalcularEnvio(){
       var rc = document.getElementById('r-opt-coord'), rd = document.getElementById('r-opt-dia');
       if (rc) rc.textContent = 'A coordinar — ' + fmtPeso(costoCoordR);
       if (rd) rd.textContent = 'En reparto por zona — ' + (costoDiaR === 0 ? 'sin cargo' : fmtPeso(costoDiaR));
+      var rn = document.getElementById('r-modalidad-nota');
+      if (rn) rn.hidden = !(costoDiaR === 0 && rr && rr.value === 'coordinar');
     }
   }
   var rm = document.getElementById('r-minimo');
