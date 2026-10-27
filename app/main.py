@@ -664,7 +664,10 @@ def checkout_confirmar(
                       token=secrets.token_urlsafe(12))
 
     # cliente
-    cli = clientes.buscar_por_telefono(telefono) or (
+    # Con sesión iniciada manda la cuenta logueada, no el celular tipeado: si lo
+    # escribió distinto (ej. uno viejo de una cuenta fusionada) se creaba otro
+    # cliente o el pedido fallaba por email repetido (pedido 2026-10-27).
+    cli = _cliente_actual(request) or clientes.buscar_por_telefono(telefono) or (
         clientes.buscar_por_email(email) if email else None)
     if graba:
         if cli:
