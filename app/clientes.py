@@ -221,6 +221,20 @@ def crear(nombre: str, apellido: str, telefono: str, email: str,
         return obtener(existente.id)  # type: ignore
 
     tel = normalizar_telefono(telefono)
+    email_final = email or f"sinmail_{tel}@masorganicos.local"
+    # `users.email` es único y `buscar_por_email`/`buscar_por_telefono` solo ven
+    # activos: si ya hay una fila desactivada con ese email, insertar rompía el
+    # checkout con un 1062. La reactivamos en vez de crear otra.
+    with engine_tienda.begin() as cx:
+        inactivo = cx.execute(text("SELECT id FROM users WHERE LOWER(email) = :e LIMIT 1"),
+                              {"e": email_final.lower()}).first()
+        if inactivo:
+            cx.execute(text("UPDATE users SET activo = 1, telefono = :t, updated_at = :now WHERE id = :id"),
+                       {"t": tel, "now": datetime.now(), "id": inactivo.id})
+    if inactivo:
+        actualizar(int(inactivo.id), nombre=nombre, apellido=apellido, telefono=telefono, pin=pin)
+        return obtener(int(inactivo.id))  # type: ignore
+
     pwd = hash_pin(pin) if pin else ""
     now = datetime.now()
     sql = text("""
