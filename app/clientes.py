@@ -224,16 +224,23 @@ def crear(nombre: str, apellido: str, telefono: str, email: str,
     email_final = email or f"sinmail_{tel}@masorganicos.local"
     # `users.email` es único y `buscar_por_email`/`buscar_por_telefono` solo ven
     # activos: si ya hay una fila desactivada con ese email, insertar rompía el
-    # checkout con un 1062. La reactivamos en vez de crear otra.
+    # checkout con un 1062. Una fila desactivada suele ser una cuenta fusionada
+    # en "Clientes duplicados": se usa la cuenta activa que quedó con el mismo
+    # cliente_codigo (sin tocarla). Si no hay, se reactiva la fila.
     with engine_tienda.begin() as cx:
-        inactivo = cx.execute(text("SELECT id FROM users WHERE LOWER(email) = :e LIMIT 1"),
-                              {"e": email_final.lower()}).first()
-        if inactivo:
+        previo = cx.execute(text("SELECT id, cliente_codigo FROM users WHERE LOWER(email) = :e LIMIT 1"),
+                            {"e": email_final.lower()}).first()
+        if previo and previo.cliente_codigo:
+            vigente = cx.execute(text("SELECT id FROM users WHERE cliente_codigo = :c AND activo = 1 "
+                                      "ORDER BY id DESC LIMIT 1"), {"c": previo.cliente_codigo}).first()
+            if vigente:
+                return obtener(int(vigente.id))  # type: ignore
+        if previo:
             cx.execute(text("UPDATE users SET activo = 1, telefono = :t, updated_at = :now WHERE id = :id"),
-                       {"t": tel, "now": datetime.now(), "id": inactivo.id})
-    if inactivo:
-        actualizar(int(inactivo.id), nombre=nombre, apellido=apellido, telefono=telefono, pin=pin)
-        return obtener(int(inactivo.id))  # type: ignore
+                       {"t": tel, "now": datetime.now(), "id": previo.id})
+    if previo:
+        actualizar(int(previo.id), nombre=nombre, apellido=apellido, telefono=telefono, pin=pin)
+        return obtener(int(previo.id))  # type: ignore
 
     pwd = hash_pin(pin) if pin else ""
     now = datetime.now()
