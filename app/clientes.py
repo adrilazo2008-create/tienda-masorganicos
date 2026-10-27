@@ -88,6 +88,12 @@ def _variante_11_15(tel: int) -> Optional[int]:
     return None
 
 
+def es_caba(localidad: str) -> bool:
+    """True si la localidad escrita es la Ciudad de Buenos Aires (CABA, Capital Federal...)."""
+    l = re.sub(r"[^a-z]", "", (localidad or "").lower())
+    return l in ("caba", "capitalfederal", "ciudaddebuenosaires", "ciudadautonomadebuenosaires", "cabaargentina")
+
+
 def _slug_name(nombre: str, apellido: str, email: str) -> str:
     base = (email.split("@")[0] if email else f"{nombre}.{apellido}").strip().lower()
     return re.sub(r"[^a-z0-9._-]", "", base)[:180] or "cliente"

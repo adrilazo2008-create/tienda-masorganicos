@@ -650,6 +650,21 @@ def checkout_confirmar(
                       direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                       token=secrets.token_urlsafe(12))
 
+    # Zona vs localidad (2026-10-27): una clienta cargó una dirección de CABA con la zona
+    # de su dirección anterior (Benavidez) y el envío se cobró de menos.
+    if (entrega != "retira" and z and clientes.es_caba(localidad)
+            and not (z.titulo or "").upper().startswith("CABA")):
+        cli_sesion = _cliente_actual(request)
+        dirs = clientes.direcciones(cli_sesion.id) if cli_sesion else []
+        return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
+                      sucursales=zonas.sucursales(), permitir_escribir=graba,
+                      error=("La dirección es de CABA pero la zona elegida es «" + z.titulo + "». "
+                             "Elegí la zona de CABA que corresponda a tu barrio (Norte o Centro) para que el envío salga bien."),
+                      cliente_checkout=cli_sesion, cliente_encontrado=cli_sesion,
+                      existe=cli_sesion is not None,
+                      direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                      token=secrets.token_urlsafe(12))
+
     # El celular es el canal de todo (coordinamos por WhatsApp): se verifica antes de grabar nada. El navegador ya
     # avisa al confirmar (confirmarCheckout); esto cubre el caso en que no lo haya hecho.
     if not clientes.celular_valido(telefono):
