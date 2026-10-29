@@ -591,6 +591,8 @@ def checkout_confirmar(
     pago: str = Form("efectivo"),
     codigo_descuento: str = Form(""), observacion: str = Form(""),
     token: str = Form(""),
+    utm_source: str = Form(""), utm_medium: str = Form(""), utm_campaign: str = Form(""),
+    utm_content: str = Form(""), fbclid: str = Form(""),
 ):
     # Mismo envío de vuelta (doble clic, "atrás" del navegador, reintento por
     # lag): no duplicar el pedido, mostrar la confirmación que ya se generó.
@@ -741,7 +743,9 @@ def checkout_confirmar(
     numero = None
     if graba:
         numero = pedidos.crear(p)
-        atribucion.guardar(numero, request.session.get("atrib"))
+        # los que mandó el navegador (cookie/localStorage, 30 días) mandan; si no vino nada, la sesión
+        atribucion.guardar(numero, atribucion.desde_formulario(
+            utm_source, utm_medium, utm_campaign, utm_content, fbclid) or request.session.get("atrib"))
         # mismo event_id que el fbq('track','Purchase', ..., {eventID: '...'})
         # del navegador (checkout_ok.html) -> Meta deduplica el evento del
         # Pixel con el de la Conversions API en vez de contarlo dos veces.

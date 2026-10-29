@@ -863,3 +863,12 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 - Error 500 del pedido de una clienta: su cuenta duplicada se habia desactivado al unificar clientes y el checkout intento crear otra con el mismo email (1062). `clientes.crear` ahora usa la cuenta activa con el mismo `cliente_codigo` (o reactiva la fila si no hay).
 - Con sesion iniciada, el pedido va siempre a la cuenta logueada (antes mandaba el celular tipeado). El celular tipeado NO actualiza la cuenta.
 - Una direccion de CABA con zona que no es de CABA ya no se puede confirmar (`clientes.es_caba`); el caso real cobro el envio de menos (pedido #22533).
+
+## 2026-10-29 - Atribución a anuncios más robusta y encuesta de un toque
+- Pedido de Adriana (pasado desde el asesor de Meta): que cada pedido guarde de qué anuncio vino sin depender de lo que conteste el cliente. Ya existía la captura en sesión (`atribucion.py`); se reforzó.
+- Captura: `static/js/atribucion.js` (en `base.html`) guarda utm_source/medium/campaign/content y fbclid en cookie `mo_atrib` (dominio raíz) Y localStorage, 30 días; una URL sin parámetros nunca pisa lo guardado, solo una URL nueva con UTM. Al enviar el checkout agrega 5 campos ocultos; `/checkout/confirmar` los toma (si no vino ninguno, cae a la sesión como antes). Motivo: el navegador interno de Instagram pierde el estado y el cliente puede pedir horas después.
+- Columnas de `grupos` ampliadas a varchar(150) (utm_*) y (200) (fbclid); `atribucion._asegurar_columnas` las ensancha sola.
+- Encuesta (`checkout_ok.html`): título «Un último dato: ¿cómo nos conociste?», cinco botones de un toque (Anuncio en Instagram o Facebook / Perfil o publicaciones de Instagram / Recomendación de alguien / Google / Otra), sin campo de texto. Claves nuevas en `como_nos_conocio.respuesta`: `anuncio`, `perfil_instagram` (las viejas siguen válidas). Sigue después de enviar y solo a clientes nuevos.
+- `conectar` → Cómo nos conocieron: sección «Por medio de llegada» (utm_source=meta + utm_medium=paid cuenta como «Por anuncio» aunque haya contestado otra cosa; lista con campaña, anuncio y lo que respondió).
+- Parámetros para los anuncios activos (test y retargeting): `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}`. Ojo: `utm_source` debe ser exactamente `meta` y `utm_medium` `paid`.
+- Probado: lectura del formulario y lógica JS (con y sin UTM). NO probado con un pedido real (escribiría en producción).

@@ -18,7 +18,7 @@ from sqlalchemy import text
 from .db import engine_tienda
 
 CLAVES = ("utm_source", "utm_medium", "utm_campaign", "utm_content", "fbclid")
-_MAX = {"utm_source": 100, "utm_medium": 100, "utm_campaign": 100, "utm_content": 100, "fbclid": 255}
+_MAX = {"utm_source": 150, "utm_medium": 150, "utm_campaign": 150, "utm_content": 150, "fbclid": 200}
 _VIGENCIA_DIAS = 30           # la sesión dura 2 años: no atribuir un pedido de hace meses
 _columnas_listas = False
 
@@ -38,17 +38,34 @@ def capturar(request) -> None:
         pass
 
 
+def desde_formulario(utm_source="", utm_medium="", utm_campaign="", utm_content="", fbclid="") -> dict | None:
+    """Atribución que mandó el navegador con el pedido (cookie/localStorage de 30 días).
+    None si no vino ninguno."""
+    try:
+        vals = {"utm_source": utm_source, "utm_medium": utm_medium, "utm_campaign": utm_campaign,
+                "utm_content": utm_content, "fbclid": fbclid}
+        datos = {k: (v or "").strip()[:_MAX[k]] for k, v in vals.items() if (v or "").strip()}
+        if not datos:
+            return None
+        datos["ts"] = int(time.time())
+        return datos
+    except Exception:
+        return None
+
+
 def _asegurar_columnas() -> None:
     global _columnas_listas
     if _columnas_listas:
         return
     with engine_tienda.begin() as cx:
-        existentes = {r[0] for r in cx.execute(text(
-            "SELECT column_name FROM information_schema.columns "
+        existentes = {r[0].lower(): r[1] for r in cx.execute(text(
+            "SELECT column_name, character_maximum_length FROM information_schema.columns "
             "WHERE table_schema = DATABASE() AND table_name = 'grupos'"))}
         for k in CLAVES:
             if k not in existentes:
                 cx.execute(text(f"ALTER TABLE grupos ADD COLUMN {k} VARCHAR({_MAX[k]}) NULL"))
+            elif (existentes[k] or 0) < _MAX[k]:
+                cx.execute(text(f"ALTER TABLE grupos MODIFY {k} VARCHAR({_MAX[k]}) NULL"))
     _columnas_listas = True
 
 

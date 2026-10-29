@@ -46,21 +46,14 @@
 <div class="popup-home" id="encuesta" role="dialog" aria-modal="true" aria-labelledby="encuesta-t" hidden>
   <div class="encuesta-caja">
     <button type="button" class="popup-home-x" aria-label="Cerrar" id="encuesta-x">×</button>
-    <h2 id="encuesta-t">¿Cómo nos conociste?</h2>
-    <p>Nos ayuda a saber dónde encontrarte a vos y a otras familias. ¡Gracias!</p>
+    <h2 id="encuesta-t">Un último dato: ¿cómo nos conociste?</h2>
     <div class="encuesta-ops">
-      <button type="button" data-r="instagram">Instagram</button>
-      <button type="button" data-r="facebook">Facebook</button>
-      <button type="button" data-r="recomendacion">Me recomendaron</button>
+      <button type="button" data-r="anuncio">Anuncio en Instagram o Facebook</button>
+      <button type="button" data-r="perfil_instagram">Perfil o publicaciones de Instagram</button>
+      <button type="button" data-r="recomendacion">Recomendación de alguien</button>
       <button type="button" data-r="google">Google</button>
-      <button type="button" data-r="whatsapp">WhatsApp</button>
-      <button type="button" data-r="local">Pasé por el local</button>
-      <button type="button" data-r="otro">Otro (contanos)</button>
+      <button type="button" data-r="otro">Otra</button>
     </div>
-    <form class="encuesta-otro" id="encuesta-otro" hidden>
-      <input type="text" id="encuesta-texto" maxlength="120" placeholder="¿Dónde? (opcional)" aria-label="Otro, opcional">
-      <button type="submit" class="btn-grande">Enviar</button>
-    </form>
     <button type="button" class="encuesta-no" id="encuesta-no">Ahora no</button>
     <p class="chico encuesta-aviso">Tu número de WhatsApp va a ser utilizado para contactarte.</p>
   </div>
@@ -78,15 +71,7 @@
     } catch(e){}
   }
   el.querySelectorAll('[data-r]').forEach(function(b){
-    b.addEventListener('click', function(){
-      if (b.dataset.r === 'otro'){
-        document.getElementById('encuesta-otro').hidden = false;
-        document.getElementById('encuesta-texto').focus();
-      } else enviar(b.dataset.r);
-    });
-  });
-  document.getElementById('encuesta-otro').addEventListener('submit', function(e){
-    e.preventDefault(); enviar('otro', document.getElementById('encuesta-texto').value);
+    b.addEventListener('click', function(){ enviar(b.dataset.r); });
   });
   document.getElementById('encuesta-x').addEventListener('click', function(){ enviar('omitido'); });
   document.getElementById('encuesta-no').addEventListener('click', function(){ enviar('omitido'); });

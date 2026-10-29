@@ -19,7 +19,8 @@ from .db import engine_erp, engine_tienda
 
 log = logging.getLogger(__name__)
 
-RESPUESTAS = ("instagram", "facebook", "recomendacion", "google", "whatsapp", "local", "otro", "omitido")
+RESPUESTAS = ("anuncio", "perfil_instagram", "instagram", "facebook", "recomendacion", "google", "whatsapp",
+              "local", "otro", "omitido")   # instagram/facebook/whatsapp/local: respuestas de la versión anterior
 _tabla_lista = False
 
 
