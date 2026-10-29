@@ -6,6 +6,13 @@
 
 {% if carrito_msg %}<p class="carrito-flash">✓ {{ carrito_msg }}</p>{% endif %}
 
+{% if pedido_abierto %}
+<form method="post" action="/carrito/sumar-a-pedido" class="pedido-abierto">
+  <p>Tenés el pedido <b>#{{ pedido_abierto.id }}</b> todavía sin preparar. ¿Querés <b>sumar estos productos a ese pedido</b> en vez de hacer otro?</p>
+  <button type="submit" class="btn-grande">Sumar a mi pedido #{{ pedido_abierto.id }}</button>
+</form>
+{% endif %}
+
 {% if car.vacio %}
   <p class="vacio">Todavía no agregaste nada. <a href="/catalogo">Ver productos →</a></p>
 {% else %}

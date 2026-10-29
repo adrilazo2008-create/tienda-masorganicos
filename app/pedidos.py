@@ -425,6 +425,20 @@ class PedidoQuedariaVacio(Exception):
     """No se deja sacar el último producto de un pedido (para cancelarlo del todo, que escriba)."""
 
 
+def pedido_abierto(cliente_id: int):
+    """El pedido más reciente del cliente que todavía se puede editar (status Nuevo, activo), o None.
+    Se usa para ofrecerle sumar el carrito a ese pedido en vez de crear otro (caso 2026-10-28:
+    una clienta hizo un segundo pedido 47 minutos después del primero). Nunca levanta excepción."""
+    try:
+        with engine_tienda.connect() as cx:
+            g = cx.execute(text(
+                "SELECT id, created_at FROM grupos WHERE cliente = :c AND status = :s AND activo = 1 "
+                "ORDER BY id DESC LIMIT 1"), {"c": cliente_id, "s": STATUS_NUEVO}).first()
+        return {"id": int(g.id), "creado": g.created_at} if g else None
+    except Exception:
+        return None
+
+
 def puede_editar(pedido_id: int, cliente_id: int) -> bool:
     d = detalle(pedido_id, cliente_id)
     return bool(d and d["editable"])

@@ -872,3 +872,11 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 - `conectar` → Cómo nos conocieron: sección «Por medio de llegada» (utm_source=meta + utm_medium=paid cuenta como «Por anuncio» aunque haya contestado otra cosa; lista con campaña, anuncio y lo que respondió).
 - Parámetros para los anuncios activos (test y retargeting): `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}`. Ojo: `utm_source` debe ser exactamente `meta` y `utm_medium` `paid`.
 - Probado: lectura del formulario y lógica JS (con y sin UTM). NO probado con un pedido real (escribiría en producción).
+
+## 2026-10-29 - Aviso para sumar el carrito a un pedido todavía editable
+- Caso Melina Leiva: hizo el pedido #22565 (17:05) y 47 min después el #22566 con 3 productos, porque carrito→checkout siempre crea un pedido nuevo (editar es solo desde Mi cuenta → Editar).
+- `pedidos.pedido_abierto(cliente_id)`: último pedido del cliente en status Nuevo y activo. Si hay uno, `/carrito` y `/checkout` muestran «Tenés el pedido #N todavía sin preparar. ¿Querés sumar estos productos a ese pedido?» con botón → `POST /carrito/sumar-a-pedido`, que usa `pedidos.agregar_item` (misma lógica que editar: reservas, recalcula envío), saca del carrito lo sumado y lleva a la edición del pedido. Lo que no se pueda sumar queda en el carrito con aviso. Confirmar como pedido nuevo sigue disponible.
+- Probado: el aviso aparece en /carrito y /checkout con sesión de un cliente con pedido abierto y no aparece sin sesión. El POST no se probó con datos reales (escribiría en producción).
+
+## 2026-10-29 - Foto de un artículo subida y la tienda muestra la vieja (caché NGINX)
+- Código 0010: el archivo nuevo estaba bien subido (Last-Modified 29/10 19:36 UTC), pero `.../assets/img/producto/0010.jpg` seguía devolviendo la copia del 22/10 por la caché NGINX del hosting; con `?x=...` sale la nueva. Se arregla con cPanel → NGINX Caching → Clear Cache (mismo caso que ya figura en el CLAUDE.md raíz).

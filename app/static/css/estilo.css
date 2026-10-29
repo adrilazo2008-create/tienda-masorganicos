@@ -557,3 +557,7 @@ body.popup-abierto{overflow:hidden}
 .encuesta-otro[hidden]{display:none}
 .encuesta-otro input{flex:1;min-width:0;padding:.6rem;border:1px solid #cfd8c4;border-radius:var(--radio);font:inherit}
 .encuesta-no{margin-top:.7rem;background:none;border:0;color:#777;text-decoration:underline;cursor:pointer;font:inherit}
+
+/* aviso: sumar el carrito al pedido todavía editable */
+.pedido-abierto{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);border-radius:var(--radio);padding:.9rem 1rem;margin:0 0 1rem;text-align:center}
+.pedido-abierto p{margin:0 0 .6rem}

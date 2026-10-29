@@ -480,9 +480,11 @@ def ver_carrito(request: Request):
     # sugerencias: habituales del cliente -> cross-sell por lo que hay en el
     # carrito -> destacados genéricos (ver _sugeridos_carrito).
     sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
+    cli_ab = _cliente_actual(request)
     return render(request, "carrito.html", car=car,
                   umbral_envio=zonas.umbral_envio_gratis(),
                   sugeridos=sug,
+                  pedido_abierto=pedidos.pedido_abierto(cli_ab.id) if cli_ab and not car.vacio else None,
                   carrito_msg=request.session.pop("carrito_msg", None))
 
 
@@ -517,6 +519,35 @@ def carrito_quitar(request: Request, indice: int = Form(...)):
     return _respuesta_carrito(request)
 
 
+@app.post("/carrito/sumar-a-pedido")
+def carrito_sumar_a_pedido(request: Request):
+    """Suma lo que hay en el carrito al pedido que el cliente todavía puede editar (en vez de crear otro)."""
+    c = _cliente_actual(request)
+    ab = pedidos.pedido_abierto(c.id) if c else None
+    if not c or not ab:
+        request.session["carrito_msg"] = "Ese pedido ya se empezó a preparar: podés confirmar el carrito como pedido nuevo."
+        return RedirectResponse("/carrito", status_code=303)
+    car = carrito_mod.resolver(request.session)
+    agregados, fallidos = set(), []
+    for l in car.lineas:
+        try:
+            pedidos.agregar_item(ab["id"], c.id, l.producto.id, l.cantidad, l.observacion)
+            agregados.add(l.producto.id)
+        except pedidos.PedidoNoEditable:
+            fallidos.append(l.producto.nombre)
+            break
+        except pedidos.ProductoNoDisponible:
+            fallidos.append(l.producto.nombre)
+    if agregados:
+        items = carrito_mod._leer(request.session)
+        carrito_mod._guardar(request.session, [it for it in items if it["producto_id"] not in agregados])
+    if fallidos:
+        request.session["carrito_msg"] = ("No se pudieron sumar al pedido: " + ", ".join(fallidos)
+                                          + ". Quedaron en tu carrito.")
+        return RedirectResponse("/carrito", status_code=303)
+    return RedirectResponse(f"/cuenta/pedido/{ab['id']}/editar", status_code=303)
+
+
 # --------------------------------------------------------------------------- checkout
 
 @app.get("/checkout", response_class=HTMLResponse)
@@ -539,6 +570,7 @@ def checkout(request: Request):
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                   aviso_stock=request.session.pop("carrito_msg", None),
+                  pedido_abierto=pedidos.pedido_abierto(cli.id) if cli and not car.vacio else None,
                   eliminados=eliminados, token=token)
 
 
