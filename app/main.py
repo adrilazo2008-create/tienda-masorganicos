@@ -193,6 +193,8 @@ templates.env.globals["img_etiqueta"] = (
     lambda archivo: f"{S.img_base_url}/etiquetas/{archivo}"
 )
 templates.env.globals["WHATSAPP"] = "5491155046740"
+# WhatsApp del sitio institucional (masorganicos.com.ar: landing, nosotros, blog, pie y botón flotante); la tienda sigue con WHATSAPP
+templates.env.globals["WHATSAPP_SITIO"] = "5491164399974"
 
 
 def _zona_del_cliente(cli):
