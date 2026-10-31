@@ -561,3 +561,6 @@ body.popup-abierto{overflow:hidden}
 /* aviso: sumar el carrito al pedido todavía editable */
 .pedido-abierto{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);border-radius:var(--radio);padding:.9rem 1rem;margin:0 0 1rem;text-align:center}
 .pedido-abierto p{margin:0 0 .6rem}
+
+/* razón social, chica, bajo el nombre en el pie */
+.pie .pie-razon{font-size:.72rem;opacity:.8;margin:-.35rem 0 .8rem}
