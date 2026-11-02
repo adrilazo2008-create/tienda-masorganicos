@@ -74,8 +74,11 @@ async def forzar_https(request: Request, call_next):
         # rutas de compra tienen que vivir en un solo host: si no, el carrito se
         # parte en dos cookies. Un solo salto (http y/o www incluidos), con ruta
         # y query intactos (utm_*, fbclid).
+        # Excepción: los datos (.json/.geojson) que la landing pide por fetch (mapa de zonas):
+        # un redirect a otro host los bloquea por CORS y el mapa queda sin zonas (2026-11-02).
         if (host in _HOSTS_LANDING and request.method in ("GET", "HEAD")
-                and request.url.path.startswith(_RUTAS_TIENDA)):
+                and request.url.path.startswith(_RUTAS_TIENDA)
+                and not request.url.path.endswith((".json", ".geojson"))):
             destino = destino.replace(scheme="https", netloc=_HOST_TIENDA)
         if str(destino) != str(request.url):
             return RedirectResponse(str(destino), status_code=301)

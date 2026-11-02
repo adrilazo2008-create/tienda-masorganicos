@@ -880,3 +880,8 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 
 ## 2026-10-29 - Foto de un artículo subida y la tienda muestra la vieja (caché NGINX)
 - Código 0010: el archivo nuevo estaba bien subido (Last-Modified 29/10 19:36 UTC), pero `.../assets/img/producto/0010.jpg` seguía devolviendo la copia del 22/10 por la caché NGINX del hosting; con `?x=...` sale la nueva. Se arregla con cPanel → NGINX Caching → Clear Cache (mismo caso que ya figura en el CLAUDE.md raíz).
+
+## 2026-11-02 - Mapa de zonas de la landing no cargaba las zonas (CORS por el redirect del 23/10)
+- Desde el 23/10 `forzar_https` manda con 301 las rutas de compra de `masorganicos.com.ar` a `tienda.*`, incluido `/envios/zonas.geojson`: el `fetch` del mapa de la landing terminaba en otro origen, el navegador lo bloqueaba por CORS y salía «No pudimos cargar el mapa» (mapa de fondo sí, sin polígonos de zonas), en iPhone y Android. Reproducido con WebKit simulando iPhone y escritorio.
+- Arreglo: los archivos `.json`/`.geojson` bajo las rutas de compra no se redirigen; la landing los sirve en su mismo origen. `/envios`, `/catalogo`, etc. siguen redirigiendo.
+- Aparte: el reclamo «ningún botón anda en iPhone desde Instagram» NO se pudo reproducir (WebKit iPhone + UA de Instagram: cookies, links y carrito andan). Pendiente: versión de iOS y captura de la clienta, prueba en un iPhone real abriendo el link desde Instagram, y las 15 sesiones con clics muertos de Clarity.
