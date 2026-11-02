@@ -44,7 +44,7 @@ def agregar(session, producto_id: int, cantidad, observacion: str = "") -> None:
     # coinciden o alguna está vacía. Solo quedan líneas separadas si ambas
     # tienen una nota distinta (ej. "bien maduro" vs "bien verde").
     for it in items:
-        if it["producto_id"] != pid:
+        if it["producto_id"] != pid or it.get("reserva"):
             continue
         obs_it = it.get("observacion", "")
         if obs_it == obs_nueva or not obs_it or not obs_nueva:
@@ -68,6 +68,27 @@ def actualizar(session, indice: int, cantidad, observacion: str | None = None) -
         _guardar(session, items)
 
 
+def resolver_faltante(session, indice: int, accion: str) -> None:
+    """La persona pidio mas de lo que hay: `reservar` deja lo disponible como pedido y el resto como reserva (se
+    encarga al proveedor); `ajustar` deja solo lo disponible."""
+    car = resolver(session)
+    items = _leer(session)
+    if not (0 <= indice < len(car.lineas)) or indice >= len(items):
+        return
+    l = car.lineas[indice]
+    falta = l.faltante
+    if falta <= 0:
+        return
+    disp = l.disponible
+    if disp <= 0:
+        return
+    items[indice]["cantidad"] = str(disp.quantize(Decimal("0.01")))
+    if accion == "reservar":
+        items.insert(indice + 1, {"producto_id": items[indice]["producto_id"], "cantidad": str(falta.quantize(Decimal("0.01"))),
+                                   "observacion": items[indice].get("observacion", ""), "reserva": True})
+    _guardar(session, items)
+
+
 def quitar(session, indice: int) -> None:
     items = _leer(session)
     if 0 <= indice < len(items):
@@ -85,10 +106,29 @@ class LineaCarrito:
     producto: Producto
     cantidad: Decimal
     observacion: str
+    reserva: bool = False   # el resto que no habia en stock y la persona pidio reservar (2026-11-02)
 
     @property
     def subtotal(self) -> Decimal:
         return (self.cantidad * self.producto.precio).quantize(Decimal("0.01"))
+
+    @property
+    def disponible(self) -> Decimal:
+        """Lo que realmente hay para este producto (el stock del catalogo ya viene descontado de lo reservado por
+        pedidos web sin bajar), en unidades enteras salvo que se venda por kg / lt."""
+        d = Decimal(str(round(float(self.producto.stock or 0), 3)))
+        return d if self.producto.fraccionable else d.to_integral_value(rounding="ROUND_FLOOR")
+
+    @property
+    def faltante(self) -> Decimal:
+        """Cuanto pidio de mas de lo disponible, solo en productos con control de stock (fuera de verduras, frutas,
+        granja y tambo, combos y los que se reservan siempre) y mientras no haya elegido que hacer con el resto."""
+        p = self.producto
+        if (self.reserva or p.es_combo or p.rubro_id in catalogo.RUBROS_SIN_CONTROL_STOCK
+                or catalogo.es_reserva(p)):
+            return Decimal("0")
+        sobra = self.cantidad - self.disponible
+        return sobra if sobra > 0 else Decimal("0")
 
 
 @dataclass
@@ -144,7 +184,8 @@ def _resolver(session) -> tuple[Carrito, bool, list[dict]]:
             continue
         lineas.append(LineaCarrito(
             indice=len(lineas), producto=p,
-            cantidad=Decimal(it["cantidad"]), observacion=it.get("observacion", "")))
+            cantidad=Decimal(it["cantidad"]), observacion=it.get("observacion", ""),
+            reserva=bool(it.get("reserva"))))
         limpio.append(it)
     if len(limpio) != len(items):
         _guardar(session, limpio)

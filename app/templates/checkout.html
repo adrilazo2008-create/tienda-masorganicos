@@ -118,7 +118,7 @@
     <h2>Tu pedido</h2>
     <div class="co-items">
       {% for l in car.lineas %}
-        <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}</span><span class="num">{{ pesos(l.subtotal) }}</span></p>
+        <p class="rr"><span>{{ fmt_cantidad(l.cantidad) }} {{ l.producto.unidad }} · {{ l.producto.nombre|truncate(34) }}{% if l.reserva %} (reserva){% endif %}</span><span class="num">{{ pesos(l.subtotal) }}</span></p>
       {% endfor %}
       {% for e in eliminados %}
         <p class="rr rr-sinstock"><span>0 · {{ e.nombre|truncate(34) }} — sin stock</span><span class="num">$0</span></p>

@@ -518,6 +518,14 @@ def carrito_actualizar(request: Request, indice: int = Form(...), cantidad: str 
     return _respuesta_carrito(request)
 
 
+@app.post("/carrito/faltante")
+def carrito_faltante(request: Request, indice: int = Form(...), accion: str = Form(...)):
+    """Pidio mas de lo que hay: reservar el resto o quedarse con lo disponible."""
+    if accion in ("reservar", "ajustar"):
+        carrito_mod.resolver_faltante(request.session, indice, accion)
+    return _respuesta_carrito(request)
+
+
 @app.post("/carrito/quitar")
 def carrito_quitar(request: Request, indice: int = Form(...)):
     carrito_mod.quitar(request.session, indice)
@@ -560,6 +568,8 @@ def checkout(request: Request):
     car, _, eliminados = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
+    if any(l.faltante > 0 for l in car.lineas):
+        return RedirectResponse("/carrito", status_code=303)   # primero elige que hacer con lo que no alcanza
     cli = _cliente_actual(request)
     dirs = clientes.direcciones(cli.id) if cli else []
     token = secrets.token_urlsafe(12)
@@ -644,6 +654,8 @@ def checkout_confirmar(
     car, hubo_cambios, eliminados = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
+    if any(l.faltante > 0 for l in car.lineas):
+        return RedirectResponse("/carrito", status_code=303)   # no se confirma con mas cantidad que stock sin elegir
     if hubo_cambios:
         # algo se quedó sin stock justo ahora, al confirmar: no completamos el
         # pedido a ciegas con menos productos de los que la persona ve en
@@ -769,7 +781,8 @@ def checkout_confirmar(
             producto_id=l.producto.id, cantidad=l.cantidad,
             precio_unitario=l.producto.precio, unidad_id=l.producto.unidad_id,
             observacion=catalogo.marcar_reserva_en_obs(
-                l.observacion, catalogo.es_reserva(l.producto), con_stock=not l.producto.agotado))
+                l.observacion, catalogo.es_reserva(l.producto) or l.reserva,
+                con_stock=not l.producto.agotado and not l.reserva))
             for l in car.lineas],
         efectivo=(pago == "efectivo"),
         id_sucursal=id_sucursal, id_direccion_envio=id_dir, id_zona_envio=id_zona_envio,
@@ -798,7 +811,7 @@ def checkout_confirmar(
         except Exception:
             cliente_codigo_reserva = cli.cliente_codigo
         for l in car.lineas:
-            if catalogo.es_reserva(l.producto):
+            if catalogo.es_reserva(l.producto) or l.reserva:
                 try:
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
                                     cliente_codigo=cliente_codigo_reserva, nombre=cli.nombre_completo,

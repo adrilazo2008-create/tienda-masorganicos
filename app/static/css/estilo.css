@@ -312,6 +312,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .rr.chico{font-size:.8rem;color:var(--gris)}
 .co-items{max-height:38vh;overflow-y:auto;padding-right:.3rem}
 .rr-sinstock{color:var(--rojo);text-decoration:line-through;opacity:.85}
+.cl-faltante{grid-column:1/-1;background:#fff6e0;border:1px solid #efc66a;border-radius:var(--radio);padding:.6rem .8rem}
+.cl-faltante p{margin:0 0 .5rem}
+.cl-faltante-bt{display:flex;gap:.5rem;flex-wrap:wrap}
+.cl-faltante-bt form{margin:0}
+.btn-chico{background:var(--verde);color:#fff;border:1.5px solid var(--verde);padding:.45rem 1rem;border-radius:999px;font-weight:600;cursor:pointer;font-size:.9rem}
+.btn-chico.btn-sec{background:transparent;color:var(--verde-osc)}
 .stock-aviso{background:#fdecec;border:1px solid #e6b5b5;border-radius:var(--radio);
   padding:.7rem .9rem;font-size:.88rem;color:var(--rojo)}
 .stock-aviso p{margin:.2rem 0}
