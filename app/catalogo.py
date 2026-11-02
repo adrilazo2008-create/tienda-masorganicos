@@ -470,6 +470,21 @@ def obtener(producto_id: int) -> Optional[Producto]:
     return filtrado[0] if filtrado else None
 
 
+def obtener_con_disponible(producto_id: int) -> Optional[Producto]:
+    """Como `obtener`, pero NO lo oculta si ya no queda stock: devuelve el producto con `stock` = lo que queda libre
+    (puede ser 0 o negativo). Sirve para saber cuanto falta cuando alguien pide mas de lo que hay."""
+    from . import pedidos  # import diferido
+
+    with engine_erp.connect() as cx:
+        r = cx.execute(text(_SELECT + " AND m.id = :id"), {"id": producto_id}).first()
+    if not r:
+        return None
+    p = _con_etiquetas(_marcar_origen_stock([_fila_a_producto(r)]))[0]
+    if p.es_combo or p.rubro_id in RUBROS_SIN_CONTROL_STOCK:
+        return p
+    return replace(p, stock=p.stock - float(pedidos.stock_reservado().get(p.id, 0)))
+
+
 def obtener_varios(ids: list[int]) -> dict[int, Producto]:
     ids = [int(i) for i in ids]
     if not ids:

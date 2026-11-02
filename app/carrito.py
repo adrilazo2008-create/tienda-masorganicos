@@ -100,6 +100,28 @@ def vaciar(session) -> None:
     session.pop(CLAVE, None)
 
 
+def disponible_de(p: Producto) -> Decimal:
+    """Lo que realmente queda libre de un producto (el `stock` ya viene descontado de lo reservado por pedidos web sin
+    bajar), en unidades enteras salvo que se venda por kg / lt. Nunca negativo."""
+    d = Decimal(str(round(float(p.stock or 0), 3)))
+    d = d if p.fraccionable else d.to_integral_value(rounding="ROUND_FLOOR")
+    return d if d > 0 else Decimal("0")
+
+
+def controla_stock(p: Producto) -> bool:
+    """Fuera de verduras/frutas/granja/tambo, combos y los que se reservan siempre, el pedido no puede pasar del stock."""
+    return not (p.es_combo or p.rubro_id in catalogo.RUBROS_SIN_CONTROL_STOCK or catalogo.es_reserva(p))
+
+
+def faltante_de(p: Producto, pedida: Decimal) -> tuple[Decimal, Decimal]:
+    """(disponible, faltante) de pedir `pedida` unidades mas de este producto."""
+    if not controla_stock(p):
+        return Decimal("0"), Decimal("0")
+    disp = disponible_de(p)
+    sobra = Decimal(pedida) - disp
+    return disp, (sobra if sobra > 0 else Decimal("0"))
+
+
 @dataclass
 class LineaCarrito:
     indice: int
@@ -116,19 +138,15 @@ class LineaCarrito:
     def disponible(self) -> Decimal:
         """Lo que realmente hay para este producto (el stock del catalogo ya viene descontado de lo reservado por
         pedidos web sin bajar), en unidades enteras salvo que se venda por kg / lt."""
-        d = Decimal(str(round(float(self.producto.stock or 0), 3)))
-        return d if self.producto.fraccionable else d.to_integral_value(rounding="ROUND_FLOOR")
+        return disponible_de(self.producto)
 
     @property
     def faltante(self) -> Decimal:
         """Cuanto pidio de mas de lo disponible, solo en productos con control de stock (fuera de verduras, frutas,
         granja y tambo, combos y los que se reservan siempre) y mientras no haya elegido que hacer con el resto."""
-        p = self.producto
-        if (self.reserva or p.es_combo or p.rubro_id in catalogo.RUBROS_SIN_CONTROL_STOCK
-                or catalogo.es_reserva(p)):
+        if self.reserva:
             return Decimal("0")
-        sobra = self.cantidad - self.disponible
-        return sobra if sobra > 0 else Decimal("0")
+        return faltante_de(self.producto, self.cantidad)[1]
 
 
 @dataclass

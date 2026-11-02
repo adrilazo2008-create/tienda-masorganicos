@@ -541,10 +541,13 @@ def carrito_sumar_a_pedido(request: Request):
         request.session["carrito_msg"] = "Ese pedido ya se empezó a preparar: podés confirmar el carrito como pedido nuevo."
         return RedirectResponse("/carrito", status_code=303)
     car = carrito_mod.resolver(request.session)
+    if any(l.faltante > 0 for l in car.lineas):
+        request.session["carrito_msg"] = "Elegí qué hacer con lo que no alcanza de stock antes de sumarlo a tu pedido."
+        return RedirectResponse("/carrito", status_code=303)
     agregados, fallidos = set(), []
     for l in car.lineas:
         try:
-            pedidos.agregar_item(ab["id"], c.id, l.producto.id, l.cantidad, l.observacion)
+            pedidos.agregar_item(ab["id"], c.id, l.producto.id, l.cantidad, l.observacion, forzar_reserva=l.reserva)
             agregados.add(l.producto.id)
         except pedidos.PedidoNoEditable:
             fallidos.append(l.producto.nombre)
@@ -917,7 +920,7 @@ def cuenta_pedido(request: Request, pedido_id: int):
                   subtotal=subtotal, total=subtotal + d["precio_envio"])
 
 
-def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, error: str = ""):
+def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, error: str = "", pregunta=None):
     d = pedidos.detalle(pedido_id, cliente_id)
     if not d:
         return RedirectResponse("/cuenta", status_code=303)
@@ -925,7 +928,7 @@ def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, err
     nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
     return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods, nombres=nombres,
-                  subtotal=subtotal, total=subtotal + d["precio_envio"], error=error)
+                  subtotal=subtotal, total=subtotal + d["precio_envio"], error=error, pregunta=pregunta)
 
 
 @app.get("/cuenta/pedido/{pedido_id}/editar", response_class=HTMLResponse)
@@ -956,13 +959,29 @@ def cuenta_pedido_editar_buscar(request: Request, pedido_id: int, q: str = ""):
 
 @app.post("/cuenta/pedido/{pedido_id}/editar/agregar", response_class=HTMLResponse)
 def cuenta_pedido_editar_agregar(request: Request, pedido_id: int, producto_id: int = Form(...),
-                                  cantidad: str = Form("1"), observacion: str = Form("")):
+                                  cantidad: str = Form("1"), observacion: str = Form(""), reservar: str = Form("")):
     c = _cliente_actual(request)
     if not c:
         return RedirectResponse("/cuenta", status_code=303)
     error = ""
     try:
-        pedidos.agregar_item(pedido_id, c.id, producto_id, carrito_mod._norm_cant(cantidad), observacion)
+        pedida = carrito_mod._norm_cant(cantidad)
+        prod = catalogo.obtener_con_disponible(producto_id)
+        disp, falta = carrito_mod.faltante_de(prod, pedida) if prod else (Decimal("0"), Decimal("0"))
+        if falta > 0 and reservar not in ("si", "no"):
+            # pidio mas de lo que hay: se le pregunta si reserva el resto
+            return _render_pedido_editar(request, pedido_id, c.id, pregunta={
+                "url": f"/cuenta/pedido/{pedido_id}/editar/agregar", "nombre": prod.nombre, "disp": disp, "falta": falta,
+                "campos": {"producto_id": producto_id, "cantidad": str(pedida), "observacion": observacion}})
+        if falta > 0:
+            if disp > 0:
+                pedidos.agregar_item(pedido_id, c.id, producto_id, disp, observacion)
+            if reservar == "si":
+                pedidos.agregar_item(pedido_id, c.id, producto_id, falta, observacion, forzar_reserva=True)
+            elif disp <= 0:
+                error = "Ese producto no tiene stock en este momento."
+        else:
+            pedidos.agregar_item(pedido_id, c.id, producto_id, pedida, observacion)
     except pedidos.PedidoNoEditable:
         error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
     except pedidos.ProductoNoDisponible:
@@ -987,13 +1006,33 @@ def cuenta_pedido_editar_quitar(request: Request, pedido_id: int, transaccion_id
 
 @app.post("/cuenta/pedido/{pedido_id}/editar/cantidad", response_class=HTMLResponse)
 def cuenta_pedido_editar_cantidad(request: Request, pedido_id: int, transaccion_id: int = Form(...),
-                                   cantidad: str = Form("1")):
+                                   cantidad: str = Form("1"), reservar: str = Form("")):
     c = _cliente_actual(request)
     if not c:
         return RedirectResponse("/cuenta", status_code=303)
     error = ""
     try:
-        pedidos.cambiar_cantidad(pedido_id, c.id, transaccion_id, carrito_mod._norm_cant(cantidad))
+        nueva = carrito_mod._norm_cant(cantidad)
+        linea = None
+        det = pedidos.detalle(pedido_id, c.id)
+        if det:
+            linea = next((l for l in det["lineas"] if l["id"] == transaccion_id), None)
+        if linea and nueva > Decimal(linea["cantidad"]):
+            # subio la cantidad: lo que suma de mas tiene que entrar en el stock libre
+            anterior = Decimal(linea["cantidad"])
+            prod = catalogo.obtener_con_disponible(linea["producto_id"])
+            disp, falta = carrito_mod.faltante_de(prod, nueva - anterior) if prod else (Decimal("0"), Decimal("0"))
+            if falta > 0 and reservar not in ("si", "no"):
+                return _render_pedido_editar(request, pedido_id, c.id, pregunta={
+                    "url": f"/cuenta/pedido/{pedido_id}/editar/cantidad", "nombre": prod.nombre, "disp": disp, "falta": falta,
+                    "campos": {"transaccion_id": transaccion_id, "cantidad": str(nueva)}})
+            if falta > 0:
+                pedidos.cambiar_cantidad(pedido_id, c.id, transaccion_id, anterior + disp)
+                if reservar == "si":
+                    pedidos.agregar_item(pedido_id, c.id, linea["producto_id"], falta, linea.get("observacion") or "",
+                                         forzar_reserva=True)
+                return _render_pedido_editar(request, pedido_id, c.id, error)
+        pedidos.cambiar_cantidad(pedido_id, c.id, transaccion_id, nueva)
     except pedidos.PedidoNoEditable:
         error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
     return _render_pedido_editar(request, pedido_id, c.id, error)

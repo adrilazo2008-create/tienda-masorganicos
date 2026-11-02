@@ -494,12 +494,17 @@ def _producto_para_agregar(producto_id: int):
 
 
 def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: Decimal,
-                  observacion: str = "") -> None:
+                  observacion: str = "", forzar_reserva: bool = False) -> None:
+    """`forzar_reserva`: el resto que no habia en stock y la persona pidio reservar (2026-11-02): la linea va marcada como
+    reserva y crea la fila en `reservas`, aunque el producto no sea de los que reservan solos. En ese caso el producto
+    puede estar oculto por falta de stock, asi que se busca con `obtener_con_disponible`."""
     from . import catalogo
 
-    p = _producto_para_agregar(producto_id)
-    es_reserva = catalogo.es_reserva(p)
-    obs = catalogo.marcar_reserva_en_obs(observacion, es_reserva, con_stock=not p.agotado)
+    p = catalogo.obtener_con_disponible(producto_id) if forzar_reserva else _producto_para_agregar(producto_id)
+    if not p:
+        raise ProductoNoDisponible()
+    es_reserva = catalogo.es_reserva(p) or forzar_reserva
+    obs = catalogo.marcar_reserva_en_obs(observacion, es_reserva, con_stock=not p.agotado and not forzar_reserva)
     now = datetime.now()
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)

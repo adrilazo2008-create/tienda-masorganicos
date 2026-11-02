@@ -1,4 +1,19 @@
 {% if error %}<p class="stock-aviso"><span>⚠ {{ error }}</span></p>{% endif %}
+{% if pregunta %}
+<div class="cl-faltante" role="alert">
+  <p>⚠ De <b>{{ pregunta.nombre }}</b> {% if pregunta.disp > 0 %}solo podemos darte <b>{{ fmt_cantidad(pregunta.disp) }}</b> más{% else %}no queda stock en este momento{% endif %}.
+    ¿Querés reservar {% if pregunta.falta == 1 %}la que falta{% else %}las <b>{{ fmt_cantidad(pregunta.falta) }}</b> que faltan{% endif %}? Te la conseguimos con el proveedor y te avisamos cuando llegue.</p>
+  <div class="cl-faltante-bt">
+    {% for decision, texto, clase in [('si', 'Sí, reservar ' ~ fmt_cantidad(pregunta.falta), ''), ('no', ('No, dejar solo ' ~ fmt_cantidad(pregunta.disp)) if pregunta.disp > 0 else 'No, gracias', 'btn-sec')] %}
+    <form hx-post="{{ pregunta.url }}" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML">
+      {% for k, v in pregunta.campos.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <input type="hidden" name="reservar" value="{{ decision }}">
+      <button type="submit" class="btn-chico {{ clase }}">{{ texto }}</button>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 {% if not p.editable %}
 <p class="alerta-stock">Ya empezamos a preparar este pedido — para cualquier cambio, escribinos por WhatsApp.</p>
