@@ -898,4 +898,8 @@ Pedido de Adriana: se suman «WhatsApp» y «Pasé por el local»; «Otro» pasa
 
 ## 2026-11-04 — Productos apartados para un cliente (reservas «recibido») dejaban de estar disponibles en el catálogo
 
-Caso: prepizza (cód. 60028): stock 4 en Central, 3 apartadas por reservas «recibido» cargadas a mano y 2 en un pedido web nuevo; la tienda mostraba 2 disponibles (solo restaba el pedido) y dejaba sumar al carrito. Ahora `pedidos.stock_reservado()` suma también las reservas en estado `recibido` (mercadería que ya llegó y espera al cliente), salvo las que viajan en un pedido web `status 0` (esas ya se cuentan por sus líneas). Con eso el artículo queda en 5 reservado contra 4 de stock y se oculta (o no deja pedir más de lo libre). Pendiente a revisar: pedidos web en `status 1` (en preparación, aún sin facturar) tampoco se descuentan hoy.
+Caso: prepizza (cód. 60028): stock 4 en Central, 3 apartadas por reservas «recibido» cargadas a mano y 2 en un pedido web nuevo; la tienda mostraba 2 disponibles (solo restaba el pedido) y dejaba sumar al carrito. Ahora `pedidos.stock_reservado()` suma también las reservas en estado `recibido` (mercadería que ya llegó y espera al cliente), salvo las que viajan en un pedido web `status 0` (esas ya se cuentan por sus líneas). Con eso el artículo queda en 5 reservado contra 4 de stock y se oculta (o no deja pedir más de lo libre). Ese mismo día también se suman los pedidos en preparación (`status 1`).
+
+## 2026-11-04 (2) — Pedidos en preparación también descuentan stock en la tienda
+
+El sistema viejo ya no se usa, así que `grupos.status = 1` (En preparación) es un pedido todavía sin facturar: el stock no salió de movstock. `stock_reservado()` ahora cuenta `status 0` y los `status 1` de los últimos 10 días (hay 13 huérfanos viejos con status 1 que nunca pasaron a facturado y no deben contar). Al facturar desde `conectar` el pedido pasa a `status 2` y deja de descontarse acá.

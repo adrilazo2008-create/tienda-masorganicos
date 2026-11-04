@@ -39,8 +39,9 @@ _RESERVA_TTL = 60  # segundos
 
 
 def stock_reservado() -> dict[int, Decimal]:
-    """Cuánto de cada producto está en pedidos web ya grabados (`grupos.status=0`,
-    la cola 'Nuevo' del VB6) pero todavía no bajado al sistema de escritorio, más lo que ya llegó y está
+    """Cuánto de cada producto está en pedidos web todavía sin facturar: nuevos (`grupos.status=0`) y en preparación
+    (`status=1`, de los últimos 10 días: los más viejos son huérfanos del sistema anterior que nunca pasaron a facturado;
+    al facturar desde `conectar` el pedido pasa a `status=2` y el stock sale de movstock). Más lo que ya llegó y está
     apartado para un cliente (reservas «recibido»).
     `catalogo` lo resta del stock del ERP para no mostrar como disponible algo
     que en la práctica ya está comprometido. Cacheado 60s."""
@@ -52,7 +53,7 @@ def stock_reservado() -> dict[int, Decimal]:
         SELECT t.producto_id AS pid, SUM(t.cantidad) AS cant
         FROM transacciones t
         JOIN grupos g ON g.id = t.grupo
-        WHERE g.status = 0 AND g.activo = 1
+        WHERE (g.status = 0 OR (g.status = 1 AND g.created_at >= NOW() - INTERVAL 10 DAY)) AND g.activo = 1
         GROUP BY t.producto_id
     """
     val: dict[int, Decimal] = {}
@@ -75,7 +76,8 @@ def stock_reservado() -> dict[int, Decimal]:
             if ids:
                 with engine_tienda.connect() as cx:
                     ya_contados = {int(r.id) for r in cx.execute(
-                        text("SELECT id FROM grupos WHERE status = 0 AND activo = 1 AND id IN :ids")
+                        text("SELECT id FROM grupos WHERE (status = 0 OR (status = 1 AND created_at >= NOW() - INTERVAL 10 DAY)) "
+                             "AND activo = 1 AND id IN :ids")
                         .bindparams(bindparam("ids", expanding=True)), {"ids": ids})}
             for r in apartadas:
                 if r.pedido_grupo_id and int(r.pedido_grupo_id) in ya_contados:
