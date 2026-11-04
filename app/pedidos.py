@@ -28,7 +28,7 @@ from typing import Optional
 from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
 
-from .db import engine_tienda
+from .db import engine_erp, engine_tienda
 
 STATUS_NUEVO = 0
 STATUS_IMPORTADO = 1
@@ -40,7 +40,8 @@ _RESERVA_TTL = 60  # segundos
 
 def stock_reservado() -> dict[int, Decimal]:
     """Cuánto de cada producto está en pedidos web ya grabados (`grupos.status=0`,
-    la cola 'Nuevo' del VB6) pero todavía no bajado al sistema de escritorio.
+    la cola 'Nuevo' del VB6) pero todavía no bajado al sistema de escritorio, más lo que ya llegó y está
+    apartado para un cliente (reservas «recibido»).
     `catalogo` lo resta del stock del ERP para no mostrar como disponible algo
     que en la práctica ya está comprometido. Cacheado 60s."""
     ahora = time.monotonic()
@@ -61,6 +62,28 @@ def stock_reservado() -> dict[int, Decimal]:
                 val[int(r.pid)] = Decimal(str(r.cant or 0))
             except (TypeError, ValueError, ArithmeticError):
                 continue
+    # Mercaderia que ya llego y esta apartada para un cliente (reservas en estado «recibido», cargadas a mano o de la tienda):
+    # sigue en el stock del ERP hasta que se le factura, pero ya no se puede ofrecer a otra persona. Las que viajan en un pedido
+    # web nuevo ya estan contadas arriba (sus lineas), asi que no se descuentan dos veces.
+    try:
+        with engine_erp.connect() as cx:
+            apartadas = cx.execute(text(
+                "SELECT producto_id, cantidad, pedido_grupo_id FROM reservas WHERE estado = 'recibido'")).fetchall()
+        if apartadas:
+            ya_contados: set[int] = set()
+            ids = sorted({int(r.pedido_grupo_id) for r in apartadas if r.pedido_grupo_id})
+            if ids:
+                with engine_tienda.connect() as cx:
+                    ya_contados = {int(r.id) for r in cx.execute(
+                        text("SELECT id FROM grupos WHERE status = 0 AND activo = 1 AND id IN :ids")
+                        .bindparams(bindparam("ids", expanding=True)), {"ids": ids})}
+            for r in apartadas:
+                if r.pedido_grupo_id and int(r.pedido_grupo_id) in ya_contados:
+                    continue
+                pid = int(r.producto_id)
+                val[pid] = val.get(pid, Decimal("0")) + Decimal(str(r.cantidad or 0))
+    except Exception:
+        pass   # sin la tabla o sin conexion al ERP la tienda sigue como antes
     _RESERVA_CACHE["r"] = (ahora, val)
     return val
 
