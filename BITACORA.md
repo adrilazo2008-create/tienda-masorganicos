@@ -920,3 +920,7 @@ Decisiones de Adriana (sin publicar todavía; cambios locales sin commitear):
 - La validación de celular del 26/10 solo aceptaba área 11, y `users.telefono` era INT(11) (tope 2.147.483.647): un celular del interior no pasaba el checkout y, si pasaba, se cortaba (dos usuarias habían quedado con 2147483647: Claudia Pintos #4546 y Yamila Roman #4238).
 - `users.telefono` pasó a BIGINT (2026-11-05, en producción). Claudia (#4546) quedó con 3484376906, el de su ficha del ERP (5159). Yamila (#4238, ERP 4178) sigue con 2147483647: el número real hay que pedírselo (lo carga Adriana).
 - `clientes.celular_valido` y `celularValido` (tienda.js): 10 dígitos, área 11 o interior (empieza con 2 o 3), sin números de relleno. `normalizar_telefono` ya no recorta a 9 dígitos. Ojo: el formato viejo del interior con 15 ("0348 15-437690") no se normaliza (solo se reconoce el 15 de AMBA); se le pide reescribirlo con área + número.
+
+## 2026-11-05 — La marca «RESERVA (...)» de una línea ya no se apila
+
+`marcar_reserva_en_obs` antepone la marca cada vez que la línea se arma de nuevo (pedido editado, vuelto a confirmar): un pedido llegó a tener cuatro seguidas y el campo las cortó a la mitad. Ahora primero saca las marcas que ya traía y deja una sola, la que corresponde al momento (agotado o proveedor «siempre reservar»). Las líneas ya grabadas con marcas apiladas no se tocan; la comanda de `conectar` las limpia al imprimir.

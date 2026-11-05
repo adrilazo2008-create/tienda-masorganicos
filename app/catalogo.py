@@ -82,10 +82,21 @@ def es_reserva(p) -> bool:
     return (p.agotado and p.rubro_id == RUBRO_GRANJA) or reservas.es_reserva_siempre(p.id)
 
 
+_RE_MARCA_RESERVA = re.compile(r"RESERVA \([^)]*(?:\)|$)\.?\s*")
+
+
+def sin_marca_reserva(observacion: str) -> str:
+    """La observacion sin ninguna marca «RESERVA (...)», tambien las repetidas o cortadas a la mitad."""
+    return _RE_MARCA_RESERVA.sub("", observacion or "").strip(" .")
+
+
 def marcar_reserva_en_obs(observacion: str, es_reserva: bool, con_stock: bool = False) -> str:
+    """Antepone la marca de reserva UNA sola vez: si la linea ya la traia (el pedido se edito o se volvio a armar), se
+    reemplaza en vez de apilarse (llegaban a juntarse cuatro y el campo las cortaba a la mitad)."""
     obs = (observacion or "").strip()
     if not es_reserva:
         return obs
+    obs = sin_marca_reserva(obs)
     texto = TEXTO_RESERVA_PROXIMA_ENTREGA if con_stock else TEXTO_RESERVA
     return f"{texto}. {obs}" if obs else texto
 
