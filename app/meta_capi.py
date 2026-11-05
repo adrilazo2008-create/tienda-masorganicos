@@ -88,6 +88,10 @@ def enviar_evento(event_name: str, event_id: str, request: Request,
     pixel_id = contenido.meta_pixel_id()
     if not pixel_id or not S.meta_capi_token or es_host_local(request):
         return
+    # Quien tocó "Rechazar" en el cartel de cookies no manda nada a Meta (ni desde el navegador ni desde acá).
+    # No tocar nada cuenta como aceptar. La cookie `mo-cookies` es del dominio raíz y llega a este servidor.
+    if request.cookies.get("mo-cookies") == "no":
+        return
     try:
         payload = {
             "data": [{

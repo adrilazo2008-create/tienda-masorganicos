@@ -2,7 +2,7 @@
 <script src="/static/js/seguimiento-meta.js?v={{ V }}"></script>
 {% if meta_pixel %}
 <script>
-/* Meta Pixel: solo se carga si la persona acepta las cookies de medición. */
+/* Meta Pixel: se carga salvo que la persona haya tocado "Rechazar" (no tocar nada cuenta como aceptar). */
 window.cargarPixel = function(){
   if (window.fbq && window.fbq.loaded) return;
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -13,7 +13,7 @@ window.cargarPixel = function(){
   if (window.moGuardarFbc) window.moGuardarFbc();
   fbq('init','{{ meta_pixel }}');fbq('track','PageView');
 };
-try { if (window.moConsent.get() === 'si') window.cargarPixel(); } catch(e){}
+try { if (window.moConsent.get() !== 'no') window.cargarPixel(); } catch(e){}
 </script>
 {% endif %}
 {% if clarity_id %}

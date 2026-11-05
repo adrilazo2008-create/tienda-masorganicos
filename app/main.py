@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import accesos, atribucion, catalogo, clientes, contenido, descuentos, encuesta, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
+from . import accesos, atribucion, catalogo, clientes, contenido, cookies_conteo, descuentos, encuesta, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -890,6 +890,16 @@ def checkout_encuesta(request: Request, grupo_id: int = Form(0), respuesta: str 
     cid = request.session.get("cliente_id")
     if cid:
         encuesta.guardar(int(cid), grupo_id, respuesta, texto)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/cookies/conteo")
+def cookies_conteo_ruta(request: Request, evento: str = Form("")):
+    """Cuenta cuántas veces se vio el cartel de cookies y qué se eligió. Solo cantidades, sin datos
+    personales. Siempre responde 200 y no cuenta nada desde localhost ni desde visitas internas."""
+    from fastapi.responses import JSONResponse
+    if not meta_capi.es_host_local(request) and request.cookies.get("mo_interno") != "1":
+        cookies_conteo.contar(evento)
     return JSONResponse({"ok": True})
 
 

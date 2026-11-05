@@ -10,18 +10,23 @@
 {% if meta_pixel or clarity_id %}
 <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookies" aria-live="polite" hidden>
   <p>
-    Usamos cookies propias para que funcione tu carrito y tu sesión, y cookies de
-    <b>Meta</b> y <b>Microsoft Clarity</b> para medir nuestras campañas y mejorar la
-    tienda. Podés aceptarlas o rechazarlas.
+    Usamos cookies propias para el funcionamiento de la tienda, y cookies de Meta y
+    Microsoft Clarity para medir campañas.
     <a href="{{ URL_WEB }}/privacidad">Más información</a>.
   </p>
   <div class="cookie-acc">
-    <button type="button" class="btn-sec" onclick="cookiesElegir('no')">Rechazar</button>
-    <button type="button" class="btn-grande" onclick="cookiesElegir('si')">Aceptar</button>
+    <button type="button" class="cookie-btn" onclick="cookiesElegir('no')">Rechazar</button>
+    <button type="button" class="cookie-btn" onclick="cookiesElegir('si')">Aceptar</button>
   </div>
 </div>
 <script>
+  /* Cuenta cuántas veces se vio el cartel (una por sesión) y qué se eligió. Sin datos personales. */
+  function cookiesContar(ev){
+    try { fetch('/cookies/conteo', {method:'POST', keepalive:true,
+      headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'evento='+ev}); } catch(e){}
+  }
   function cookiesElegir(v){
+    cookiesContar(v);
     window.moConsent.set(v);
     var b = document.getElementById('cookie-banner'); if (b) b.hidden = true;
     document.body.classList.remove('cookies-pendientes');
@@ -35,6 +40,8 @@
     if (elegido !== 'si' && elegido !== 'no'){
       var b = document.getElementById('cookie-banner'); if (b) b.hidden = false;
       document.body.classList.add('cookies-pendientes');
+      try { if (!sessionStorage.getItem('mo-cookies-visto')) {
+        sessionStorage.setItem('mo-cookies-visto', '1'); cookiesContar('visto'); } } catch(e){}
     }
   })();
 </script>

@@ -903,3 +903,15 @@ Caso: prepizza (cód. 60028): stock 4 en Central, 3 apartadas por reservas «rec
 ## 2026-11-04 (2) — Pedidos en preparación también descuentan stock en la tienda
 
 El sistema viejo ya no se usa, así que `grupos.status = 1` (En preparación) es un pedido todavía sin facturar: el stock no salió de movstock. `stock_reservado()` ahora cuenta `status 0` y los `status 1` de los últimos 10 días (hay 13 huérfanos viejos con status 1 que nunca pasaron a facturado y no deben contar). Al facturar desde `conectar` el pedido pasa a `status 2` y deja de descontarse acá.
+
+
+## Cartel de cookies, privacidad y envío a Meta (2026-11-05)
+
+Decisiones de Adriana (sin publicar todavía; cambios locales sin commitear):
+
+- **No tocar nada cuenta como aceptar; "Rechazar" no manda nada a Meta.** El píxel del navegador ahora carga salvo que `mo-cookies` sea `no` (`base.html` y `_pixel_head.html`), y `meta_capi.enviar_evento` no envía nada si la cookie `mo-cookies` es `no`. Antes el servidor mandaba a Meta email y teléfono (hasheados), IP, navegador y fbp/fbc con cada pedido aunque la persona hubiera rechazado. **Clarity sigue siendo opt-in** (solo carga con `si`). Riesgo asumido por Adriana: tratar el silencio como aceptación; pendiente consulta a un abogado de protección de datos (Ley 25.326, art. 5: consentimiento libre, expreso e informado; envío de datos al exterior).
+- **Cartel más corto y botones idénticos** (`base.html` y `_cierre.html`): «Usamos cookies propias para el funcionamiento de la tienda, y cookies de Meta y Microsoft Clarity para medir campañas. Más información.» Los dos botones usan `.cookie-btn` (antes Aceptar era el grande y Rechazar el secundario, asimetría que las autoridades de la UE tratan como diseño engañoso). Posición abajo a la izquierda en escritorio, ancho completo en celular (`estilo.css`).
+- **Contador de la tasa de aceptación:** `app/cookies_conteo.py` + `POST /cookies/conteo`; tabla `cookies_conteo` (`dia`, `evento` = visto|si|no, `n`), se crea sola, sin datos personales, no cuenta localhost ni visitas internas.
+- **`/privacidad` corregida:** decía que a Meta iban «acciones anónimas» y solo con aceptación, y no era cierto. Ahora describe lo que se manda, aclara que «si tocás Rechazar no le enviamos ningún dato tuyo a Meta» y se sacó «ni cedemos» de la frase de no venta (zona gris).
+- Para medir ventas por anuncio no hace falta Meta: `atribucion.js` guarda `utm_*` y `fbclid` en `grupos` sin depender del cartel.
+- Pendiente: probar en un navegador, publicar, y las etiquetas UTM del retargeting (hoy copia `test_landing`/`tie03` de Test landing).
