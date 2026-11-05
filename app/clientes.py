@@ -19,7 +19,7 @@ from sqlalchemy import bindparam, text
 
 from .db import engine_erp, engine_tienda
 
-_INT_MAX = 2147483647  # límite de la columna telefono INT(11) con signo
+_TEL_MAX = 99_999_999_999  # el teléfono se guarda como BIGINT (antes INT: un área del interior, ej. 3484 376906, se pasaba del límite y se cortaba)
 
 
 def hash_pin(pin: str) -> str:
@@ -36,8 +36,8 @@ def _check_pin(pin: str, hashed: str) -> bool:
 def normalizar_telefono(valor: str) -> int:
     """'11 5504-6740' -> 1155046740. Devuelve 0 si no hay dígitos usables.
 
-    Las zonas de reparto son todas AMBA/GBA/CABA (área 11), así que 10 dígitos
-    entran en un INT. Se saca un prefijo 54 / 549 / 0 si viene, y se
+    Un celular argentino son 10 dígitos (área + número): AMBA (11) o interior (2xx/3xx),
+    todos entran en un BIGINT. Se saca un prefijo 54 / 549 / 0 si viene, y se
     normalizan las dos costumbres viejas de cargar un celular de AMBA:
       - "11 15 5504-6740"  (área + 15 completo)      -> se saca el 15
       - "15 5504-6740"     (solo la marca "es celu",
@@ -59,16 +59,16 @@ def normalizar_telefono(valor: str) -> int:
     if not d:
         return 0
     n = int(d)
-    return n if n <= _INT_MAX else int(d[-9:])  # fallback defensivo
+    return n if n <= _TEL_MAX else int(d[-10:])  # fallback defensivo
 
 
 def celular_valido(valor: str) -> bool:
-    """True si `valor` es un celular argentino usable para WhatsApp: código de área 11 + número = 10 dígitos
-    ("11 5504-6740", también con 0/15/54/9 delante: normalizar_telefono los saca) y no un número "de relleno"
+    """True si `valor` es un celular argentino usable para WhatsApp: código de área + número = 10 dígitos
+    ("11 5504-6740", "3484 37-6906", también con 0/15/54/9 delante: normalizar_telefono los saca) y no un número "de relleno"
     (1111111111). Sirve para avisar ANTES de confirmar el pedido: coordinamos todo por WhatsApp."""
     d = str(normalizar_telefono(valor))
-    # Las zonas son AMBA (área 11) y el teléfono se guarda como INT: un código de área más largo se corrompería.
-    if len(d) != 10 or not d.startswith("11") or len(set(d)) == 1:
+    # Área + número = 10 dígitos: AMBA (11) o interior (los códigos de área del interior empiezan con 2 o 3).
+    if len(d) != 10 or d[0] not in "123" or (d[0] == "1" and d[1] != "1") or len(set(d)) == 1:
         return False
     return True
 

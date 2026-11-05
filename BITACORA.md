@@ -915,3 +915,8 @@ Decisiones de Adriana (sin publicar todavía; cambios locales sin commitear):
 - **`/privacidad` corregida:** decía que a Meta iban «acciones anónimas» y solo con aceptación, y no era cierto. Ahora describe lo que se manda, aclara que «si tocás Rechazar no le enviamos ningún dato tuyo a Meta» y se sacó «ni cedemos» de la frase de no venta (zona gris).
 - Para medir ventas por anuncio no hace falta Meta: `atribucion.js` guarda `utm_*` y `fbclid` en `grupos` sin depender del cartel.
 - Pendiente: probar en un navegador, publicar, y las etiquetas UTM del retargeting (hoy copia `test_landing`/`tie03` de Test landing).
+
+## 2026-11-05 - Celulares del interior (caso Claudia Pintos, 3484 376906)
+- La validación de celular del 26/10 solo aceptaba área 11, y `users.telefono` era INT(11) (tope 2.147.483.647): un celular del interior no pasaba el checkout y, si pasaba, se cortaba (dos usuarias habían quedado con 2147483647: Claudia Pintos #4546 y Yamila Roman #4238).
+- `users.telefono` pasó a BIGINT (2026-11-05, en producción). Claudia (#4546) quedó con 3484376906, el de su ficha del ERP (5159). Yamila (#4238, ERP 4178) sigue con 2147483647: el número real hay que pedírselo (lo carga Adriana).
+- `clientes.celular_valido` y `celularValido` (tienda.js): 10 dígitos, área 11 o interior (empieza con 2 o 3), sin números de relleno. `normalizar_telefono` ya no recorta a 9 dígitos. Ojo: el formato viejo del interior con 15 ("0348 15-437690") no se normaliza (solo se reconoce el 15 de AMBA); se le pide reescribirlo con área + número.

@@ -573,7 +573,7 @@ function celularValido(v){
   d = d.replace(/^0+/, '');
   if (d.slice(0, 2) === '11' && d.slice(2, 4) === '15') d = d.slice(0, 2) + d.slice(4);
   else if (d.slice(0, 2) === '15') d = '11' + d.slice(2);
-  if (d.length !== 10 || d.slice(0, 2) !== '11' || /^(\d)\1+$/.test(d)) return false;
+  if (d.length !== 10 || !/^(11|[23])/.test(d) || /^(\d)\1+$/.test(d)) return false;
   return true;
 }
 
