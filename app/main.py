@@ -1060,7 +1060,8 @@ def cuenta_pedido_repetir(request: Request, pedido_id: int):
     agregados = sin_stock = 0
     for l in d["lineas"]:
         if l["producto_id"] in disponibles:
-            carrito_mod.agregar(request.session, l["producto_id"], l["cantidad"], l["observacion"])
+            # se copia solo la nota de la persona: la marca «RESERVA (...)» se vuelve a poner al confirmar, segun el stock de hoy
+            carrito_mod.agregar(request.session, l["producto_id"], l["cantidad"], catalogo.sin_marca_reserva(l["observacion"]))
             agregados += 1
         else:
             sin_stock += 1

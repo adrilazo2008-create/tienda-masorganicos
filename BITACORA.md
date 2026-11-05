@@ -924,3 +924,7 @@ Decisiones de Adriana (sin publicar todavía; cambios locales sin commitear):
 ## 2026-11-05 — La marca «RESERVA (...)» de una línea ya no se apila
 
 `marcar_reserva_en_obs` antepone la marca cada vez que la línea se arma de nuevo (pedido editado, vuelto a confirmar): un pedido llegó a tener cuatro seguidas y el campo las cortó a la mitad. Ahora primero saca las marcas que ya traía y deja una sola, la que corresponde al momento (agotado o proveedor «siempre reservar»). Las líneas ya grabadas con marcas apiladas no se tocan; la comanda de `conectar` las limpia al imprimir.
+
+## 2026-11-05 (2) — «Repetir pedido» ya no arrastra la marca de reserva
+
+Origen real de las marcas apiladas: «Repetir pedido» (`/cuenta/pedido/<id>/repetir`) copiaba la observacion de cada linea CON la marca «RESERVA (...)» al carrito y el checkout le anteponia otra: cada repeticion sumaba una (un cliente que repite semana a semana llego a cuatro). Ahora al repetir se copia solo la nota de la persona (`catalogo.sin_marca_reserva`); la marca la pone el checkout segun el stock del momento.
