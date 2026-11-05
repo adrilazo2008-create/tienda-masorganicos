@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import carrito as carrito_mod
-from . import accesos, atribucion, catalogo, clientes, contenido, cookies_conteo, descuentos, encuesta, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
+from . import accesos, atribucion, catalogo, clientes, contenido, cookies_conteo, descuentos, encuesta, fotos, meta_capi, navegacion, pedidos, reservas, rutas_admin, sitio, zonas
 from .config import get_settings
 from .formato import cantidad as fmt_cantidad
 from .formato import linkify, pesos
@@ -188,10 +188,14 @@ templates.env.globals["fmt_cantidad"] = fmt_cantidad
 templates.env.filters["linkify"] = linkify
 templates.env.globals["IMG_BASE"] = S.img_base_url
 templates.env.globals["V"] = ASSET_VER
-templates.env.globals["img_producto"] = (
-    lambda codigo: f"{S.img_base_url}/producto/{codigo}.jpg" if codigo
-    else "/static/img/sinfoto.svg"
-)
+def _img_producto(codigo):
+    if not codigo:
+        return "/static/img/sinfoto.svg"
+    v = fotos.version(codigo)
+    return f"{S.img_base_url}/producto/{codigo}.jpg" + (f"?v={v}" if v else "")
+
+
+templates.env.globals["img_producto"] = _img_producto
 templates.env.globals["img_etiqueta"] = (
     lambda archivo: f"{S.img_base_url}/etiquetas/{archivo}"
 )

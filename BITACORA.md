@@ -928,3 +928,9 @@ Decisiones de Adriana (sin publicar todavía; cambios locales sin commitear):
 ## 2026-11-05 (2) — «Repetir pedido» ya no arrastra la marca de reserva
 
 Origen real de las marcas apiladas: «Repetir pedido» (`/cuenta/pedido/<id>/repetir`) copiaba la observacion de cada linea CON la marca «RESERVA (...)» al carrito y el checkout le anteponia otra: cada repeticion sumaba una (un cliente que repite semana a semana llego a cuatro). Ahora al repetir se copia solo la nota de la persona (`catalogo.sin_marca_reserva`); la marca la pone el checkout segun el stock del momento.
+
+## 2026-11-05 - Fotos de producto: «Refrescar en la tienda» (salto de la caché NGINX)
+- Problema: al cambiar una foto, la tienda seguía mostrando la anterior un buen rato (caché NGINX del hosting + navegador), salvo que se limpiara a mano en cPanel.
+- Ahora las fotos llevan `?v=<versión>` (URL nueva = no hay caché que vencer). `app/fotos.py` lee la tabla `fotos_version` del ERP (`codigo` en minúscula, `version` = momento; `'*'` = todas), cacheada 1 minuto; sin fila, la URL queda igual que siempre. `img_producto` (main.py) la usa en catálogo, ficha, carrito y editar pedido.
+- La tabla la crea y escribe `stock`: al subir/reemplazar una foto desde «Fotos de productos» (automático) y con los botones nuevos «↻ Refrescar en la tienda» (por artículo) y «↻ Refrescar todas las fotos en la tienda» (para cuando se cambian fotos por FTP/administrador de archivos). Tarda hasta ~1 minuto en verse.
+- Las fotos de la landing/blog/etiquetas no se versionan (no pasan por `img_producto`).
