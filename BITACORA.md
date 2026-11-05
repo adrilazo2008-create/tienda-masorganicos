@@ -934,3 +934,13 @@ Origen real de las marcas apiladas: «Repetir pedido» (`/cuenta/pedido/<id>/rep
 - Ahora las fotos llevan `?v=<versión>` (URL nueva = no hay caché que vencer). `app/fotos.py` lee la tabla `fotos_version` del ERP (`codigo` en minúscula, `version` = momento; `'*'` = todas), cacheada 1 minuto; sin fila, la URL queda igual que siempre. `img_producto` (main.py) la usa en catálogo, ficha, carrito y editar pedido.
 - La tabla la crea y escribe `stock`: al subir/reemplazar una foto desde «Fotos de productos» (automático) y con los botones nuevos «↻ Refrescar en la tienda» (por artículo) y «↻ Refrescar todas las fotos en la tienda» (para cuando se cambian fotos por FTP/administrador de archivos). Tarda hasta ~1 minuto en verse.
 - Las fotos de la landing/blog/etiquetas no se versionan (no pasan por `img_producto`).
+
+
+## Segundo pixel de Meta para la cuenta publicitaria en USD (2026-11-05)
+
+Meta bloquea por unas semanas compartir pixeles entre portfolios nuevos (aviso en "Asignar activos y permisos"), asi que la cuenta `MasOrganicos USD` (act 1116110881065005, portfolio `Adriana monica lazo`, id 2213323272862560) usa un **segundo pixel**: el conjunto de datos `2213323272862560`, id `1696893095389963`, ya conectado a esa cuenta. El pixel viejo (`1101405808098438`, portfolio Masorganicos, cuenta `Mas Organicos`) sigue igual.
+
+- El navegador inicializa los dos (`meta_pixel_id_2` en `app/data/integraciones.json`; campo opcional en /admin/pixel) y todo evento va a ambos.
+- `meta_capi.enviar_evento` manda a cada pixel con su token: `META_CAPI_TOKEN` (viejo) y `META_CAPI_TOKEN_2` (nuevo, **lo carga Adriana a mano en el .env del cPanel**; sin el, el pixel nuevo solo recibe los eventos del navegador). El rechazo del cartel de cookies sigue valiendo para los dos.
+- A verificar: que el Administrador de eventos del conjunto nuevo reciba visitas del sitio; si no, ese conjunto no sirve como pixel web y se crea uno con Agregar.
+- Idea de Adriana: mas adelante cerrar el portfolio viejo y dejar el USD independiente; antes pasar pagina, Instagram y publicos, y esperar a que el pixel nuevo junte datos.

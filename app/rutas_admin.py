@@ -304,13 +304,14 @@ async def admin_popup_guardar(request: Request, alt: str = Form(""), link: str =
 def admin_pixel(request: Request):
     if not _logueado(request):
         return RedirectResponse("/admin/login", status_code=303)
-    return _render(request, "admin_pixel.html", pixel_id=contenido.meta_pixel_id())
+    return _render(request, "admin_pixel.html", pixel_id=contenido.meta_pixel_id(),
+                   pixel_id_2=contenido.meta_pixel_id_2())
 
 
 @router.post("/pixel")
-def admin_pixel_guardar(request: Request, pixel_id: str = Form("")):
+def admin_pixel_guardar(request: Request, pixel_id: str = Form(""), pixel_id_2: str = Form("")):
     if not _logueado(request):
         return RedirectResponse("/admin/login", status_code=303)
-    contenido.guardar_meta_pixel_id(pixel_id)
+    contenido.guardar_meta_pixel_id(pixel_id, pixel_id_2)
     request.session["admin_msg"] = "Pixel actualizado."
     return RedirectResponse("/admin/pixel", status_code=303)

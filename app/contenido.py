@@ -29,6 +29,15 @@ def meta_pixel_id() -> str:
         return ""
 
 
+def meta_pixel_id_2() -> str:
+    """ID de un segundo Pixel de Meta (app/data/integraciones.json). Vacío = solo el pixel principal."""
+    try:
+        data = json.loads((_DATA / "integraciones.json").read_text(encoding="utf-8"))
+        return str(data.get("meta_pixel_id_2") or "").strip()
+    except OSError:
+        return ""
+
+
 def clarity_id() -> str:
     """Project ID de Microsoft Clarity (app/data/integraciones.json). Vacío = desactivado."""
     try:
@@ -315,11 +324,13 @@ def guardar_popup_home(alt: str, link: str, frecuencia: str, activo: bool,
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def guardar_meta_pixel_id(valor: str) -> None:
+def guardar_meta_pixel_id(valor: str, valor2: str | None = None) -> None:
     ruta = _DATA / "integraciones.json"
     try:
         data = json.loads(ruta.read_text(encoding="utf-8"))
     except OSError:
         data = {}
     data["meta_pixel_id"] = (valor or "").strip()
+    if valor2 is not None:
+        data["meta_pixel_id_2"] = valor2.strip()
     ruta.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

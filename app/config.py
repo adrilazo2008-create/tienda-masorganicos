@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     # PaginaWeb MO -> Configuración -> Conversions API -> Generar token de
     # acceso). Vacío = CAPI desactivada (solo queda el Pixel del navegador).
     meta_capi_token: str = ""
+    # Idem para el segundo pixel (cuenta publicitaria en USD). Vacío = ese pixel solo recibe los eventos del navegador.
+    meta_capi_token_2: str = ""
 
     def url_tienda(self) -> str:
         return (

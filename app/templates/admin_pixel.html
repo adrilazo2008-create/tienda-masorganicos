@@ -9,6 +9,8 @@
 </p>
 <form method="post" action="/admin/pixel" class="co-box">
   <label>Pixel ID <input name="pixel_id" value="{{ pixel_id }}" placeholder="1101405808098438"></label>
+  <label style="display:block;margin-top:.6rem">Segundo Pixel ID (opcional: cuenta publicitaria en USD)
+    <input name="pixel_id_2" value="{{ pixel_id_2 }}" placeholder="1696893095389963"></label>
   <button type="submit" class="btn-grande" style="margin-top:.6rem">Guardar</button>
 </form>
 {% endblock %}

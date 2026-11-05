@@ -73,6 +73,18 @@ def _user_data(request: Request, cliente=None) -> dict:
     return ud
 
 
+def _destinos() -> list[tuple[str, str]]:
+    """Pares (pixel_id, token) a los que se manda cada evento. Un pixel sin token queda solo con el del
+    navegador. Hoy: el pixel de siempre y, si está configurado, un segundo pixel (cuenta publicitaria USD)."""
+    out: list[tuple[str, str]] = []
+    p1, p2 = contenido.meta_pixel_id(), contenido.meta_pixel_id_2()
+    if p1 and S.meta_capi_token:
+        out.append((p1, S.meta_capi_token))
+    if p2 and S.meta_capi_token_2:
+        out.append((p2, S.meta_capi_token_2))
+    return out
+
+
 def es_host_local(request: Request) -> bool:
     """Pruebas en la PC (localhost): no deben contaminar las métricas de Meta."""
     host = (request.headers.get("host") or "").split(":")[0].lower()
@@ -85,15 +97,15 @@ def enviar_evento(event_name: str, event_id: str, request: Request,
     contraparte del Pixel de navegador (deduplicación). Nunca rompe el
     checkout: cualquier falla (token no configurado, sin red, error de Meta)
     queda solo logueada."""
-    pixel_id = contenido.meta_pixel_id()
-    if not pixel_id or not S.meta_capi_token or es_host_local(request):
+    destinos = _destinos()
+    if not destinos or es_host_local(request):
         return
     # Quien tocó "Rechazar" en el cartel de cookies no manda nada a Meta (ni desde el navegador ni desde acá).
     # No tocar nada cuenta como aceptar. La cookie `mo-cookies` es del dominio raíz y llega a este servidor.
     if request.cookies.get("mo-cookies") == "no":
         return
     try:
-        payload = {
+        payload = json.dumps({
             "data": [{
                 "event_name": event_name,
                 "event_time": int(time.time()),
@@ -103,12 +115,17 @@ def enviar_evento(event_name: str, event_id: str, request: Request,
                 "user_data": _user_data(request, cliente),
                 "custom_data": custom_data,
             }],
-        }
-        url = _URL.format(pixel_id=pixel_id) + f"?access_token={S.meta_capi_token}"
-        req = urllib.request.Request(
-            url, data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
-            resp.read()
+        }).encode("utf-8")
     except Exception:
-        _LOG.exception("Meta CAPI: no se pudo enviar %s (event_id=%s)", event_name, event_id)
+        _LOG.exception("Meta CAPI: no se pudo armar %s (event_id=%s)", event_name, event_id)
+        return
+    # Un envío por pixel (cada uno con su token): si uno falla, el otro igual sale.
+    for pixel_id, token in destinos:
+        try:
+            req = urllib.request.Request(
+                _URL.format(pixel_id=pixel_id) + f"?access_token={token}", data=payload,
+                headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+                resp.read()
+        except Exception:
+            _LOG.exception("Meta CAPI: no se pudo enviar %s al pixel %s (event_id=%s)", event_name, pixel_id, event_id)
