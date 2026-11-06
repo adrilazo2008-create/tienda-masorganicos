@@ -270,8 +270,10 @@ document.body.addEventListener('htmx:afterSwap', function(e){
     var t = e.detail.target.firstElementChild;
     if (t && !t.dataset.timed){
       t.dataset.timed = '1';
-      if (window.fbq) fbq('track', 'AddToCart');
-      if (window.clarity) clarity('event', 'agregar_al_carrito');
+      if (!t.dataset.sinEvento){
+        if (window.fbq) fbq('track', 'AddToCart');
+        if (window.clarity) clarity('event', 'agregar_al_carrito');
+      }
       setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 220); }, 2600);
     }
   }

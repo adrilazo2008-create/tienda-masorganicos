@@ -131,6 +131,55 @@ def abiertas_sin_pedido(cliente_codigo: int | None, telefono) -> dict[int, Decim
         return {}
 
 
+def crear_suelta(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None, nombre: str,
+                 telefono, cantidad: Decimal, observaciones: str = "") -> int:
+    """Reserva que el cliente anota desde la tienda SIN cerrar un pedido (2026-11-06). Queda sin pedido: el carrito se la
+    suma sola (abiertas_sin_pedido) cuando arme su proximo pedido. Si ya tiene una pendiente del mismo producto, se suma
+    a esa; un segundo clic dentro de los 5 segundos se ignora (doble clic)."""
+    _asegurar_tabla()
+    now = datetime.now()
+    cantidad = Decimal(cantidad)
+    cond, par = [], dict(p=producto_id)
+    if cliente_codigo:
+        cond.append("cliente_codigo = :c"); par["c"] = int(cliente_codigo)
+    try:
+        tel = int(str(telefono).strip()) if telefono not in (None, "") else None
+    except ValueError:
+        tel = None
+    if tel:
+        cond.append("telefono = :t"); par["t"] = tel
+    with engine_erp.begin() as cx:
+        previa = None
+        if cond:
+            try:
+                previa = cx.execute(text(
+                    "SELECT id, creado_en, actualizado_en FROM reservas WHERE producto_id = :p AND pedido_grupo_id IS NULL "
+                    "AND estado = 'pendiente' AND COALESCE(es_extra, 0) = 0 AND origen = 'tienda' AND (" + " OR ".join(cond) + ") "
+                    "ORDER BY id DESC LIMIT 1"), par).first()
+            except Exception:
+                previa = None
+        if previa is not None:
+            ultimo = previa[2] or previa[1]
+            if ultimo and (now - ultimo).total_seconds() < 5:
+                return int(previa[0])
+            cx.execute(text("UPDATE reservas SET cantidad = cantidad + :c, actualizado_en = :n WHERE id = :id"),
+                       dict(c=cantidad, n=now, id=int(previa[0])))
+            return int(previa[0])
+        res = cx.execute(text(
+            "INSERT INTO reservas (producto_id, producto_nombre, cliente_codigo, nombre, telefono, cantidad, tipo_entrega, "
+            "pedido_grupo_id, origen, estado, creado_en) VALUES (:pid, :pn, :cc, :nom, :tel, :cant, NULL, NULL, 'tienda', "
+            "'pendiente', :now)"),
+            dict(pid=producto_id, pn=producto_nombre[:191], cc=cliente_codigo, nom=nombre[:191], tel=tel, cant=cantidad, now=now))
+        nueva = int(res.lastrowid)
+    if observaciones.strip():
+        try:
+            with engine_erp.begin() as cx:
+                cx.execute(text("UPDATE reservas SET observaciones = :o WHERE id = :id"), dict(o=observaciones.strip()[:500], id=nueva))
+        except Exception:
+            pass          # la columna la crea `conectar`; si todavia no existe, la reserva igual queda
+    return nueva
+
+
 def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
           nombre: str, telefono: int | None, cantidad: Decimal,
           pedido_grupo_id: int | None, tipo_entrega: str | None = None) -> int:

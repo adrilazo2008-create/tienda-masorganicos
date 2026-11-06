@@ -16,6 +16,8 @@
     <h3><a href="/producto/{{ p.id }}">{{ p.nombre }}</a></h3>
     {% if p.detalle %}<p class="card-det"><a href="/producto/{{ p.id }}">{{ p.detalle|truncate(90) }}</a></p>{% endif %}
     <p class="card-precio"><span class="num">{{ pesos(p.precio) }}</span> <small>x {{ p.unidad }}</small></p>
+    {% set se_reserva = es_reserva(p) %}
+    {% if se_reserva and not p.agotado %}<p class="card-reserva-nota">Se encarga con anticipación: te avisamos cuando llega.</p>{% endif %}
     <form class="card-add" hx-post="/carrito/agregar" hx-target="#toasts" hx-swap="afterbegin">
       <input type="hidden" name="producto_id" value="{{ p.id }}">
       <div class="cant" role="group" aria-label="Cantidad">
@@ -26,7 +28,8 @@
       </div>
       <input class="obs" name="observacion" aria-label="Observación (opcional)"
              placeholder="{{ p.sugerencia_obs }}" maxlength="191" autocomplete="off">
-      <button type="submit" class="btn-add {{ 'btn-add-agotado' if p.agotado }}">{{ 'Reservar' if p.agotado else 'Agregar' }}</button>
+      <button type="submit" class="btn-add {{ 'btn-add-agotado' if p.agotado }}"{% if p.agotado and cliente and se_reserva %} hx-post="/reservar" hx-target="#toasts" hx-swap="afterbegin"{% endif %}>{{ 'Reservar' if p.agotado else 'Agregar' }}</button>
+      {% if se_reserva and not p.agotado %}<button type="submit" class="btn-reservar-sec" hx-post="/reservar" hx-target="#toasts" hx-swap="afterbegin">Reservar para mi próximo pedido</button>{% endif %}
     </form>
   </div>
 </article>

@@ -961,3 +961,9 @@ Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por Whats
 - Al confirmar, la reserva se vincula al pedido (`reservas.crear` ya lo hacía); lo que el cliente pida de más sobre un producto que no reserva solo NO genera reserva nueva. También al «sumar a pedido abierto» (`agregar_item(..., cantidad_reserva=)`).
 - El stock no la frena: se muestra aunque el producto esté sin stock; solo lo que exceda lo reservado se compara contra el stock.
 - Pendiente (acordado con Adriana): botón «Reservar para mi próximo pedido» en productos marcados, marcado de productos sueltos en `conectar`, «Saltear esta semana» de la reserva fija y recordatorio por WhatsApp (jueves).
+
+## 2026-11-06 — Botón «Reservar para mi próximo pedido»
+- En productos que se reservan (`catalogo.es_reserva`: Granja agotado o proveedor «siempre reservar»): tarjeta y ficha muestran «Se encarga con anticipación: te avisamos cuando llega» y, si hay stock, un botón secundario **Reservar para mi próximo pedido** además de «Agregar». Si está agotado, el botón «Reservar» de siempre pasa a anotar la reserva directo cuando el cliente tiene sesión (sin sesión sigue agregando al carrito como antes).
+- `POST /reservar` → `reservas.crear_suelta()`: fila en `reservas` sin pedido (origen `tienda`, estado `pendiente`, `tipo_entrega` NULL). Misma pendiente del mismo producto → se suma la cantidad; segundo clic en menos de 5 s se ignora. Sin sesión: toast con link a «ingresá con tu celular». El toast no cuenta como AddToCart del pixel (`data-sin-evento`).
+- Al armar su próximo pedido, el carrito se la suma sola (bloqueada), ver entrada anterior.
+- Prueba en producción: dejó una fila de prueba (id 879, tel 1100000001) porque el `CREATE TABLE IF NOT EXISTS` interno corta la transacción y el rollback no alcanzó; se borró a mano. Para probar escrituras contra `reservas`, usar siempre un teléfono ficticio y borrar después.

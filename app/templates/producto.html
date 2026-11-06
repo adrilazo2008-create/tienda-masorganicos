@@ -44,10 +44,16 @@
       <label for="obs-{{ p.id }}">Observación (opcional)</label>
       <input id="obs-{{ p.id }}" class="obs" name="observacion" autocomplete="off"
              placeholder="{{ p.sugerencia_obs }}" maxlength="191">
-      <button type="submit" class="btn-grande {{ 'btn-reserva' if p.agotado }}">{{ 'Reservar este producto' if p.agotado else 'Agregar al carrito' }}</button>
+      {% set se_reserva = es_reserva(p) %}
+      <button type="submit" class="btn-grande {{ 'btn-reserva' if p.agotado }}"{% if p.agotado and cliente and se_reserva %} hx-post="/reservar" hx-target="#toasts" hx-swap="afterbegin"{% endif %}>{{ 'Reservar este producto' if p.agotado else 'Agregar al carrito' }}</button>
+      {% if se_reserva and not p.agotado %}<button type="submit" class="btn-grande btn-reservar-sec" hx-post="/reservar" hx-target="#toasts" hx-swap="afterbegin">Reservar para mi próximo pedido</button>{% endif %}
     </form>
-    {% if p.agotado %}
+    {% if p.agotado and cliente and se_reserva %}
+    <p class="prod-nota">Queda anotada tu reserva: te la sumamos sola a tu próximo pedido y te avisamos cuando tengamos stock.</p>
+    {% elif p.agotado %}
     <p class="prod-nota">Lo agregás igual al carrito: al confirmar el pedido, esto queda como reserva y te avisamos cuando tengamos stock.</p>
+    {% elif se_reserva %}
+    <p class="prod-nota">Este producto se encarga con anticipación. Podés llevarlo ya si hay, o reservarlo para tu próximo pedido: te la sumamos sola y te avisamos cuando llegue.</p>
     {% else %}
     <p class="prod-nota">El precio y la disponibilidad se confirman al preparar tu pedido.</p>
     {% endif %}

@@ -235,6 +235,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .btn-add{background:var(--verde);color:#fff;border:0;border-radius:var(--radio);padding:.5rem;font-weight:600;cursor:pointer}
 .btn-add:hover{background:var(--verde-osc)}
 .btn-add-agotado{background:var(--acento)}
+.card-reserva-nota{font-size:.78rem;color:var(--verde-osc);margin:.1rem 0 .4rem;line-height:1.25}
+.btn-reservar-sec{display:block;width:100%;margin-top:.4rem;background:#fff;color:var(--verde-osc);border:1.5px solid var(--verde-osc);border-radius:999px;padding:.45rem .8rem;font-size:.85rem;font-weight:600;cursor:pointer}
+.btn-reservar-sec:hover{background:var(--verde-osc);color:#fff}
 .btn-add-agotado:hover{background:#b9721c}
 
 .rubros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem}

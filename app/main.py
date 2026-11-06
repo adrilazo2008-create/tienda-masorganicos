@@ -185,6 +185,7 @@ if S.img_base_url.startswith("/") and _fotos_local.exists():
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 templates.env.globals["pesos"] = pesos
 templates.env.globals["fmt_cantidad"] = fmt_cantidad
+templates.env.globals["es_reserva"] = catalogo.es_reserva
 templates.env.filters["linkify"] = linkify
 templates.env.globals["IMG_BASE"] = S.img_base_url
 templates.env.globals["V"] = ASSET_VER
@@ -505,6 +506,34 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
         partes.append(templates.get_template("_carrito_cuerpo_oob.html").render(extra))
         return HTMLResponse("".join(partes))
     return RedirectResponse("/catalogo", status_code=303)
+
+
+@app.post("/reservar")
+def reservar_producto(request: Request, producto_id: int = Form(...), cantidad: str = Form("1"),
+                      observacion: str = Form("")):
+    """«Reservar para mi proximo pedido» (2026-11-06): anota la reserva sin cerrar un pedido. Hace falta haber iniciado sesion."""
+    def toast(html: str, evento: bool = False):
+        marca = "" if evento else ' data-sin-evento="1"'
+        return HTMLResponse(f'<p class="toast-ok" role="status"{marca}>{html}</p>')
+
+    cli = _cliente_actual(request)
+    if not cli:
+        if request.headers.get("HX-Request"):
+            return toast('Para reservar, <a href="/cuenta" style="color:#fff;text-decoration:underline">ingresá con tu celular</a>.')
+        return RedirectResponse("/cuenta", status_code=303)
+    p = catalogo.obtener_con_disponible(producto_id)
+    if not p or not catalogo.es_reserva(p):
+        return toast("Este producto no se reserva: agregalo al carrito.")
+    cant = carrito_mod._norm_cant(cantidad)
+    try:
+        cod = (clientes.obtener(cli.id) or cli).cliente_codigo
+        reservas.crear_suelta(producto_id=p.id, producto_nombre=p.nombre, cliente_codigo=cod,
+                              nombre=cli.nombre_completo, telefono=cli.telefono, cantidad=cant, observaciones=observacion)
+    except Exception:
+        logger_errores.exception("No se pudo anotar la reserva suelta del producto %s", producto_id)
+        return toast("No pudimos anotar la reserva. Escribinos por WhatsApp y la anotamos.")
+    from html import escape
+    return toast(f"✓ Reservado: {escape(p.nombre)}. Te lo sumamos a tu próximo pedido y te avisamos cuando llegue.")
 
 
 @app.get("/carrito", response_class=HTMLResponse)
