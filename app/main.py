@@ -649,6 +649,16 @@ def checkout_confirmar(
     utm_source: str = Form(""), utm_medium: str = Form(""), utm_campaign: str = Form(""),
     utm_content: str = Form(""), fbclid: str = Form(""),
 ):
+    # La altura se guarda como número, pero el campo es de texto libre: alguien
+    # puede escribir "1541 o 1547" (pasó el 2026-11-06, daba error 500 al
+    # confirmar). Nos quedamos con el primer número y el texto original no se
+    # pierde: va a las indicaciones de entrega.
+    altura = (altura or "").strip()
+    if altura and not altura.isdigit():
+        m_alt = re.search(r"\d+", altura)
+        info_adicional = (f"Altura: {altura}. " + (info_adicional or "")).strip()
+        altura = m_alt.group(0) if m_alt else ""
+
     # Mismo envío de vuelta (doble clic, "atrás" del navegador, reintento por
     # lag): no duplicar el pedido, mostrar la confirmación que ya se generó.
     ya_hecho = request.session.get("checkout_token_hecho")

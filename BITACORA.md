@@ -944,3 +944,13 @@ Meta bloquea por unas semanas compartir pixeles entre portfolios nuevos (aviso e
 - `meta_capi.enviar_evento` manda a cada pixel con su token: `META_CAPI_TOKEN` (viejo) y `META_CAPI_TOKEN_2` (nuevo, **lo carga Adriana a mano en el .env del cPanel**; sin el, el pixel nuevo solo recibe los eventos del navegador). El rechazo del cartel de cookies sigue valiendo para los dos.
 - A verificar: que el Administrador de eventos del conjunto nuevo reciba visitas del sitio; si no, ese conjunto no sirve como pixel web y se crea uno con Agregar.
 - Idea de Adriana: mas adelante cerrar el portfolio viejo y dejar el USD independiente; antes pasar pagina, Instagram y publicos, y esperar a que el pixel nuevo junte datos.
+
+## 2026-11-06 — Hotfix: 500 al confirmar con altura en texto ("1541 o 1547")
+
+Clienta con carrito de pollo/leche de avena, código `1793978635` (= timestamp del 500, 12:23 ART).
+Log del cPanel (`public_html/claude2026/tienda/app/logs/errores.log`): `ValueError: invalid literal for int()
+with base 10: '1541 o 1547'` en `checkout_confirmar` (`int(altura or 0)`). La altura es campo de texto libre.
+
+**Arreglo:** al entrar a `checkout_confirmar`, si la altura no es solo dígitos se toma el primer número y el texto
+original se antepone a `info_adicional` ("Altura: ..."), así no se pierde la aclaración para el reparto.
+Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por WhatsApp.
