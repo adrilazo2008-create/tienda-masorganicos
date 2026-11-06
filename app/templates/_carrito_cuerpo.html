@@ -21,6 +21,7 @@
       <div class="cl-info">
         <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
         {% if l.reserva %}<span class="etq etq-stock">Reserva: lo pedimos al proveedor y te avisamos</span>{% endif %}
+        {% if l.reservada > 0 %}<span class="etq etq-stock">✓ Ya lo tenías reservado ({{ fmt_cantidad(l.reservada) }}): lo sumamos a tu pedido. Si no lo querés, avisanos en la observación o por WhatsApp.</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
         <form method="post" action="/carrito/actualizar" class="cl-obs-form" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
           <input type="hidden" name="indice" value="{{ l.indice }}">
@@ -37,7 +38,7 @@
           <button type="button" onclick="stepCarrito(this,-1)" aria-label="Quitar uno">−</button>
           <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
                  data-step="{{ '0.25' if l.producto.fraccionable else '1' }}"
-                 data-min="{{ '0.25' if l.producto.fraccionable else '1' }}"
+                 data-min="{{ fmt_cantidad(l.reservada) if l.reservada > 0 else ('0.25' if l.producto.fraccionable else '1') }}"
                  aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off"
                  onchange="this.form.requestSubmit()">
           <button type="button" onclick="stepCarrito(this,1)" aria-label="Agregar uno">+</button>
@@ -45,10 +46,14 @@
         <span>{{ l.producto.unidad }}</span>
       </form>
       <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
+      {% if l.reservada > 0 %}
+      <span class="cl-quitar" title="Es una reserva que ya hicimos: no se puede sacar" aria-label="Reserva, no se puede quitar">🔒</span>
+      {% else %}
       <form method="post" action="/carrito/quitar" class="cl-quitar" hx-post="/carrito/quitar" hx-swap="none">
         <input type="hidden" name="indice" value="{{ l.indice }}">
         <button type="submit" aria-label="Quitar">✕</button>
       </form>
+      {% endif %}
       {% if l.faltante > 0 %}
       <div class="cl-faltante" role="alert">
         <p>⚠ Pediste {{ fmt_cantidad(l.cantidad) }} y {% if l.disponible == 1 %}solo queda <b>1</b>{% else %}solo quedan <b>{{ fmt_cantidad(l.disponible) }}</b>{% endif %}.

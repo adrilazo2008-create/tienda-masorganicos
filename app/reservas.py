@@ -105,6 +105,32 @@ def _regla_fija(cx, producto_id: int, cliente_codigo: int | None, telefono: int 
     return None
 
 
+def abiertas_sin_pedido(cliente_codigo: int | None, telefono) -> dict[int, Decimal]:
+    """Reservas abiertas del cliente que todavia no estan en ningun pedido (cargadas a mano en `conectar`, o las que
+    genera solas la reserva fija): {producto_id: cantidad total}. El carrito las suma solo (2026-11-06) para que el
+    cliente vea que tiene eso pendiente de recibir y no se olvide de pedirlo. Si falla la consulta: ninguna."""
+    cond, par = [], {}
+    if cliente_codigo:
+        cond.append("cliente_codigo = :c"); par["c"] = int(cliente_codigo)
+    try:
+        tel = int(str(telefono).strip()) if telefono not in (None, "") else None
+    except ValueError:
+        tel = None
+    if tel:
+        cond.append("telefono = :t"); par["t"] = tel
+    if not cond:
+        return {}
+    try:
+        with engine_erp.connect() as cx:
+            filas = cx.execute(text(
+                "SELECT producto_id, SUM(cantidad) FROM reservas WHERE pedido_grupo_id IS NULL AND COALESCE(es_extra, 0) = 0 "
+                "AND estado IN ('pendiente', 'encargado', 'recibido') AND (" + " OR ".join(cond) + ") GROUP BY producto_id"),
+                par).fetchall()
+        return {int(f[0]): Decimal(str(f[1])) for f in filas if f[1] and Decimal(str(f[1])) > 0}
+    except Exception:
+        return {}
+
+
 def crear(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None,
           nombre: str, telefono: int | None, cantidad: Decimal,
           pedido_grupo_id: int | None, tipo_entrega: str | None = None) -> int:

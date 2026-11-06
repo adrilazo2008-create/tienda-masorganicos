@@ -62,7 +62,9 @@ def actualizar(session, indice: int, cantidad, observacion: str | None = None) -
     estaba; para borrarla o cambiarla se manda un string (puede ser "")."""
     items = _leer(session)
     if 0 <= indice < len(items):
-        items[indice]["cantidad"] = str(_norm_cant(cantidad))
+        nueva = _norm_cant(cantidad)
+        minima = Decimal(str(items[indice].get("reservada") or 0))
+        items[indice]["cantidad"] = str(nueva if nueva >= minima else minima)   # lo reservado no se puede bajar
         if observacion is not None:
             items[indice]["observacion"] = observacion.strip()[:191]
         _guardar(session, items)
@@ -80,9 +82,10 @@ def resolver_faltante(session, indice: int, accion: str) -> None:
     if falta <= 0:
         return
     disp = l.disponible
-    if disp <= 0:
+    base = Decimal(str(items[indice].get("reservada") or 0))      # lo reservado no cuenta como faltante
+    if disp <= 0 and base <= 0:
         return
-    items[indice]["cantidad"] = str(disp.quantize(Decimal("0.01")))
+    items[indice]["cantidad"] = str((base + disp).quantize(Decimal("0.01")))
     if accion == "reservar":
         items.insert(indice + 1, {"producto_id": items[indice]["producto_id"], "cantidad": str(falta.quantize(Decimal("0.01"))),
                                    "observacion": items[indice].get("observacion", ""), "reserva": True})
@@ -92,8 +95,44 @@ def resolver_faltante(session, indice: int, accion: str) -> None:
 def quitar(session, indice: int) -> None:
     items = _leer(session)
     if 0 <= indice < len(items):
+        if items[indice].get("reservada"):
+            return          # una reserva ya hecha no se saca del pedido: si no la quiere, que avise en la observacion o por WhatsApp
         items.pop(indice)
         _guardar(session, items)
+
+
+def sincronizar_reservas(session, reservadas: dict) -> list[int]:
+    """Deja en el carrito, bloqueado, lo que el cliente ya tiene reservado (2026-11-06, pedido de Adriana): asi ve que tiene eso
+    pendiente de recibir y queda registrado en el pedido (si lo sacara, no quedaria rastro de que habia una reserva).
+    `reservadas`: {producto_id: cantidad} (reservas.abiertas_sin_pedido). Cada linea lleva `reservada` = cantidad minima.
+    Devuelve los ids de producto que se agregaron o crecieron en este llamado."""
+    items = _leer(session)
+    cambios: list[int] = []
+    nuevos: list[dict] = []
+    for pid, cant in reservadas.items():
+        cant = _norm_cant(cant)
+        linea = next((it for it in items if it["producto_id"] == pid and not it.get("reserva")), None)
+        if linea is not None:
+            if Decimal(str(linea.get("reservada") or 0)) != cant or Decimal(linea["cantidad"]) < cant:
+                linea["reservada"] = str(cant)
+                if Decimal(linea["cantidad"]) < cant:
+                    linea["cantidad"] = str(cant)
+                cambios.append(pid)
+        elif catalogo.obtener_con_disponible(pid) is not None:        # si ya no se vende por la web, no se agrega
+            nuevos.append({"producto_id": pid, "cantidad": str(cant), "observacion": "", "reservada": str(cant), "auto": True})
+            cambios.append(pid)
+    limpio = []
+    for it in items:
+        if it.get("reservada") and it["producto_id"] not in reservadas:
+            if it.get("auto"):
+                cambios.append(it["producto_id"])
+                continue                  # la reserva ya no existe (se vendio, se anulo): la linea que se agrego sola se va
+            it.pop("reservada", None)
+        limpio.append(it)
+    resultado = nuevos + limpio
+    if resultado != items:
+        _guardar(session, resultado)
+    return cambios
 
 
 def vaciar(session) -> None:
@@ -129,6 +168,7 @@ class LineaCarrito:
     cantidad: Decimal
     observacion: str
     reserva: bool = False   # el resto que no habia en stock y la persona pidio reservar (2026-11-02)
+    reservada: Decimal = Decimal("0")   # cantidad que el cliente YA tenia reservada: no se puede sacar ni bajar (2026-11-06)
 
     @property
     def subtotal(self) -> Decimal:
@@ -146,7 +186,7 @@ class LineaCarrito:
         granja y tambo, combos y los que se reservan siempre) y mientras no haya elegido que hacer con el resto."""
         if self.reserva:
             return Decimal("0")
-        return faltante_de(self.producto, self.cantidad)[1]
+        return faltante_de(self.producto, self.cantidad - self.reservada)[1]
 
 
 @dataclass
@@ -188,6 +228,11 @@ def _resolver(session) -> tuple[Carrito, bool, list[dict]]:
     if not items:
         return Carrito(lineas=[]), False, []
     prods = catalogo.obtener_varios([it["producto_id"] for it in items])
+    for it in items:      # lo reservado se muestra aunque el producto este sin stock (justamente por eso estaba reservado)
+        if it.get("reservada") and it["producto_id"] not in prods:
+            pr = catalogo.obtener_con_disponible(it["producto_id"])
+            if pr:
+                prods[it["producto_id"]] = pr
     lineas: list[LineaCarrito] = []
     limpio: list[dict] = []
     eliminados: list[dict] = []
@@ -203,7 +248,7 @@ def _resolver(session) -> tuple[Carrito, bool, list[dict]]:
         lineas.append(LineaCarrito(
             indice=len(lineas), producto=p,
             cantidad=Decimal(it["cantidad"]), observacion=it.get("observacion", ""),
-            reserva=bool(it.get("reserva"))))
+            reserva=bool(it.get("reserva")), reservada=Decimal(str(it.get("reservada") or 0))))
         limpio.append(it)
     if len(limpio) != len(items):
         _guardar(session, limpio)

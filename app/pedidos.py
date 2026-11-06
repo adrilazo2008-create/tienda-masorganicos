@@ -519,7 +519,7 @@ def _producto_para_agregar(producto_id: int):
 
 
 def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: Decimal,
-                  observacion: str = "", forzar_reserva: bool = False) -> None:
+                  observacion: str = "", forzar_reserva: bool = False, cantidad_reserva=None) -> None:
     """`forzar_reserva`: el resto que no habia en stock y la persona pidio reservar (2026-11-02): la linea va marcada como
     reserva y crea la fila en `reservas`, aunque el producto no sea de los que reservan solos. En ese caso el producto
     puede estar oculto por falta de stock, asi que se busca con `obtener_con_disponible`."""
@@ -550,8 +550,8 @@ def agregar_item(pedido_id: int, cliente_id: int, producto_id: int, cantidad: De
             reservas.crear(producto_id=p.id, producto_nombre=p.nombre,
                             cliente_codigo=cli.cliente_codigo if cli else None,
                             nombre=cli.nombre_completo if cli else "", telefono=cli.telefono if cli else None,
-                            cantidad=Decimal(cantidad), pedido_grupo_id=pedido_id,
-                            tipo_entrega=_tipo_entrega(pedido_id))
+                            cantidad=Decimal(cantidad if cantidad_reserva is None else cantidad_reserva),
+                            pedido_grupo_id=pedido_id, tipo_entrega=_tipo_entrega(pedido_id))
         except Exception:
             import logging
             logging.getLogger("tienda.errores").exception(

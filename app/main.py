@@ -232,6 +232,29 @@ def _cliente_actual(request: Request):
     return clientes.obtener(cid) if cid else None
 
 
+def _cliente_para_reservas(request: Request):
+    """Cliente cuyas reservas se suman al carrito: el de la sesion o, si todavia no inicio sesion, el que se identifico
+    por celular en el checkout."""
+    c = _cliente_actual(request)
+    if c:
+        return c
+    cid = request.session.get("checkout_cliente_id")
+    return clientes.obtener(cid) if cid else None
+
+
+def _sync_reservas(request: Request, cli=None) -> list:
+    """Suma al carrito, bloqueado, lo que el cliente ya tiene reservado (2026-11-06). Nunca rompe la pagina: si algo falla se
+    sigue con el carrito como estaba. Devuelve los nombres de lo que se agrego o cambio."""
+    try:
+        cli = cli or _cliente_para_reservas(request)
+        res = reservas.abiertas_sin_pedido(cli.cliente_codigo, cli.telefono) if cli else {}
+        ids = carrito_mod.sincronizar_reservas(request.session, res)
+        return list(catalogo.nombres_por_id(ids).values()) if ids else []
+    except Exception:
+        logger_errores.exception("No se pudieron sumar las reservas al carrito")
+        return []
+
+
 def _habituales(cli, limite: int, excluir=()) -> list:
     """Productos que el cliente suele comprar, listos para <_card.html>.
     Cacheado por cliente (se refresca a los ~3 min o al reiniciar la app)."""
@@ -462,6 +485,7 @@ def envios_barrios():
 def carrito_agregar(request: Request, producto_id: int = Form(...),
                     cantidad: str = Form("1"), observacion: str = Form("")):
     carrito_mod.agregar(request.session, producto_id, cantidad, observacion)
+    _sync_reservas(request)
     if request.headers.get("HX-Request"):
         car = carrito_mod.resolver(request.session)
         n = car.cantidad_items
@@ -485,6 +509,7 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
+    _sync_reservas(request)
     car, _, _ = carrito_mod.resolver_y_avisar(request.session)
     en_carrito = {l.producto.id for l in car.lineas}
     # sugerencias: habituales del cliente -> cross-sell por lo que hay en el
@@ -503,6 +528,7 @@ def _respuesta_carrito(request: Request):
     carrito (+ badge) por OOB, sin recargar la página entera."""
     if not request.headers.get("HX-Request"):
         return RedirectResponse("/carrito", status_code=303)
+    _sync_reservas(request)
     car = carrito_mod.resolver(request.session)
     if car.vacio:
         return HTMLResponse("", headers={"HX-Redirect": "/carrito"})
@@ -552,7 +578,10 @@ def carrito_sumar_a_pedido(request: Request):
     agregados, fallidos = set(), []
     for l in car.lineas:
         try:
-            pedidos.agregar_item(ab["id"], c.id, l.producto.id, l.cantidad, l.observacion, forzar_reserva=l.reserva)
+            pedidos.agregar_item(ab["id"], c.id, l.producto.id, l.cantidad, l.observacion,
+                                 forzar_reserva=l.reserva or l.reservada > 0,
+                                 cantidad_reserva=(min(l.cantidad, l.reservada) if (l.reservada > 0 and not l.reserva
+                                                                                   and not catalogo.es_reserva(l.producto)) else None))
             agregados.add(l.producto.id)
         except pedidos.PedidoNoEditable:
             fallidos.append(l.producto.nombre)
@@ -573,6 +602,7 @@ def carrito_sumar_a_pedido(request: Request):
 
 @app.get("/checkout", response_class=HTMLResponse)
 def checkout(request: Request):
+    _sync_reservas(request)
     car, _, eliminados = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
@@ -602,16 +632,18 @@ def checkout_identificar(request: Request, telefono: str = Form(...)):
     c = clientes.buscar_por_telefono(telefono)
     dirs = []
     sugerido = None
+    reservas_sumadas = []
     if c:
         request.session["checkout_cliente_id"] = c.id
         dirs = clientes.direcciones(c.id)
+        reservas_sumadas = _sync_reservas(request, c)
     else:
         # todavía no pidió por la web, pero puede ya ser cliente (local/ERP)
         sugerido = clientes.buscar_en_erp(telefono)
     return render(request, "_checkout_identidad.html",
                   existe=c is not None, cliente_encontrado=c, telefono=telefono,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
-                  sugerido=sugerido)
+                  sugerido=sugerido, reservas_sumadas=reservas_sumadas)
 
 
 @app.get("/checkout/descuento", response_class=HTMLResponse)
@@ -669,6 +701,16 @@ def checkout_confirmar(
             request.session["pedido_ok"] = ya_hecho["pedido_ok"]
         return RedirectResponse("/checkout/ok", status_code=303)
 
+    # Reservas ya hechas del cliente: entran solas al pedido. Si recien ahora aparece alguna que la persona no vio en el
+    # carrito (se identifico por celular y no tenia sesion), se le muestra antes de confirmar.
+    cli_res = _cliente_actual(request) or clientes.buscar_por_telefono(telefono)
+    if cli_res:
+        request.session["checkout_cliente_id"] = cli_res.id
+    sumadas = _sync_reservas(request, cli_res)
+    if sumadas and not _cliente_actual(request):
+        request.session["carrito_msg"] = ("Sumamos a tu pedido lo que tenías reservado: " + ", ".join(sumadas)
+                                          + ". Revisalo y cerrá el pedido.")
+        return RedirectResponse("/carrito", status_code=303)
     car, hubo_cambios, eliminados = carrito_mod.resolver_y_avisar(request.session)
     if car.vacio and not eliminados:
         return RedirectResponse("/catalogo", status_code=303)
@@ -799,7 +841,7 @@ def checkout_confirmar(
             producto_id=l.producto.id, cantidad=l.cantidad,
             precio_unitario=l.producto.precio, unidad_id=l.producto.unidad_id,
             observacion=catalogo.marcar_reserva_en_obs(
-                l.observacion, catalogo.es_reserva(l.producto) or l.reserva,
+                l.observacion, catalogo.es_reserva(l.producto) or l.reserva or l.reservada > 0,
                 con_stock=not l.producto.agotado and not l.reserva))
             for l in car.lineas],
         efectivo=(pago == "efectivo"),
@@ -829,11 +871,15 @@ def checkout_confirmar(
         except Exception:
             cliente_codigo_reserva = cli.cliente_codigo
         for l in car.lineas:
-            if catalogo.es_reserva(l.producto) or l.reserva:
+            if catalogo.es_reserva(l.producto) or l.reserva or l.reservada > 0:
+                # lo ya reservado se vincula a este pedido; si el producto no es de los que reservan solos, lo que pidio
+                # de mas NO es una reserva nueva
+                cant_reserva = (min(l.cantidad, l.reservada) if (l.reservada > 0 and not l.reserva
+                                                                 and not catalogo.es_reserva(l.producto)) else l.cantidad)
                 try:
                     reservas.crear(producto_id=l.producto.id, producto_nombre=l.producto.nombre,
                                     cliente_codigo=cliente_codigo_reserva, nombre=cli.nombre_completo,
-                                    telefono=cli.telefono, cantidad=l.cantidad,
+                                    telefono=cli.telefono, cantidad=cant_reserva,
                                     pedido_grupo_id=numero,
                                     tipo_entrega=("retiro" if p.retira else "envio"))
                 except Exception:
@@ -1108,6 +1154,8 @@ def cuenta_entrar(request: Request, telefono: str = Form(...)):
 @app.get("/cuenta/salir")
 def cuenta_salir(request: Request):
     request.session.pop("cliente_id", None)
+    request.session.pop("checkout_cliente_id", None)
+    _sync_reservas(request)        # las reservas bloqueadas del cliente que se va salen del carrito
     return RedirectResponse("/", status_code=303)
 
 

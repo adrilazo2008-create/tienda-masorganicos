@@ -1,5 +1,6 @@
 {% if existe %}
   <p class="ok-box">¡Hola de nuevo, {{ cliente_encontrado.nombre }}! Ya tenemos tus datos.</p>
+  {% if reservas_sumadas %}<p class="ok-box">Sumamos a tu pedido lo que tenías reservado: <b>{{ reservas_sumadas|join(', ') }}</b>. <a href="/checkout">Actualizar el resumen</a>.</p>{% endif %}
   <input type="hidden" name="nombre" value="{{ cliente_encontrado.nombre }}">
   <input type="hidden" name="apellido" value="{{ cliente_encontrado.apellido }}">
   {% set sin_email = (not cliente_encontrado.email) or cliente_encontrado.email.startswith('sinmail') %}

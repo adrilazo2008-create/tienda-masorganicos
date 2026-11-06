@@ -954,3 +954,10 @@ with base 10: '1541 o 1547'` en `checkout_confirmar` (`int(altura or 0)`). La al
 **Arreglo:** al entrar a `checkout_confirmar`, si la altura no es solo dígitos se toma el primer número y el texto
 original se antepone a `info_adicional` ("Altura: ..."), así no se pierde la aclaración para el reparto.
 Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por WhatsApp.
+
+## 2026-11-06 — Las reservas ya hechas entran solas al carrito (bloqueadas)
+- Pedido de Adriana: el cliente no veía en la tienda lo que ya tenía reservado, y a veces lo pedía y a veces no. Si alguien tiene una reserva abierta (`reservas` sin pedido: `pedido_grupo_id IS NULL`, estado pendiente/encargado/recibido, no extra), al armar un pedido se agrega solo al carrito y **no se puede quitar ni bajar** (si no la quiere, que avise en la observación o por WhatsApp: así queda registro de que había una reserva).
+- Código: `reservas.abiertas_sin_pedido()`, `carrito.sincronizar_reservas()` (línea con `reservada` = cantidad mínima, `auto` = la agregó el sistema; si la reserva desaparece, la línea automática se va), `main._sync_reservas()` en carrito, checkout, identificación por celular y confirmación. Se identifica por sesión o por el celular tipeado en el checkout (`checkout_cliente_id`, se limpia al salir).
+- Al confirmar, la reserva se vincula al pedido (`reservas.crear` ya lo hacía); lo que el cliente pida de más sobre un producto que no reserva solo NO genera reserva nueva. También al «sumar a pedido abierto» (`agregar_item(..., cantidad_reserva=)`).
+- El stock no la frena: se muestra aunque el producto esté sin stock; solo lo que exceda lo reservado se compara contra el stock.
+- Pendiente (acordado con Adriana): botón «Reservar para mi próximo pedido» en productos marcados, marcado de productos sueltos en `conectar`, «Saltear esta semana» de la reserva fija y recordatorio por WhatsApp (jueves).
