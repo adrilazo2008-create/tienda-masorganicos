@@ -71,6 +71,11 @@ def productos_reserva_siempre() -> frozenset:
             except Exception:
                 excluidos = frozenset()
             ids = ids - excluidos
+            # Productos sueltos marcados en `conectar` (2026-11-06); si la tabla todavia no existe, no hay ninguno.
+            try:
+                ids = ids | frozenset(int(r[0]) for r in cx.execute(text("SELECT producto_id FROM reservas_productos_incluidos")))
+            except Exception:
+                pass
     except Exception:
         ids = frozenset()
     _cache_siempre.update(t=ahora, ids=ids)
