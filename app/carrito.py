@@ -139,6 +139,17 @@ def vaciar(session) -> None:
     session.pop(CLAVE, None)
 
 
+def vaciar_quitables(session) -> int:
+    """Botón «Vaciar carrito»: saca todo lo que el cliente puede sacar. Las reservas ya hechas se quedan (igual que en
+    `quitar`: si no las quiere, que avise en la observación o por WhatsApp). Devuelve cuántas líneas quedaron."""
+    items = [it for it in _leer(session) if it.get("reservada")]
+    if items:
+        _guardar(session, items)
+    else:
+        session.pop(CLAVE, None)
+    return len(items)
+
+
 def disponible_de(p: Producto) -> Decimal:
     """Lo que realmente queda libre de un producto (el `stock` ya viene descontado de lo reservado por pedidos web sin
     bajar), en unidades enteras salvo que se venda por kg / lt. Nunca negativo."""

@@ -84,6 +84,9 @@
     <a href="/checkout" class="btn-grande">Cerrar pedido</a>
     {% endif %}
     <a href="/catalogo" class="btn-sec">Seguir comprando</a>
+    <form method="post" action="/carrito/vaciar" data-confirmar="¿Vaciar el carrito? Se van a sacar todos los productos que agregaste.">
+      <button type="submit" class="btn-sec" style="width:100%;margin-top:.5rem;">Vaciar carrito</button>
+    </form>
   </aside>
 </div>
 

@@ -592,6 +592,16 @@ def carrito_quitar(request: Request, indice: int = Form(...)):
     return _respuesta_carrito(request)
 
 
+@app.post("/carrito/vaciar")
+def carrito_vaciar(request: Request):
+    """Deja el carrito vacío de una. Las reservas ya hechas no se pueden sacar y quedan (con aviso)."""
+    quedan = carrito_mod.vaciar_quitables(request.session)
+    if quedan:
+        request.session["carrito_msg"] = ("Vaciamos tu carrito. Quedan las reservas que ya hiciste: "
+                                          "si no las querés, avisanos en la observación o por WhatsApp.")
+    return RedirectResponse("/carrito", status_code=303)
+
+
 @app.post("/carrito/sumar-a-pedido")
 def carrito_sumar_a_pedido(request: Request):
     """Suma lo que hay en el carrito al pedido que el cliente todavía puede editar (en vez de crear otro)."""
