@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Repetir pedido #{{ p.id }} — Más Orgánicos{% endblock %}
+{% block contenido %}
+
+<nav class="miga" aria-label="Ruta de navegación">
+  <a href="/cuenta">Mi cuenta</a> / <a href="/cuenta/pedido/{{ p.id }}">Pedido #{{ p.id }}</a> / <span aria-current="page">Repetir</span>
+</nav>
+
+<div class="ok-final">
+  <h1>Repetir pedido #{{ p.id }}</h1>
+  <p class="ok-num">{{ p.fecha.strftime('%d/%m/%Y') }}</p>
+  <p class="chico">Destildá lo que no quieras volver a pedir. Lo tildado se suma a tu carrito.</p>
+  {% if error %}<p class="carrito-flash">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir">
+    <input type="hidden" name="elegido" value="1">
+    <div class="ok-caja">
+      <table class="ok-items">
+        <thead>
+          <tr><th scope="col"><span class="sr-only">Incluir</span></th><th scope="col">Cant.</th><th scope="col">Producto</th></tr>
+        </thead>
+        <tbody>
+        {% for l in p.lineas %}
+        {% set prod = prods.get(l.producto_id) %}
+        <tr>
+          <td><input type="checkbox" name="lineas" value="{{ l.id }}" id="l{{ l.id }}" {% if prod %}checked{% else %}disabled{% endif %}
+                     aria-label="Incluir {{ prod.nombre if prod else (nombres.get(l.producto_id) or 'este producto') }}"></td>
+          <td class="num"><label for="l{{ l.id }}">{{ fmt_cantidad(l.cantidad) }}{% if prod %} {{ prod.unidad }}{% endif %}</label></td>
+          <td>
+            <label for="l{{ l.id }}">{{ prod.nombre if prod else (nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id)) }}</label>
+            {% if not prod %}<br><small>No está disponible ahora</small>{% endif %}
+            {% if l.observacion %}<br><small>“{{ l.observacion }}”</small>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="submit" class="btn-grande">Sumar al carrito</button>
+  </form>
+  <a href="/cuenta" class="btn-sec">Volver a mis pedidos</a>
+</div>
+{% endblock %}

@@ -1148,14 +1148,35 @@ def cuenta_pedido_editar_cantidad(request: Request, pedido_id: int, transaccion_
     return _render_pedido_editar(request, pedido_id, c.id, error)
 
 
+@app.get("/cuenta/pedido/{pedido_id}/repetir", response_class=HTMLResponse)
+def cuenta_pedido_repetir_ver(request: Request, pedido_id: int):
+    """Antes de repetir, la persona ve qué había pedido y destilda lo que no quiere."""
+    c = _cliente_actual(request)
+    if not c:
+        return RedirectResponse("/cuenta", status_code=303)
+    d = pedidos.detalle(pedido_id, c.id)
+    if not d or not d["lineas"]:
+        return RedirectResponse("/cuenta", status_code=303)
+    prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
+    nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
+    return render(request, "cuenta_pedido_repetir.html", p=d, prods=prods, nombres=nombres,
+                  error=request.session.pop("carrito_msg", None))
+
+
 @app.post("/cuenta/pedido/{pedido_id}/repetir")
-def cuenta_pedido_repetir(request: Request, pedido_id: int):
+def cuenta_pedido_repetir(request: Request, pedido_id: int, lineas: list[int] = Form(default=[]),
+                          elegido: Optional[str] = Form(None)):
     c = _cliente_actual(request)
     if not c:
         return RedirectResponse("/cuenta", status_code=303)
     d = pedidos.detalle(pedido_id, c.id)
     if not d:
         return RedirectResponse("/cuenta", status_code=303)
+    if elegido:     # vino de la pantalla de elegir: solo las líneas que quedaron tildadas
+        if not lineas:
+            request.session["carrito_msg"] = "Tildá al menos un producto para sumarlo al carrito."
+            return RedirectResponse(f"/cuenta/pedido/{pedido_id}/repetir", status_code=303)
+        d["lineas"] = [l for l in d["lineas"] if l["id"] in set(lineas)]
     disponibles = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
     agregados = sin_stock = 0
     for l in d["lineas"]:

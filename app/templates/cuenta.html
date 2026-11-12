@@ -21,8 +21,9 @@
         <td class="num">{{ p.cantidad_items }}</td>
         <td class="num">{{ pesos(p.total) }}</td>
         <td class="acciones-pedido">
+          <a href="/cuenta/pedido/{{ p.id }}" class="btn-mini">Ver pedido</a>
           {% if p.editable %}<a href="/cuenta/pedido/{{ p.id }}/editar" class="btn-mini">Editar</a>{% endif %}
-          <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir"><button type="submit" class="btn-mini">Repetir</button></form>
+          <a href="/cuenta/pedido/{{ p.id }}/repetir" class="btn-mini">Repetir</a>
         </td>
       </tr>
     {% endfor %}
