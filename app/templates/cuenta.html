@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Mi cuenta — Más Orgánicos{% endblock %}
 {% block contenido %}
-<div class="cuenta-cab">
-  <h1>Hola, {{ cliente.nombre }}</h1>
-  <a href="/cuenta/salir" class="btn-sec">Salir</a>
-</div>
-
+<h1 class="sr-only">Mi cuenta</h1>
 {% if pedidos_cli %}
 <section class="bloque">
   <h2>Mis últimos pedidos</h2>

@@ -78,6 +78,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cab-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.8rem 1rem}
 .logo{display:flex;align-items:center;gap:.55rem;font-weight:700;color:var(--verde-osc);font-size:1.1rem;letter-spacing:-.02em;white-space:nowrap}
 .logo:hover{text-decoration:none}
+.btn-salir{margin-left:auto;order:9;border:1.5px solid var(--verde);color:var(--verde-osc);border-radius:999px;padding:.25rem .8rem;font-size:.85rem;font-weight:600;white-space:nowrap}
+.btn-salir:hover{background:var(--verde-claro);text-decoration:none}
+@media(max-width:900px){.btn-salir{order:0}}
 .logo img{width:38px;height:38px;object-fit:contain}
 .buscador{flex:1;display:flex;max-width:520px}
 .buscador input{flex:1;padding:.55rem .9rem;border:1px solid var(--linea);border-radius:999px 0 0 999px;font-size:.95rem;background:var(--fondo)}
@@ -419,8 +422,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .ped-estado{background:var(--verde-claro);color:var(--verde-osc);border-radius:999px;padding:.1rem .6rem;font-size:.82rem;font-weight:600}
 .lista-reservas{list-style:none;margin:.4rem 0 0;padding:0;display:flex;flex-direction:column;gap:.35rem}
 .lista-reservas li{display:flex;align-items:center;gap:.5rem}
-.aviso-pendiente{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);border-radius:var(--radio);padding:.7rem 1rem;margin:0 0 1rem;font-size:.92rem}
-.aviso-pendiente span{display:block;font-size:.85rem}
+.aviso-pendiente{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);border-radius:var(--radio);padding:.8rem 1rem;margin:0 0 1rem;font-size:1.1rem}
+.aviso-pendiente span{display:block;font-size:1rem}
+.aviso-pendiente .btn-mini{font-size:1rem;padding:.4rem 1rem}
 .carrito-flash{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);
   border-radius:10px;padding:.7rem 1rem;margin:0 0 1rem;font-size:.95rem}
 .repetir-pedido{margin:1rem 0 .4rem}

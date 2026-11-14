@@ -85,6 +85,7 @@ try { if (window.moConsent.get() === 'si') window.cargarClarity(); } catch(e){}
       <img src="{{ IMG_BASE }}/logo/masorganicos.png" alt="" width="36" height="36" fetchpriority="high" decoding="async">
       <span>Más Orgánicos</span>
     </a>
+    {% if cliente %}<a href="/cuenta/salir" class="btn-salir">Salir</a>{% endif %}
     <form action="/catalogo" method="get" class="buscador" role="search">
       <input type="search" name="q" placeholder="Buscar productos…" value="{{ busqueda|default('') }}"
              aria-label="Buscar productos" autocomplete="off" enterkeyhint="search">
