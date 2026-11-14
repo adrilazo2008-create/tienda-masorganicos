@@ -1020,7 +1020,9 @@ def cuenta(request: Request):
         mis_reservas = [{"nombre": nombres.get(pid, "Producto"), "cantidad": cant} for pid, cant in res.items()]
     except Exception:
         mis_reservas = []
-    return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id, limite=5), mis_reservas=mis_reservas,
+    pend = pedidos.pendiente_resumen(c.id)          # ese pedido ya figura en el aviso de arriba: no se repite en la lista
+    lista = [p for p in pedidos.historial(c.id, limite=6) if not (pend and p.id == pend["id"])][:5]
+    return render(request, "cuenta.html", pedidos_cli=lista, mis_reservas=mis_reservas,
                   direcciones=clientes.direcciones(c.id),
                   habituales=_habituales(c, 12))
 

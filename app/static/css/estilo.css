@@ -87,6 +87,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .badge{background:var(--verde);color:#fff;border-radius:999px;padding:.05rem .5rem;font-size:.78rem;font-weight:600}
 .acc-prod{font-weight:600;color:var(--verde-osc)!important}
 .acc-prod:hover{text-decoration:underline}
+.cab-acc a{line-height:1.15;text-align:center}
+.acc-cuenta{display:inline-flex;flex-direction:column;align-items:center;border:1.5px solid var(--verde);border-radius:12px;padding:.25rem .7rem;color:var(--verde-osc)!important}
+.acc-cuenta small{font-size:.72rem;font-weight:600}
+.acc-cuenta b{font-weight:600;max-width:9ch;overflow:hidden;text-overflow:ellipsis}
+.br-cel{display:none}
+@media(max-width:560px){.br-cel{display:inline}.cab-acc{gap:.6rem;font-size:.84rem}}
 .acc-como:hover{text-decoration:underline}
 
 /* chips de rubros (navegación de catálogo en mobile) */

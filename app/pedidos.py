@@ -474,7 +474,7 @@ def pendiente_resumen(cliente_id: int):
                 "FROM grupos g LEFT JOIN transacciones t ON t.grupo = g.id AND t.activo = 1 "
                 "WHERE g.cliente = :c AND g.status = :s AND g.activo = 1 "
                 "GROUP BY g.id, g.precioEnvio ORDER BY g.id DESC LIMIT 1"), {"c": cliente_id, "s": STATUS_NUEVO}).first()
-        return {"id": int(r.id), "total": Decimal(str(r.total or 0)), "items": int(r.n)} if r else None
+        return {"id": int(r.id), "total": Decimal(str(r.total or 0)), "productos": int(r.n)} if r else None
     except Exception:
         return None
 

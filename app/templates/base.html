@@ -92,8 +92,8 @@ try { if (window.moConsent.get() === 'si') window.cargarClarity(); } catch(e){}
     </form>
     <nav class="cab-acc" aria-label="Navegación principal">
       <a href="/catalogo" class="acc-prod">Productos</a>
-      <a href="/#como-funciona" class="acc-como">Cómo funciona</a>
-      <a href="/cuenta" class="acc-cuenta">{{ cliente.nombre if cliente else 'Mi cuenta' }}</a>
+      <a href="/#como-funciona" class="acc-como">Cómo<br class="br-cel"> funciona</a>
+      <a href="/cuenta" class="acc-cuenta"><small>Mi cuenta</small>{% if cliente %}<b>{{ cliente.nombre }}</b>{% endif %}</a>
       <a href="/carrito" class="acc-carrito">Carrito
         <span id="carrito-badge" class="badge" aria-live="polite" aria-label="{{ carrito_n }} productos en el carrito">{{ carrito_n }}</span>
       </a>
@@ -105,8 +105,8 @@ try { if (window.moConsent.get() === 'si') window.cargarClarity(); } catch(e){}
   {% if pedido_pendiente %}
   <div class="aviso-pendiente" role="status">
     <div><b>Tenés el pedido #{{ pedido_pendiente.id }} sin preparar</b>
-      <span>{{ pedido_pendiente.items }} producto{{ '' if pedido_pendiente.items == 1 else 's' }} · {{ pesos(pedido_pendiente.total) }}. Lo que agregues al carrito lo podés sumar a ese pedido.</span></div>
-    <a href="/cuenta/pedido/{{ pedido_pendiente.id }}/editar" class="btn-mini">Editar mi pedido</a>
+      <span>{{ pedido_pendiente.productos }} producto{{ '' if pedido_pendiente.productos == 1 else 's' }} · {{ pesos(pedido_pendiente.total) }}. Lo que agregues al carrito lo podés sumar a ese pedido.</span></div>
+    <div class="acciones-pedido"><a href="/cuenta/pedido/{{ pedido_pendiente.id }}/editar" class="btn-mini btn-mini-fuerte">Editar mi pedido</a><a href="/cuenta/pedido/{{ pedido_pendiente.id }}" class="btn-mini">Ver</a></div>
   </div>
   {% endif %}
   {% block contenido %}{% endblock %}
