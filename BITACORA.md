@@ -973,3 +973,9 @@ Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por Whats
 - El aviso al reservar desde el catálogo pasó a ser corto: «✓ Reserva tomada» (antes repetía el nombre y una explicación larga); el globito ya no se deforma con textos largos (`max-width`).
 - Botones verdes un poco más grandes (`.btn-grande` 1.1rem) y «Confirmar pedido» a todo el ancho con letra de 1.25rem.
 - Pendiente de la charla: Adriana tiene más cosas para pasar sobre la tienda.
+
+## 2026-11-13 - Pedido pendiente visible en toda la tienda y «Mi cuenta» en tarjetas
+- Problema (probando desde el celular con la cuenta de Adriana): tras confirmar un pedido nuevo (sin preparar), la tienda no avisaba en ningún lado que ese pedido seguía abierto ni que se podía seguir editando; el carrito arrancaba en cero y en «Mi cuenta» la tabla se cortaba y no se veían los botones.
+- Cambios: (1) aviso fijo arriba de todas las páginas con sesión: «Tenés el pedido #N sin preparar · X productos · $total» con botón «Editar mi pedido» (`pedidos.pendiente_resumen`, contexto `pedido_pendiente`; no se muestra en checkout, carrito, edición del pedido ni admin). (2) «Mi cuenta»: los pedidos pasan de tabla a tarjetas (número y fecha arriba, estado/productos/total, botones Editar/Ver/Repetir siempre visibles; el pedido editable lleva borde verde). (3) Sección «Mis reservas» en Mi cuenta con las reservas abiertas que todavía no están en ningún pedido.
+- Se mantiene la mecánica de siempre: lo que se agrega al carrito se suma al pedido abierto con «Sumar a mi pedido #N» en el carrito.
+- No probado en pantalla. Pendiente a decidir: si al agregar un producto desde el catálogo con pedido abierto conviene sumarlo directo a ese pedido (hoy hay que pasar por el carrito).

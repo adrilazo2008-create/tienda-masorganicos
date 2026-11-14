@@ -402,6 +402,19 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
   padding:.3rem .8rem;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn-mini:hover{background:var(--verde-claro)}
 .acciones-pedido{display:flex;gap:.4rem;flex-wrap:wrap}
+.btn-mini-fuerte{background:var(--verde);color:#fff}
+.btn-mini-fuerte:hover{background:var(--verde-osc)}
+.ped-lista{display:flex;flex-direction:column;gap:.7rem}
+.ped-card{background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem}
+.ped-abierto{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde) inset}
+.ped-cab{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.ped-cab span{color:var(--gris);font-size:.88rem}
+.ped-dato{display:flex;gap:.8rem;flex-wrap:wrap;align-items:baseline}
+.ped-estado{background:var(--verde-claro);color:var(--verde-osc);border-radius:999px;padding:.1rem .6rem;font-size:.82rem;font-weight:600}
+.lista-reservas{list-style:none;margin:.4rem 0 0;padding:0;display:flex;flex-direction:column;gap:.35rem}
+.lista-reservas li{display:flex;align-items:center;gap:.5rem}
+.aviso-pendiente{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);border-radius:var(--radio);padding:.7rem 1rem;margin:0 0 1rem;font-size:.92rem}
+.aviso-pendiente span{display:block;font-size:.85rem}
 .carrito-flash{background:var(--verde-claro);border:1px solid #cfe3c2;color:var(--verde-osc);
   border-radius:10px;padding:.7rem 1rem;margin:0 0 1rem;font-size:.95rem}
 .repetir-pedido{margin:1rem 0 .4rem}

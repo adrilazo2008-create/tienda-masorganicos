@@ -464,6 +464,21 @@ def pedido_abierto(cliente_id: int):
         return None
 
 
+def pendiente_resumen(cliente_id: int):
+    """Resumen del pedido editable más reciente del cliente (id, productos, total) para el aviso de toda la tienda
+    («Tenés un pedido sin preparar»). Una sola consulta; si falla, None."""
+    try:
+        with engine_tienda.connect() as cx:
+            r = cx.execute(text(
+                "SELECT g.id, COALESCE(SUM(t.cantidad * t.precio), 0) + g.precioEnvio AS total, COUNT(t.id) AS n "
+                "FROM grupos g LEFT JOIN transacciones t ON t.grupo = g.id AND t.activo = 1 "
+                "WHERE g.cliente = :c AND g.status = :s AND g.activo = 1 "
+                "GROUP BY g.id, g.precioEnvio ORDER BY g.id DESC LIMIT 1"), {"c": cliente_id, "s": STATUS_NUEVO}).first()
+        return {"id": int(r.id), "total": Decimal(str(r.total or 0)), "items": int(r.n)} if r else None
+    except Exception:
+        return None
+
+
 def puede_editar(pedido_id: int, cliente_id: int) -> bool:
     d = detalle(pedido_id, cliente_id)
     return bool(d and d["editable"])

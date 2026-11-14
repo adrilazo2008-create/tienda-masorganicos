@@ -102,6 +102,13 @@ try { if (window.moConsent.get() === 'si') window.cargarClarity(); } catch(e){}
 </header>
 
 <main class="cont" id="contenido">
+  {% if pedido_pendiente %}
+  <div class="aviso-pendiente" role="status">
+    <div><b>Tenés el pedido #{{ pedido_pendiente.id }} sin preparar</b>
+      <span>{{ pedido_pendiente.items }} producto{{ '' if pedido_pendiente.items == 1 else 's' }} · {{ pesos(pedido_pendiente.total) }}. Lo que agregues al carrito lo podés sumar a ese pedido.</span></div>
+    <a href="/cuenta/pedido/{{ pedido_pendiente.id }}/editar" class="btn-mini">Editar mi pedido</a>
+  </div>
+  {% endif %}
   {% block contenido %}{% endblock %}
 </main>
 

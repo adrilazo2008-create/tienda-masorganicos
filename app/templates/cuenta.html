@@ -9,29 +9,31 @@
 <section class="bloque">
   <h2>Mis últimos pedidos</h2>
   {% if pedidos_cli %}
-  <div class="tabla-scroll">
-  <table class="tabla-pedidos">
-    <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
-    <tbody>
+  <div class="ped-lista">
     {% for p in pedidos_cli %}
-      <tr>
-        <td class="num"><a href="/cuenta/pedido/{{ p.id }}">#{{ p.id }}</a></td>
-        <td>{{ p.fecha.strftime('%d/%m/%Y') }}</td>
-        <td>{{ p.estado }}</td>
-        <td class="num">{{ p.cantidad_items }}</td>
-        <td class="num">{{ pesos(p.total) }}</td>
-        <td class="acciones-pedido">
-          <a href="/cuenta/pedido/{{ p.id }}" class="btn-mini">Ver pedido</a>
-          {% if p.editable %}<a href="/cuenta/pedido/{{ p.id }}/editar" class="btn-mini">Editar</a>{% endif %}
-          <a href="/cuenta/pedido/{{ p.id }}/repetir" class="btn-mini">Repetir</a>
-        </td>
-      </tr>
+    <div class="ped-card{{ ' ped-abierto' if p.editable }}">
+      <div class="ped-cab"><a href="/cuenta/pedido/{{ p.id }}"><b>Pedido #{{ p.id }}</b></a><span>{{ p.fecha.strftime('%d/%m/%Y') }}</span></div>
+      <div class="ped-dato"><span class="ped-estado">{{ p.estado }}</span><span>{{ p.cantidad_items }} producto{{ '' if p.cantidad_items == 1 else 's' }}</span><b>{{ pesos(p.total) }}</b></div>
+      <div class="acciones-pedido">
+        {% if p.editable %}<a href="/cuenta/pedido/{{ p.id }}/editar" class="btn-mini btn-mini-fuerte">Editar</a>{% endif %}
+        <a href="/cuenta/pedido/{{ p.id }}" class="btn-mini">Ver pedido</a>
+        <a href="/cuenta/pedido/{{ p.id }}/repetir" class="btn-mini">Repetir</a>
+      </div>
+    </div>
     {% endfor %}
-    </tbody>
-  </table>
   </div>
   {% else %}<p class="vacio">Todavía no tenés pedidos.</p>{% endif %}
 </section>
+
+{% if mis_reservas %}
+<section class="bloque">
+  <h2>Mis reservas</h2>
+  <p class="chico">Las tenés reservadas y se suman solas a tu próximo pedido. Te avisamos cuando lleguen.</p>
+  <ul class="lista-reservas">
+    {% for r in mis_reservas %}<li><span class="cl-reservado"><i></i></span>{{ r.nombre }} <b>x{{ fmt_cantidad(r.cantidad) }}</b></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 {% if habituales %}
 <section class="bloque">

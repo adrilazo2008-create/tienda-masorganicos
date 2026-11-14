@@ -318,10 +318,15 @@ def _recientes(request: Request, excluir: int | None = None, limite: int = 8) ->
 
 def ctx(request: Request, **extra):
     car = carrito_mod.resolver(request.session)
+    cli_actual = _cliente_actual(request)
+    pendiente = None
+    if cli_actual and not request.url.path.startswith(("/checkout", "/carrito", "/cuenta/pedido", "/static", "/admin")):
+        pendiente = pedidos.pendiente_resumen(cli_actual.id)       # aviso «tenés un pedido sin preparar» (2026-11-13)
     base = dict(
         rubros=catalogo.rubros(),
         carrito_n=car.cantidad_items,
-        cliente=_cliente_actual(request),
+        cliente=cli_actual,
+        pedido_pendiente=pendiente,
         entorno=S.entorno,
         anuncio=contenido.anuncio(),
         meta_pixel=contenido.meta_pixel_id() if not meta_capi.es_host_local(request) else "",
@@ -1009,7 +1014,13 @@ def cuenta(request: Request):
     c = _cliente_actual(request)
     if not c:
         return render(request, "cuenta_login.html")
-    return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id, limite=5),
+    try:
+        res = reservas.abiertas_sin_pedido(c.cliente_codigo, c.telefono)
+        nombres = catalogo.nombres_por_id(list(res.keys())) if res else {}
+        mis_reservas = [{"nombre": nombres.get(pid, "Producto"), "cantidad": cant} for pid, cant in res.items()]
+    except Exception:
+        mis_reservas = []
+    return render(request, "cuenta.html", pedidos_cli=pedidos.historial(c.id, limite=5), mis_reservas=mis_reservas,
                   direcciones=clientes.direcciones(c.id),
                   habituales=_habituales(c, 12))
 
