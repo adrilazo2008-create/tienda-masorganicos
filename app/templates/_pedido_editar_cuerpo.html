@@ -1,3 +1,4 @@
+{% if request.headers.get("HX-Request") %}<span id="carrito-badge" class="badge" aria-live="polite" hx-swap-oob="true">{{ carrito_n }}</span>{% endif %}
 {% if error %}<p class="stock-aviso"><span>⚠ {{ error }}</span></p>{% endif %}
 {% if pregunta %}
 <div class="cl-faltante" role="alert">
@@ -28,7 +29,7 @@
            loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
       <div class="cl-info">
         {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>{{ nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id) }}</span>{% endif %}
-        {% if res > 0 %}<span class="cl-reservado" title="Te lo conseguimos y te avisamos cuando llegue"><i></i>Reservado</span>{% endif %}
+        {% if res > 0 %}<span class="cl-reservado"><i></i>Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.precio) }}{% if prod %} x {{ prod.unidad }}{% endif %}</span>
         {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
       </div>
@@ -45,7 +46,7 @@
       </form>
       <span class="cl-sub num">{{ pesos(l.cantidad * l.precio) }}</span>
       {% if res > 0 %}
-      <span class="cl-quitar" title="Es una reserva que ya hicimos: no se puede sacar" aria-label="Reserva, no se puede quitar">🔒</span>
+      <span class="cl-quitar" title="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp." aria-label="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.">🔒</span>
       {% else %}
       <form hx-post="/cuenta/pedido/{{ p.id }}/editar/quitar" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML" class="cl-quitar">
         <input type="hidden" name="transaccion_id" value="{{ l.id }}">

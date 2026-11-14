@@ -20,7 +20,7 @@
            loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
       <div class="cl-info">
         <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
-        {% if l.reserva or l.reservada > 0 %}<span class="cl-reservado" title="Te lo conseguimos y te avisamos cuando llegue"><i></i>Reservado</span>{% endif %}
+        {% if l.reservada > 0 %}<span class="cl-reservado"><i></i>Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.</span>{% elif l.reserva %}<span class="cl-reservado" title="Te lo conseguimos y te avisamos cuando llegue"><i></i>Reservado</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
         <form method="post" action="/carrito/actualizar" class="cl-obs-form" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
           <input type="hidden" name="indice" value="{{ l.indice }}">
@@ -46,7 +46,7 @@
       </form>
       <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
       {% if l.reservada > 0 %}
-      <span class="cl-quitar" title="Es una reserva que ya hicimos: no se puede sacar" aria-label="Reserva, no se puede quitar">🔒</span>
+      <span class="cl-quitar" title="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp." aria-label="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.">🔒</span>
       {% else %}
       <form method="post" action="/carrito/quitar" class="cl-quitar" hx-post="/carrito/quitar" hx-swap="none">
         <input type="hidden" name="indice" value="{{ l.indice }}">
