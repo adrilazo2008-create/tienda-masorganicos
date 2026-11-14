@@ -22,11 +22,13 @@
   <div class="carrito-lineas">
     {% for l in p.lineas %}
     {% set prod = prods.get(l.producto_id) %}
+    {% set res = (reservado or {}).get(l.producto_id|int, 0) %}
     <div class="cl">
       <img src="{{ img_producto(prod.codigo) if prod else '' }}" alt="" width="64" height="64"
            loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
       <div class="cl-info">
         {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>{{ nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id) }}</span>{% endif %}
+        {% if res > 0 %}<span class="cl-reservado" title="Te lo conseguimos y te avisamos cuando llegue"><i></i>Reservado</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.precio) }}{% if prod %} x {{ prod.unidad }}{% endif %}</span>
         {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
       </div>
@@ -36,16 +38,20 @@
           <button type="button" onclick="stepCantHTMX(this,-1)" aria-label="Quitar uno">−</button>
           <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal" autocomplete="off"
                  data-step="{{ '0.25' if (prod and prod.fraccionable) else '1' }}"
-                 data-min="{{ '0.25' if (prod and prod.fraccionable) else '1' }}"
+                 data-min="{{ fmt_cantidad(res) if res > 0 else ('0.25' if (prod and prod.fraccionable) else '1') }}"
                  onchange="this.form.requestSubmit()">
           <button type="button" onclick="stepCantHTMX(this,1)" aria-label="Agregar uno">+</button>
         </div>
       </form>
       <span class="cl-sub num">{{ pesos(l.cantidad * l.precio) }}</span>
+      {% if res > 0 %}
+      <span class="cl-quitar" title="Es una reserva que ya hicimos: no se puede sacar" aria-label="Reserva, no se puede quitar">🔒</span>
+      {% else %}
       <form hx-post="/cuenta/pedido/{{ p.id }}/editar/quitar" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML" class="cl-quitar">
         <input type="hidden" name="transaccion_id" value="{{ l.id }}">
         <button type="submit" aria-label="Quitar">✕</button>
       </form>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

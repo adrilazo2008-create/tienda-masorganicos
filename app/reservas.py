@@ -136,6 +136,19 @@ def abiertas_sin_pedido(cliente_codigo: int | None, telefono) -> dict[int, Decim
         return {}
 
 
+def de_pedido(pedido_id: int) -> dict[int, Decimal]:
+    """Reservas abiertas ya vinculadas a este pedido: {producto_id: cantidad}. En el pedido esas lineas quedan con candado
+    (no se sacan ni se bajan: la reserva ya esta hecha). Si falla la consulta: ninguna."""
+    try:
+        with engine_erp.connect() as cx:
+            filas = cx.execute(text(
+                "SELECT producto_id, SUM(cantidad) FROM reservas WHERE pedido_grupo_id = :g AND COALESCE(es_extra, 0) = 0 "
+                "AND estado IN ('pendiente', 'encargado', 'recibido') GROUP BY producto_id"), {"g": int(pedido_id)}).fetchall()
+        return {int(f[0]): Decimal(str(f[1])) for f in filas if f[1] and Decimal(str(f[1])) > 0}
+    except Exception:
+        return {}
+
+
 def crear_suelta(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None, nombre: str,
                  telefono, cantidad: Decimal, observaciones: str = "") -> int:
     """Reserva que el cliente anota desde la tienda SIN cerrar un pedido (2026-11-06). Queda sin pedido: el carrito se la

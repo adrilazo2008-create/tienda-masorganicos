@@ -1049,7 +1049,7 @@ def _render_pedido_editar(request: Request, pedido_id: int, cliente_id: int, err
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
     nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
-    return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods, nombres=nombres,
+    return render(request, "_pedido_editar_cuerpo.html", p=d, prods=prods, nombres=nombres, reservado=reservas.de_pedido(pedido_id),
                   subtotal=subtotal, total=subtotal + d["precio_envio"], error=error, pregunta=pregunta)
 
 
@@ -1066,7 +1066,7 @@ def cuenta_pedido_editar(request: Request, pedido_id: int):
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
     nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     subtotal = sum((l["cantidad"] * l["precio"] for l in d["lineas"]), Decimal("0"))
-    return render(request, "cuenta_pedido_editar.html", p=d, prods=prods, nombres=nombres,
+    return render(request, "cuenta_pedido_editar.html", p=d, prods=prods, nombres=nombres, reservado=reservas.de_pedido(pedido_id),
                   subtotal=subtotal, total=subtotal + d["precio_envio"], error="")
 
 
@@ -1123,6 +1123,8 @@ def cuenta_pedido_editar_quitar(request: Request, pedido_id: int, transaccion_id
         error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
     except pedidos.PedidoQuedariaVacio:
         error = "No podés sacar el último producto — si querés cancelar el pedido, escribinos por WhatsApp."
+    except pedidos.LineaReservada:
+        error = "Esa es una reserva que ya hicimos y no se puede sacar ni bajar desde acá. Si querés cambiarla, escribinos por WhatsApp."
     return _render_pedido_editar(request, pedido_id, c.id, error)
 
 
@@ -1157,6 +1159,8 @@ def cuenta_pedido_editar_cantidad(request: Request, pedido_id: int, transaccion_
         pedidos.cambiar_cantidad(pedido_id, c.id, transaccion_id, nueva)
     except pedidos.PedidoNoEditable:
         error = "Este pedido ya se empezó a preparar — para cambios, escribinos por WhatsApp."
+    except pedidos.LineaReservada:
+        error = "Esa es una reserva que ya hicimos y no se puede sacar ni bajar desde acá. Si querés cambiarla, escribinos por WhatsApp."
     return _render_pedido_editar(request, pedido_id, c.id, error)
 
 

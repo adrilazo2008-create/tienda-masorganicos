@@ -446,6 +446,10 @@ class ProductoNoDisponible(Exception):
     """El producto ya no existe en el catálogo vendible."""
 
 
+class LineaReservada(Exception):
+    """La linea corresponde a una reserva ya hecha: no se puede sacar ni bajar (hay que escribir por WhatsApp)."""
+
+
 class PedidoQuedariaVacio(Exception):
     """No se deja sacar el último producto de un pedido (para cancelarlo del todo, que escriba)."""
 
@@ -631,6 +635,7 @@ def quitar_item(pedido_id: int, cliente_id: int, transaccion_id: int) -> None:
     asegurar_tabla_quitadas()
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)
+        _controlar_reservada(cx, pedido_id, transaccion_id, None)
         n_activas = cx.execute(text(
             "SELECT COUNT(*) FROM transacciones WHERE grupo = :g AND activo = 1"
         ), {"g": pedido_id}).scalar()
@@ -640,9 +645,26 @@ def quitar_item(pedido_id: int, cliente_id: int, transaccion_id: int) -> None:
         _recalcular_envio(cx, pedido_id)
 
 
+def _controlar_reservada(cx: Connection, pedido_id: int, transaccion_id: int, nueva) -> None:
+    """Si la linea es de un producto con reserva abierta en este pedido: no se saca (`nueva` None) ni se baja de lo reservado."""
+    from . import reservas
+    reservado = reservas.de_pedido(pedido_id)
+    if not reservado:
+        return
+    fila = cx.execute(text("SELECT producto_id FROM transacciones WHERE id = :id AND grupo = :g"),
+                      {"id": transaccion_id, "g": pedido_id}).first()
+    try:
+        minimo = reservado.get(int(fila[0])) if fila else None
+    except (TypeError, ValueError):
+        minimo = None
+    if minimo and (nueva is None or Decimal(nueva) < minimo):
+        raise LineaReservada()
+
+
 def cambiar_cantidad(pedido_id: int, cliente_id: int, transaccion_id: int, cantidad: Decimal) -> None:
     with engine_tienda.begin() as cx:
         _bloquear_editable(cx, pedido_id, cliente_id)
+        _controlar_reservada(cx, pedido_id, transaccion_id, cantidad)
         cx.execute(text(
             "UPDATE transacciones SET cantidad = :cant, updated_at = :now "
             "WHERE id = :id AND grupo = :g AND activo = 1"
