@@ -185,6 +185,7 @@ if S.img_base_url.startswith("/") and _fotos_local.exists():
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 templates.env.globals["pesos"] = pesos
 templates.env.globals["fmt_cantidad"] = fmt_cantidad
+templates.env.filters["obs_cliente"] = catalogo.sin_marca_reserva     # la marca «RESERVA (...)» es interna (comanda): el cliente no la ve
 templates.env.globals["es_reserva"] = catalogo.es_reserva
 templates.env.filters["linkify"] = linkify
 templates.env.globals["IMG_BASE"] = S.img_base_url

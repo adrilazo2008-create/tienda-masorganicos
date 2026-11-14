@@ -29,7 +29,7 @@
           <td>
             <label for="l{{ l.id }}">{{ prod.nombre if prod else (nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id)) }}</label>
             {% if not prod %}<br><small>No está disponible ahora</small>{% endif %}
-            {% if l.observacion %}<br><small>“{{ l.observacion }}”</small>{% endif %}
+            {% if l.observacion|obs_cliente %}<br><small>“{{ l.observacion|obs_cliente }}”</small>{% endif %}
           </td>
         </tr>
         {% endfor %}

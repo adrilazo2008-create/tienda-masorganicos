@@ -31,7 +31,7 @@
         {% if prod %}<a href="/producto/{{ prod.id }}">{{ prod.nombre }}</a>{% else %}<span>{{ nombres.get(l.producto_id) or ('Producto #' ~ l.producto_id) }}</span>{% endif %}
         {% if res > 0 %}<span class="cl-reservado"><i></i>Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.</span>{% endif %}
         <span class="cl-unit">{{ pesos(l.precio) }}{% if prod %} x {{ prod.unidad }}{% endif %}</span>
-        {% if l.observacion %}<span class="cl-obs">“{{ l.observacion }}”</span>{% endif %}
+        {% if l.observacion|obs_cliente %}<span class="cl-obs">“{{ l.observacion|obs_cliente }}”</span>{% endif %}
       </div>
       <form hx-post="/cuenta/pedido/{{ p.id }}/editar/cantidad" hx-target="#pedido-editar-cuerpo" hx-swap="innerHTML" class="cl-cant">
         <input type="hidden" name="transaccion_id" value="{{ l.id }}">
