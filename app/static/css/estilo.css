@@ -70,7 +70,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 
 /* toasts */
 #toasts{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column-reverse;gap:.4rem;pointer-events:none}
-.toast-ok{background:var(--verde-osc);color:#fff;padding:.6rem 1.2rem;border-radius:999px;font-size:.9rem;box-shadow:var(--sombra);animation:toastIn .2s ease-out;transition:opacity .2s}
+.toast-ok{background:var(--verde-osc);color:#fff;padding:.6rem 1.2rem;border-radius:999px;max-width:min(92vw,360px);text-align:center;font-size:.95rem;box-shadow:var(--sombra);animation:toastIn .2s ease-out;transition:opacity .2s}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* header */
@@ -150,6 +150,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 
 .btn-grande{background:var(--verde);color:#fff;padding:.8rem 1.5rem;border-radius:999px;font-weight:600;border:0;cursor:pointer;display:inline-block;text-align:center;transition:background .15s,transform .1s}
 .btn-grande:hover{background:var(--verde-osc);text-decoration:none}
+.btn-grande{font-size:1.1rem}
+#btn-confirmar{font-size:1.25rem;padding:1rem 1.5rem;width:100%}
 .btn-grande:active{transform:translateY(1px)}
 .btn-sec{background:transparent;border:1.5px solid var(--verde);color:var(--verde-osc);padding:.75rem 1.4rem;border-radius:999px;font-weight:600;display:inline-block;text-align:center;transition:background .15s}
 .btn-sec:hover{background:var(--verde-claro);text-decoration:none}
@@ -294,7 +296,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .cl{display:grid;grid-template-columns:64px 1fr auto auto auto;gap:.8rem;align-items:center;background:#fff;border:1px solid var(--linea);border-radius:var(--radio);padding:.6rem;margin-bottom:.6rem}
 .cl img{width:64px;height:64px;object-fit:cover;border-radius:8px}
 .cl-info{display:flex;flex-direction:column;min-width:0}
-.cl-info a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-info a{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cl-reservado{display:inline-flex;align-items:center;gap:.35rem;align-self:flex-start;font-size:.78rem;font-weight:600;color:var(--rojo);margin:.1rem 0}
+.cl-reservado i{width:.55rem;height:.55rem;border-radius:50%;background:var(--rojo);display:inline-block}
 .cl-unit{font-size:.8rem;color:var(--gris)}
 .cl-obs-form{margin-top:.2rem}
 .cl-obs-input{width:100%;max-width:220px;font-size:.8rem;font-style:italic;color:var(--gris);

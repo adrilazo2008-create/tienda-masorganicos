@@ -967,3 +967,9 @@ Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por Whats
 - `POST /reservar` → `reservas.crear_suelta()`: fila en `reservas` sin pedido (origen `tienda`, estado `pendiente`, `tipo_entrega` NULL). Misma pendiente del mismo producto → se suma la cantidad; segundo clic en menos de 5 s se ignora. Sin sesión: toast con link a «ingresá con tu celular». El toast no cuenta como AddToCart del pixel (`data-sin-evento`).
 - Al armar su próximo pedido, el carrito se la suma sola (bloqueada), ver entrada anterior.
 - Prueba en producción: dejó una fila de prueba (id 879, tel 1100000001) porque el `CREATE TABLE IF NOT EXISTS` interno corta la transacción y el rollback no alcanzó; se borró a mano. Para probar escrituras contra `reservas`, usar siempre un teléfono ficticio y borrar después.
+
+## 2026-11-13 - Carrito: avisos de reserva más claros
+- Causa del «raya roja» confusa: en el carrito el cartel de reserva usaba la clase `.etq` (pensada para las tarjetas del catálogo, `position:absolute`), así que los carteles de TODOS los productos reservados se apilaban en el mismo lugar y tapaban un nombre. Ahora cada línea reservada lleva un punto rojo + «Reservado» (`.cl-reservado`) dentro de su propia fila, y los nombres largos se muestran hasta en 3 renglones.
+- El aviso al reservar desde el catálogo pasó a ser corto: «✓ Reserva tomada» (antes repetía el nombre y una explicación larga); el globito ya no se deforma con textos largos (`max-width`).
+- Botones verdes un poco más grandes (`.btn-grande` 1.1rem) y «Confirmar pedido» a todo el ancho con letra de 1.25rem.
+- Pendiente de la charla: Adriana tiene más cosas para pasar sobre la tienda.

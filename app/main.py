@@ -532,8 +532,7 @@ def reservar_producto(request: Request, producto_id: int = Form(...), cantidad: 
     except Exception:
         logger_errores.exception("No se pudo anotar la reserva suelta del producto %s", producto_id)
         return toast("No pudimos anotar la reserva. Escribinos por WhatsApp y la anotamos.")
-    from html import escape
-    return toast(f"✓ Reservado: {escape(p.nombre)}. Te lo sumamos a tu próximo pedido y te avisamos cuando llegue.")
+    return toast("✓ Reserva tomada")
 
 
 @app.get("/carrito", response_class=HTMLResponse)
