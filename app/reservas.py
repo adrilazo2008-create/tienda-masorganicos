@@ -16,7 +16,7 @@ from decimal import Decimal
 
 from sqlalchemy import text
 
-from .db import engine_erp
+from .db import engine_erp, engine_tienda
 
 ESTADOS = ("pendiente", "encargado", "entregado")
 
@@ -149,6 +149,22 @@ def de_pedido(pedido_id: int) -> dict[int, Decimal]:
         return {}
 
 
+def _entrega_habitual(cliente_codigo: int | None) -> str:
+    """Forma de entrega para una reserva suelta (sin pedido): la del ultimo pedido del cliente ('retiro' si retiro,
+    'envio' si no) y, si no tiene pedidos o falla la consulta, 'envio'. Asi nunca queda sin forma de entrega y
+    aparece en las listas de envios / retiros de `conectar` (2026-11-17, caso Adriana Bravo)."""
+    if not cliente_codigo:
+        return "envio"
+    try:
+        with engine_tienda.connect() as cx:
+            g = cx.execute(text(
+                "SELECT g.retira FROM grupos g JOIN users u ON u.id = g.cliente WHERE u.cliente_codigo = :c "
+                "AND g.activo = 1 ORDER BY g.id DESC LIMIT 1"), {"c": int(cliente_codigo)}).first()
+        return "retiro" if (g and g.retira) else "envio"
+    except Exception:
+        return "envio"
+
+
 def crear_suelta(*, producto_id: int, producto_nombre: str, cliente_codigo: int | None, nombre: str,
                  telefono, cantidad: Decimal, observaciones: str = "") -> int:
     """Reserva que el cliente anota desde la tienda SIN cerrar un pedido (2026-11-06). Queda sin pedido: el carrito se la
@@ -185,9 +201,9 @@ def crear_suelta(*, producto_id: int, producto_nombre: str, cliente_codigo: int 
             return int(previa[0])
         res = cx.execute(text(
             "INSERT INTO reservas (producto_id, producto_nombre, cliente_codigo, nombre, telefono, cantidad, tipo_entrega, "
-            "pedido_grupo_id, origen, estado, creado_en) VALUES (:pid, :pn, :cc, :nom, :tel, :cant, NULL, NULL, 'tienda', "
+            "pedido_grupo_id, origen, estado, creado_en) VALUES (:pid, :pn, :cc, :nom, :tel, :cant, :te, NULL, 'tienda', "
             "'pendiente', :now)"),
-            dict(pid=producto_id, pn=producto_nombre[:191], cc=cliente_codigo, nom=nombre[:191], tel=tel, cant=cantidad, now=now))
+            dict(pid=producto_id, pn=producto_nombre[:191], cc=cliente_codigo, nom=nombre[:191], tel=tel, cant=cantidad, now=now, te=_entrega_habitual(cliente_codigo)))
         nueva = int(res.lastrowid)
     if observaciones.strip():
         try:
