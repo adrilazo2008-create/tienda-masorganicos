@@ -989,3 +989,6 @@ Pedido de la clienta: no se guardó; hay que cargárselo / contestarle por Whats
 
 ## 2026-11-17 — Reservas sueltas con forma de entrega
 - `reservas.crear_suelta` ya no deja `tipo_entrega` vacío: toma la del último pedido del cliente (retira → retiro, si no envío) y, sin pedidos, envío. Antes esas reservas no salían en las listas de envíos ni de retiros de `conectar`. Reparadas a mano las 1052, 1055 y 1056 (envío).
+
+## 2026-11-18 - Freno ante pedidos idénticos a uno que todavía no se entregó
+Caso (Analía Alvez Da Silva): sumó el carrito a su pedido abierto #22742 (11:10) y a los 2 minutos «repitió» ese mismo pedido y lo confirmó como nuevo (#22783, 21 de los 22 productos): salió dos veces. Las defensas anteriores no lo agarraban (`pedido_reciente_igual` mira 5 minutos; el aviso «sumar a mi pedido» se podía ignorar). Ahora: `pedidos.pendiente_similar` busca un pedido del cliente sin entregar (status Nuevo o En preparación, últimos 30 días) con ≥3 productos y ≥70 % del carrito en común; en el checkout aparece el aviso rojo con la casilla «Sí, quiero hacer otro pedido igual» (obligatoria: lo exige el JS y también el servidor, que vuelve a mostrar el checkout sin la casilla), y la pantalla «Repetir pedido» avisa cuando ese pedido todavía no se entregó.

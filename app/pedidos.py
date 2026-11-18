@@ -468,6 +468,31 @@ def pedido_abierto(cliente_id: int):
         return None
 
 
+def pendiente_similar(cliente_id: int, producto_ids) -> Optional[dict]:
+    """Pedido del cliente que todavía NO se entregó (sin preparar o en preparación) y que ya trae casi los mismos productos que
+    este carrito (2026-11-18: una clienta sumó el carrito a su pedido y a los 2 minutos «repitió» ese pedido y lo confirmó: salió
+    dos veces). Devuelve {id, status, coinciden, total} o None. Cuenta como parecido si coinciden al menos 3 productos y el 70 %
+    del carrito. Nunca levanta excepción."""
+    ids = {int(i) for i in producto_ids if str(i).isdigit()}
+    if not cliente_id or len(ids) < 3:
+        return None
+    try:
+        with engine_tienda.connect() as cx:
+            pedidos_pend = cx.execute(text(
+                "SELECT id, status FROM grupos WHERE cliente = :c AND status IN (:s0, :s1) AND activo = 1 "
+                "AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY id DESC LIMIT 5"),
+                {"c": cliente_id, "s0": STATUS_NUEVO, "s1": STATUS_IMPORTADO}).all()
+            for g in pedidos_pend:
+                filas = cx.execute(text("SELECT producto_id FROM transacciones WHERE grupo = :g AND activo = 1"), {"g": g.id}).all()
+                en_pedido = {int(f.producto_id) for f in filas if str(f.producto_id).isdigit()}
+                coinciden = len(ids & en_pedido)
+                if coinciden >= 3 and coinciden >= 0.7 * len(ids):
+                    return {"id": int(g.id), "status": int(g.status), "coinciden": coinciden, "total": len(ids)}
+    except Exception:
+        return None
+    return None
+
+
 def pendiente_resumen(cliente_id: int):
     """Resumen del pedido editable más reciente del cliente (id, productos, total) para el aviso de toda la tienda
     («Tenés un pedido sin preparar»). Una sola consulta; si falla, None."""

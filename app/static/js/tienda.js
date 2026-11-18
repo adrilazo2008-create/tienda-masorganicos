@@ -594,6 +594,13 @@ function confirmarCheckout(f){
     if (f.telefono.focus) f.telefono.focus({ preventScroll: true });
     return false;
   }
+  var otroIgual = document.getElementById('otro-igual');
+  if (otroIgual && !otroIgual.checked){
+    var avisoSim = document.getElementById('aviso-pedido-similar');
+    if (avisoSim){ try { avisoSim.scrollIntoView({ block: 'center' }); } catch(e){} }
+    alert('Ya tenés un pedido igual sin entregar. Si querés hacer otro idéntico, marcá la casilla «Sí, quiero hacer otro pedido igual».');
+    return false;
+  }
   var envio = f.querySelector('input[name=entrega][value=envio]');
   if (envio && envio.checked){
     var dir = ((f.direccion || {}).value || '').trim();

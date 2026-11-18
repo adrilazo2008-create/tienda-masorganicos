@@ -668,6 +668,7 @@ def checkout(request: Request):
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                   aviso_stock=request.session.pop("carrito_msg", None),
                   pedido_abierto=pedidos.pedido_abierto(cli.id) if cli and not car.vacio else None,
+                  pedido_similar=pedidos.pendiente_similar(cli.id, [l.producto.id for l in car.lineas]) if cli and not car.vacio else None,
                   eliminados=eliminados, token=token)
 
 
@@ -724,6 +725,7 @@ def checkout_confirmar(
     token: str = Form(""),
     utm_source: str = Form(""), utm_medium: str = Form(""), utm_campaign: str = Form(""),
     utm_content: str = Form(""), fbclid: str = Form(""),
+    otro_igual: str = Form(""),
 ):
     # La altura se guarda como número, pero el campo es de texto libre: alguien
     # puede escribir "1541 o 1547" (pasó el 2026-11-06, daba error 500 al
@@ -775,6 +777,17 @@ def checkout_confirmar(
                       cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                       direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                       eliminados=eliminados, token=secrets.token_urlsafe(12))
+
+    # Ya tiene un pedido sin entregar con casi los mismos productos: no se manda otro igual sin que lo confirme (2026-11-18).
+    if otro_igual != "1" and cli_res:
+        similar = pedidos.pendiente_similar(cli_res.id, [l.producto.id for l in car.lineas])
+        if similar:
+            dirs = clientes.direcciones(cli_res.id)
+            return render(request, "checkout.html", car=car, zonas=zonas.zonas(),
+                          sucursales=zonas.sucursales(), permitir_escribir=S.permitir_escribir_pedidos,
+                          cliente_checkout=cli_res, cliente_encontrado=cli_res, existe=True,
+                          direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
+                          pedido_similar=similar, eliminados=eliminados, token=secrets.token_urlsafe(12))
 
     graba = S.permitir_escribir_pedidos
 
@@ -1179,6 +1192,7 @@ def cuenta_pedido_repetir_ver(request: Request, pedido_id: int):
     prods = catalogo.obtener_varios([l["producto_id"] for l in d["lineas"]])
     nombres = catalogo.nombres_por_id([l["producto_id"] for l in d["lineas"] if l["producto_id"] not in prods])
     return render(request, "cuenta_pedido_repetir.html", p=d, prods=prods, nombres=nombres,
+                  todavia_pendiente=(d.get("status") in (pedidos.STATUS_NUEVO, pedidos.STATUS_IMPORTADO) and d.get("activo")),
                   error=request.session.pop("carrito_msg", None))
 
 

@@ -11,6 +11,7 @@
   <p class="ok-num">{{ p.fecha.strftime('%d/%m/%Y') }}</p>
   <p class="chico">Destildá lo que no quieras volver a pedir. Lo tildado se suma a tu carrito.</p>
   {% if error %}<p class="carrito-flash">{{ error }}</p>{% endif %}
+  {% if todavia_pendiente %}<p class="err-box" role="alert"><b>Ojo:</b> este pedido todavía no se entregó. Si lo repetís y lo confirmás, vas a tener dos pedidos iguales. Si solo querés agregarle productos, usá «Editar» en ese pedido.</p>{% endif %}
 
   <form method="post" action="/cuenta/pedido/{{ p.id }}/repetir">
     <input type="hidden" name="elegido" value="1">

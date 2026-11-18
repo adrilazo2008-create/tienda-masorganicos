@@ -18,6 +18,14 @@
 </form>
 {% endif %}
 
+{% if pedido_similar %}
+<div class="err-box" role="alert" id="aviso-pedido-similar">
+  <p><b>Ojo: ya tenés el pedido #{{ pedido_similar.id }} {% if pedido_similar.status == 0 %}sin preparar{% else %}en preparación{% endif %}</b>
+  con casi los mismos productos ({{ pedido_similar.coinciden }} de {{ pedido_similar.total }} de este carrito). Si lo mandás de nuevo, se entregan dos veces.</p>
+  <label><input type="checkbox" name="otro_igual" value="1" id="otro-igual" form="form-checkout"> Sí, quiero hacer otro pedido igual</label>
+</div>
+{% endif %}
+
 <form method="post" action="/checkout/confirmar" class="checkout" id="form-checkout"
       onkeydown="if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();}"
       onsubmit="return confirmarCheckout(this);">
