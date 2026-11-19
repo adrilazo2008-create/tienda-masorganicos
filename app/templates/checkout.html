@@ -68,7 +68,7 @@
           <select name="id_zona" id="sel-zona" onchange="recalcularEnvio()">
             <option value="0">Elegí tu zona…</option>
             {% for z in zonas %}
-              <option value="{{ z.id }}" data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}"
+              <option value="{{ z.id }}"{% if zona_carrito and zona_carrito == z.id %} selected{% endif %} data-precio="{{ z.precio }}" data-gratis="{{ z.envio_gratis }}"
                       data-min="{{ z.minimo_compra }}" data-diaprecio="{{ z.precio_dia }}"
                       data-mensaje="{{ z.mensaje }}">
                 {{ z.titulo }}

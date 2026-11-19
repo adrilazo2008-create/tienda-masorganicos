@@ -541,7 +541,6 @@ def reservar_producto(request: Request, producto_id: int = Form(...), cantidad: 
     return toast("✓ Reserva tomada")
 
 
-@app.get("/carrito", response_class=HTMLResponse)
 def _envio_gratis_info(request: Request) -> dict:
     """Desde cuanto el envio es sin cargo, para el aviso del carrito. Si la persona ya esta identificada y tiene una direccion con zona, el
     monto es el de SU zona; si no, el mas bajo de todas las zonas, y el aviso lo dice («desde», segun tu zona) en vez de prometer que le
@@ -557,9 +556,17 @@ def _envio_gratis_info(request: Request) -> dict:
                         return {"umbral": z.envio_gratis, "zona": z.titulo, "exacto": True}
         except Exception:
             pass
-    return {"umbral": zonas.umbral_envio_gratis(), "zona": "", "exacto": False}
+    # Sin direccion guardada: la zona que la persona eligio en el carrito («¿En qué zona estás?»), si la eligio.
+    try:
+        zc = zonas.zona(int(request.session.get("zona_carrito") or 0))
+    except (TypeError, ValueError):
+        zc = None
+    if zc:
+        return {"umbral": zc.envio_gratis, "zona": zc.titulo, "exacto": True, "elegida": zc.id, "lista": [(z.id, z.titulo) for z in zonas.zonas()]}
+    return {"umbral": zonas.umbral_envio_gratis(), "zona": "", "exacto": False, "lista": [(z.id, z.titulo) for z in zonas.zonas()]}
 
 
+@app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
     _sync_reservas(request)
     car, _, _ = carrito_mod.resolver_y_avisar(request.session)
@@ -592,6 +599,17 @@ def _respuesta_carrito(request: Request):
         f'<span id="carrito-badge" class="badge" aria-live="polite" '
         f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>'
         + templates.get_template("_carrito_cuerpo_oob.html").render(extra))
+
+
+@app.post("/carrito/zona")
+def carrito_zona(request: Request, id_zona: int = Form(0)):
+    """La persona dice en que zona esta, desde el carrito: el aviso de envio sin cargo pasa a usar el monto de esa zona y el checkout la
+    trae ya elegida (2026-11-19). 0 = borrar la eleccion."""
+    if id_zona and zonas.zona(id_zona):
+        request.session["zona_carrito"] = int(id_zona)
+    else:
+        request.session.pop("zona_carrito", None)
+    return _respuesta_carrito(request)
 
 
 @app.post("/carrito/actualizar")
@@ -685,6 +703,7 @@ def checkout(request: Request):
                   cliente_checkout=cli, cliente_encontrado=cli, existe=cli is not None,
                   direccion_ppal=dirs[0] if dirs else None, direcciones_cliente=dirs,
                   aviso_stock=request.session.pop("carrito_msg", None),
+                  zona_carrito=int(request.session.get("zona_carrito") or 0),
                   pedido_abierto=pedidos.pedido_abierto(cli.id) if cli and not car.vacio else None,
                   pedido_similar=pedidos.pendiente_similar(cli.id, [l.producto.id for l in car.lineas]) if cli and not car.vacio else None,
                   eliminados=eliminados, token=token)

@@ -11,11 +11,31 @@
   {% endif %}
   <div class="ep-barra"><span style="width: {{ pct|round(0, 'floor') }}%"></span></div>
   {% if falta > 0 %}<p class="chico">Sin cargo desde {{ pesos(umbral_envio) }} eligiendo el día de reparto de tu zona. A coordinar día y horario, el envío se cobra siempre.</p>{% endif %}
+  {% if envio_info and envio_info.elegida %}{% set txt = "Tu zona:" %}
+  <form method="post" action="/carrito/zona" hx-post="/carrito/zona" hx-swap="none" hx-trigger="change" class="envio-zona">
+    <label>{{ txt }}
+      <select name="id_zona" aria-label="Tu zona de envío">
+        <option value="0">Elegí tu zona…</option>
+        {% for zid, ztit in envio_info.lista %}<option value="{{ zid }}"{% if envio_info.elegida == zid %} selected{% endif %}>{{ ztit }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+  {% endif %}
 </div>
 {% else %}
 <div class="envio-progreso">
-  <p>El <b>envío sin cargo</b> depende de tu zona: <b>desde {{ pesos(umbral_envio) }}</b> el día que repartimos tu zona.</p>
-  <p class="chico">Al cerrar el pedido, cuando elegís tu zona, ves el monto exacto. <a href="/envios">Ver zonas y días</a>. A coordinar día y horario, el envío se cobra siempre.</p>
+  <p>El <b>envío sin cargo</b> depende de tu zona (desde {{ pesos(umbral_envio) }} el día que repartimos).</p>
+  {% if envio_info and envio_info.lista %}{% set txt = "Decinos en qué zona estás y calculamos tu envío:" %}
+  <form method="post" action="/carrito/zona" hx-post="/carrito/zona" hx-swap="none" hx-trigger="change" class="envio-zona">
+    <label>{{ txt }}
+      <select name="id_zona" aria-label="Tu zona de envío">
+        <option value="0">Elegí tu zona…</option>
+        {% for zid, ztit in envio_info.lista %}<option value="{{ zid }}"{% if envio_info.elegida == zid %} selected{% endif %}>{{ ztit }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+  {% endif %}
+  <p class="chico"><a href="/envios">Ver zonas y días</a>. A coordinar día y horario, el envío se cobra siempre.</p>
 </div>
 {% endif %}
 {% endif %}
