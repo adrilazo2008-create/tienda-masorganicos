@@ -508,7 +508,7 @@ def carrito_agregar(request: Request, producto_id: int = Form(...),
         # producto), htmx simplemente ignora este fragmento de más.
         en_carrito = {l.producto.id for l in car.lineas}
         sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
-        extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug)
+        extra = ctx(request, car=car, umbral_envio=_envio_gratis_info(request)["umbral"], envio_info=_envio_gratis_info(request), sugeridos=sug)
         partes.append(templates.get_template("_carrito_cuerpo_oob.html").render(extra))
         return HTMLResponse("".join(partes))
     return RedirectResponse("/catalogo", status_code=303)
@@ -542,6 +542,24 @@ def reservar_producto(request: Request, producto_id: int = Form(...), cantidad: 
 
 
 @app.get("/carrito", response_class=HTMLResponse)
+def _envio_gratis_info(request: Request) -> dict:
+    """Desde cuanto el envio es sin cargo, para el aviso del carrito. Si la persona ya esta identificada y tiene una direccion con zona, el
+    monto es el de SU zona; si no, el mas bajo de todas las zonas, y el aviso lo dice («desde», segun tu zona) en vez de prometer que le
+    faltan tantos pesos. Antes siempre mostraba el mas bajo: a un cliente de una zona con minimo $150.000 le decia que con $100.000 era
+    gratis y despues se le cobro el envio (2026-11-19)."""
+    cli = _cliente_actual(request)
+    if cli:
+        try:
+            for d in clientes.direcciones(cli.id):       # la principal primero
+                if d.get("id_zona"):
+                    z = zonas.zona(int(d["id_zona"]))
+                    if z:
+                        return {"umbral": z.envio_gratis, "zona": z.titulo, "exacto": True}
+        except Exception:
+            pass
+    return {"umbral": zonas.umbral_envio_gratis(), "zona": "", "exacto": False}
+
+
 def ver_carrito(request: Request):
     _sync_reservas(request)
     car, _, _ = carrito_mod.resolver_y_avisar(request.session)
@@ -551,7 +569,7 @@ def ver_carrito(request: Request):
     sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
     cli_ab = _cliente_actual(request)
     return render(request, "carrito.html", car=car,
-                  umbral_envio=zonas.umbral_envio_gratis(),
+                  umbral_envio=_envio_gratis_info(request)["umbral"], envio_info=_envio_gratis_info(request),
                   sugeridos=sug,
                   pedido_abierto=pedidos.pedido_abierto(cli_ab.id) if cli_ab and not car.vacio else None,
                   carrito_msg=request.session.pop("carrito_msg", None))
@@ -569,7 +587,7 @@ def _respuesta_carrito(request: Request):
     n = car.cantidad_items
     en_carrito = {l.producto.id for l in car.lineas}
     sug = _sugeridos_carrito(_cliente_actual(request), en_carrito)
-    extra = ctx(request, car=car, umbral_envio=zonas.umbral_envio_gratis(), sugeridos=sug)
+    extra = ctx(request, car=car, umbral_envio=_envio_gratis_info(request)["umbral"], envio_info=_envio_gratis_info(request), sugeridos=sug)
     return HTMLResponse(
         f'<span id="carrito-badge" class="badge" aria-live="polite" '
         f'aria-label="{n} productos en el carrito" hx-swap-oob="true">{n}</span>'

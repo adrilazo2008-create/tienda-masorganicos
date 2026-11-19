@@ -1,99 +1,21 @@
 {% if umbral_envio %}
+{% set exacto = envio_info.exacto if envio_info else false %}
+{% if exacto %}
 {% set falta = umbral_envio - car.subtotal %}
 {% set pct = (car.subtotal / umbral_envio * 100) if car.subtotal < umbral_envio else 100 %}
 <div class="envio-progreso {{ 'listo' if falta <= 0 else '' }}">
   {% if falta > 0 %}
-  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío sin cargo</b> el día que repartimos tu zona.</p>
+  <p>Te faltan <b>{{ pesos(falta) }}</b> para el <b>envío sin cargo</b> el día que repartimos tu zona ({{ envio_info.zona }}).</p>
   {% else %}
-  <p>🎉 Con este total el <b>envío es sin cargo</b> el día que repartimos tu zona. Elegís la modalidad al cerrar el pedido.</p>
+  <p>🎉 Con este total el <b>envío es sin cargo</b> el día que repartimos tu zona ({{ envio_info.zona }}). Elegís la modalidad al cerrar el pedido.</p>
   {% endif %}
   <div class="ep-barra"><span style="width: {{ pct|round(0, 'floor') }}%"></span></div>
   {% if falta > 0 %}<p class="chico">Sin cargo desde {{ pesos(umbral_envio) }} eligiendo el día de reparto de tu zona. A coordinar día y horario, el envío se cobra siempre.</p>{% endif %}
 </div>
-{% endif %}
-
-<div class="carrito">
-  <div class="carrito-lineas">
-    {% for l in car.lineas %}
-    <div class="cl">
-      <img src="{{ img_producto(l.producto.codigo) }}" alt="" width="64" height="64"
-           loading="lazy" decoding="async" onerror="this.src='/static/img/sinfoto.svg'">
-      <div class="cl-info">
-        <a href="/producto/{{ l.producto.id }}">{{ l.producto.nombre }}</a>
-        {% if l.reservada > 0 %}<span class="cl-reservado"><i></i>Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.</span>{% elif l.reserva %}<span class="cl-reservado" title="Te lo conseguimos y te avisamos cuando llegue"><i></i>Reservado</span>{% endif %}
-        <span class="cl-unit">{{ pesos(l.producto.precio) }} x {{ l.producto.unidad }}</span>
-        <form method="post" action="/carrito/actualizar" class="cl-obs-form" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
-          <input type="hidden" name="indice" value="{{ l.indice }}">
-          <input type="hidden" name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}">
-          <input name="observacion" value="{{ l.observacion }}" class="cl-obs-input" maxlength="191"
-                 placeholder="Observación (opcional)" autocomplete="off"
-                 aria-label="Observación de {{ l.producto.nombre }}"
-                 onchange="this.form.requestSubmit()">
-        </form>
-      </div>
-      <form method="post" action="/carrito/actualizar" class="cl-cant" hx-post="/carrito/actualizar" hx-swap="none" hx-sync="this:replace">
-        <input type="hidden" name="indice" value="{{ l.indice }}">
-        <div class="cant" role="group" aria-label="Cantidad de {{ l.producto.nombre }}">
-          <button type="button" onclick="stepCarrito(this,-1)" aria-label="Quitar uno">−</button>
-          <input name="cantidad" value="{{ fmt_cantidad(l.cantidad) }}" inputmode="decimal"
-                 data-step="{{ '0.25' if l.producto.fraccionable else '1' }}"
-                 data-min="{{ fmt_cantidad(l.reservada) if l.reservada > 0 else ('0.25' if l.producto.fraccionable else '1') }}"
-                 aria-label="Cantidad de {{ l.producto.nombre }}" autocomplete="off"
-                 onchange="this.form.requestSubmit()">
-          <button type="button" onclick="stepCarrito(this,1)" aria-label="Agregar uno">+</button>
-        </div>
-        <span>{{ l.producto.unidad }}</span>
-      </form>
-      <span class="cl-sub num">{{ pesos(l.subtotal) }}</span>
-      {% if l.reservada > 0 %}
-      <span class="cl-quitar" title="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp." aria-label="Reserva hecha. Para bajar o sacar, escribinos por WhatsApp.">🔒</span>
-      {% else %}
-      <form method="post" action="/carrito/quitar" class="cl-quitar" hx-post="/carrito/quitar" hx-swap="none">
-        <input type="hidden" name="indice" value="{{ l.indice }}">
-        <button type="submit" aria-label="Quitar">✕</button>
-      </form>
-      {% endif %}
-      {% if l.faltante > 0 %}
-      <div class="cl-faltante" role="alert">
-        <p>⚠ Pediste {{ fmt_cantidad(l.cantidad) }} y {% if l.disponible == 1 %}solo queda <b>1</b>{% else %}solo quedan <b>{{ fmt_cantidad(l.disponible) }}</b>{% endif %}.
-          ¿Querés reservar {% if l.faltante == 1 %}la que falta{% else %}las <b>{{ fmt_cantidad(l.faltante) }}</b> que faltan{% endif %}? Te la conseguimos con el proveedor y te avisamos cuando llegue.</p>
-        <div class="cl-faltante-bt">
-          <form method="post" action="/carrito/faltante" hx-post="/carrito/faltante" hx-swap="none">
-            <input type="hidden" name="indice" value="{{ l.indice }}"><input type="hidden" name="accion" value="reservar">
-            <button type="submit" class="btn-chico">Sí, reservar {{ fmt_cantidad(l.faltante) }}</button></form>
-          <form method="post" action="/carrito/faltante" hx-post="/carrito/faltante" hx-swap="none">
-            <input type="hidden" name="indice" value="{{ l.indice }}"><input type="hidden" name="accion" value="ajustar">
-            <button type="submit" class="btn-chico btn-sec">No, llevar solo {{ fmt_cantidad(l.disponible) }}</button></form>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-
-  <aside class="carrito-resumen">
-    <h2>Resumen</h2>
-    <p class="rr"><span>Subtotal</span><span class="num">{{ pesos(car.subtotal) }}</span></p>
-    <p class="rr chico">El costo de envío se calcula en el próximo paso según tu zona. No se cobra en el sitio: pagás al recibir.</p>
-    {% include "_consulta_envio.html" %}
-    {% if car.lineas|selectattr('faltante')|list %}
-    <p class="chico">Elegí qué hacer con lo que no alcanza (arriba) para poder cerrar el pedido.</p>
-    <span class="btn-grande" style="opacity:.45;pointer-events:none;">Cerrar pedido</span>
-    {% else %}
-    <a href="/checkout" class="btn-grande">Cerrar pedido</a>
-    {% endif %}
-    <a href="/catalogo" class="btn-sec">Seguir comprando</a>
-    <form method="post" action="/carrito/vaciar" data-confirmar="¿Vaciar el carrito? Se van a sacar todos los productos que agregaste.">
-      <button type="submit" class="btn-sec" style="width:100%;margin-top:.5rem;">Vaciar carrito</button>
-    </form>
-  </aside>
+{% else %}
+<div class="envio-progreso">
+  <p>El <b>envío sin cargo</b> depende de tu zona: <b>desde {{ pesos(umbral_envio) }}</b> el día que repartimos tu zona.</p>
+  <p class="chico">Al cerrar el pedido, cuando elegís tu zona, ves el monto exacto. <a href="/envios">Ver zonas y días</a>. A coordinar día y horario, el envío se cobra siempre.</p>
 </div>
-
-{% if sugeridos %}
-<section class="bloque sugeridos">
-  <h2>Sumá a tu pedido</h2>
-  <div class="grid">
-    {% for p in sugeridos %}{% include "_card.html" %}{% endfor %}
-  </div>
-</section>
+{% endif %}
 {% endif %}
